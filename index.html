@@ -330,7 +330,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -772,6 +772,17 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 @keyframes rvL{from{opacity:0;transform:translateX(-36px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes rv0{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.rv-c{animation:none!important}}
+.celeb{position:fixed;inset:0;z-index:90;background:rgb(20 6 12 / .55);display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+.celeb-card{position:relative;background:#420725;color:#fff;border-radius:24px;padding:26px 22px 22px;max-width:380px;width:100%;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:0 24px 60px rgb(0 0 0 / .45);animation:celebIn .5s cubic-bezier(.3,1.5,.5,1)}
+.celeb-card h2{font-size:24px;color:#fff}.celeb-card p{margin:0;color:rgb(255 255 255 / .85);font-weight:500}
+.celeb-e{font-size:52px;line-height:1;animation:celebPop .7s cubic-bezier(.3,1.7,.5,1) .15s both}
+.celeb-tag{color:#F4C9D8;font-family:var(--display);font-weight:700;font-size:15px}
+.celeb-card .btn{background:#FF5C8A;border-color:#FF5C8A;color:#fff;margin-top:4px;justify-content:center;min-width:160px}
+.celeb-fx i{position:absolute;top:-20px;width:9px;height:14px;border-radius:3px;animation:celebFall 1.6s ease-in forwards}
+@keyframes celebIn{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:none}}
+@keyframes celebPop{from{transform:scale(0)}to{transform:none}}
+@keyframes celebFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+@media (prefers-reduced-motion: reduce){.celeb-card,.celeb-e,.celeb-fx i{animation:none}.celeb-fx{display:none}}
 .toast-a{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
 .dot.d-dv{background:#FF5C8A}.dot.d-tk{background:var(--fg)}.dot.d-nt{background:#E0A100}.dot.d-ps{background:#2E9E6B}
 .callg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.callg span{display:inline-flex;align-items:center;gap:5px}
@@ -1147,7 +1158,7 @@ function render() {
   v.innerHTML = ({ inicio: vHome, radar: vNews, rotina: vRoutine, marcas: vBrands, agenda: vAgenda, estudio: vStudio, financeiro: vFinance })[S.tab]();
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -2865,9 +2876,40 @@ function checkBadges() {
 }
 function vBadges() {
   const have = S.profile.badges || {}, got = BADGES.filter(b => have[b[0]]);
-  return `<div class="card section"><div class="progress-top"><span style="color:var(--fg);font-weight:700">${got.length} de ${BADGES.length} conquistas</span><span class="num">${Math.round(got.length / BADGES.length * 100)}%</span></div><div class="bar ok"><span style="width:${Math.round(got.length / BADGES.length * 100)}%"></span></div></div>
+  return `${retroList()}
+  <div class="card section"><div class="progress-top"><span style="color:var(--fg);font-weight:700">${got.length} de ${BADGES.length} conquistas</span><span class="num">${Math.round(got.length / BADGES.length * 100)}%</span></div><div class="bar ok"><span style="width:${Math.round(got.length / BADGES.length * 100)}%"></span></div></div>
   <div class="badges">${BADGES.map(([id, n, d]) => `<div class="badge ${have[id] ? 'on' : ''}"><div class="bi">${have[id] ? ic('check') : '<span>?</span>'}</div><b>${esc(n)}</b><span>${esc(d)}</span>${have[id] ? `<small>${fmtD(have[id])}</small><button class="link" data-bshare="${id}">Copiar pra postar</button>` : ''}</div>`).join('')}</div>
-  ${retroList()}`;
+`;
+}
+/* ================= comemorações: nova fonte de renda e faturamento crescendo ================= */
+const celebQ = [];
+function celebrate(emoji, title, body) {
+  celebQ.push({ emoji, title, body }); if (celebQ.length === 1) celebShow();
+}
+function celebShow() {
+  const c = celebQ[0]; if (!c) return;
+  const el = document.createElement('div'); el.className = 'celeb'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', c.title);
+  el.innerHTML = `<div class="celeb-fx" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="left:${(i * 7.3 + 3) % 100}%;animation-delay:${(i % 7) * 90}ms;background:${['#FF5C8A', '#F4C9D8', '#fff', '#E0A100'][i % 4]}"></i>`).join('')}</div>
+    <div class="celeb-card"><div class="celeb-e">${c.emoji}</div><h2>${esc(c.title)}</h2><p>${esc(c.body)}</p><div class="celeb-tag">quem cria, se organiza.</div><button type="button" class="btn" data-celebok>Obrigada! 💗</button></div>`;
+  document.body.appendChild(el); setTimeout(() => el.querySelector('[data-celebok]')?.focus(), 50);
+}
+function celebClose() { document.querySelector('.celeb')?.remove(); celebQ.shift(); if (celebQ.length) setTimeout(celebShow, 250); }
+const celebSource = name => celebrate('🎉', 'Mais uma fonte de renda!', `${name} entrou pra sua lista. Parabéns: isso é fruto da sua organização, de cada contato, entrega e cobrança que você registra aqui.`);
+/* faturamento: quando o mês passa o anterior (uma vez por mês) e quando vira o melhor mês até agora */
+let growT = 0;
+function checkGrowth() {
+  clearTimeout(growT); growT = setTimeout(() => {
+    if (S.loading || hasExamples()) return;
+    const mk = monthKey(today()), pm = shiftMonth(mk, -1), cur = monthIncome(mk), prv = monthIncome(pm), done = S.profile.celebrated || {};
+    if (!(cur > 0)) return;
+    const past = [...new Set([...S.data.payments.filter(p => p.paid).map(p => monthKey(p.paidAt || p.due)), ...S.data.extras.filter(x => x.paid).map(x => monthKey(x.date))])].filter(m => m && m < mk);
+    const best = Math.max(0, ...past.map(monthIncome)), mn = monthName(mk), pn = monthName(pm);
+    let key = '', msg = null;
+    if (past.length >= 2 && cur > best && !done['rec' + mk]) { key = 'rec' + mk; msg = ['🏆', 'Seu melhor mês até agora!', `${mn.charAt(0).toUpperCase() + mn.slice(1)} já é o mês em que você mais faturou. Parabéns pela organização: é ela que transforma trabalho em resultado.`]; }
+    else if (prv > 0 && cur > prv && !done['fat' + mk] && !done['rec' + mk]) { key = 'fat' + mk; msg = ['📈', 'Seu faturamento cresceu!', `${mn.charAt(0).toUpperCase() + mn.slice(1)} já passou ${pn}. Parabéns pela organização: cada entrega registrada e cada cobrança feita fazem diferença.`]; }
+    if (!msg) return;
+    saveProfile({ celebrated: { ...done, [key]: today(), ...(key.startsWith('rec') ? { ['fat' + mk]: today() } : {}) } }); celebrate(...msg);
+  }, 1500);
 }
 /* ================= meu mês de cria: retrospectiva mensal (sem IA: tudo calculado aqui) ================= */
 const RETRO_BADGES = ['v50', 'agua30', 'v10', 'semana', 'gringa', 'lic5', 'hab7', 'meta1', 'kit', 'marca1', 'pago1', 'lic1', 'brief1', 'check3']; /* as de dinheiro (k10, k50) ficam de fora */
@@ -2878,63 +2920,105 @@ function retroStats(ym) {
   const t = today(), [y, m] = ym.split('-').map(Number), last = iso(new Date(y, m, 0)), end = last < t ? last : t, inM = v => monthKey(v) === ym, days = [];
   for (let d = ym + '-01'; d <= end; d = addDays(d, 1)) days.push(d);
   const sent = realOnly(S.data.deliveries).filter(d => (d.stage || 0) >= 3 && inM(d.sentAt || d.due));
-  const brands = [...new Set(sent.map(d => d.brandId).filter(Boolean))].map(brandName);
   const tasks = realOnly(S.data.tasks), habits = realOnly(S.data.habits);
-  /* dia de rotina cumprida: todas as tarefas do dia feitas; sem tarefas, todos os hábitos do dia feitos */
-  let rDays = 0, run = 0, best = 0;
-  days.forEach(d => {
-    const tk = tasks.filter(x => x.date === d), hs = habits.filter(h => h.active !== false && (!h.created || String(h.created).slice(0, 10) <= d));
-    const ok = tk.length ? tk.every(x => x.done) : hs.length ? hs.every(h => hDone(h, d)) : false;
-    if (ok) { rDays++; run++; best = Math.max(best, run); } else run = 0;
-  });
+  const { rDays, best } = routineDays(days, tasks, habits);
   const tDone = tasks.filter(x => x.done && inM(x.doneAt || x.date));
   let hN = 0; habits.forEach(h => days.forEach(d => { if (hDone(h, d)) hN++; }));
   const have = S.profile.badges || {}, bk = RETRO_BADGES.find(k => have[k] && inM(have[k])), b = bk && BADGES.find(x => x[0] === bk);
-  return { month: ym, sent: sent.length, onTime: sent.filter(d => !d.sentAt || !d.due || d.sentAt <= d.due).length, brands, tasks: tDone.length, briefTasks: tDone.filter(x => x.briefId).length, rDays, best, habits: hN, goals: realOnly(S.data.goals).filter(g => g.doneAt && inM(g.doneAt)).length, badge: b ? { name: b[1], desc: b[2] } : null };
+  return { month: ym, sent: sent.length, onTime: sent.filter(d => !d.sentAt || !d.due || d.sentAt <= d.due).length, ...workOf(inM, sent), tasks: tDone.length, briefTasks: tDone.filter(x => x.briefId).length, rDays, best, habits: hN, goals: realOnly(S.data.goals).filter(g => g.doneAt && inM(g.doneAt)).length, badge: b ? { name: b[1], desc: b[2] } : null };
 }
-const retroWeak = s => s.sent <= 1 && s.rDays < 5 && s.tasks < 5 && s.habits < 10 && !s.goals;
+/* dia de rotina cumprida: todas as tarefas do dia feitas; sem tarefas, todos os hábitos do dia feitos */
+function routineDays(days, tasks, habits) {
+  const byDay = {}; tasks.forEach(x => { if (x.date) (byDay[x.date] = byDay[x.date] || []).push(x); });
+  let rDays = 0, run = 0, best = 0;
+  days.forEach(d => {
+    const tk = byDay[d] || [], hs = habits.filter(h => h.active !== false && (!h.created || String(h.created).slice(0, 10) <= d));
+    const ok = tk.length ? tk.every(x => x.done) : hs.length ? hs.every(h => hDone(h, d)) : false;
+    if (ok) { rDays++; run++; best = Math.max(best, run); } else run = 0;
+  });
+  return { rDays, best };
+}
+/* marcas trabalhadas por frente (UGC, UGC Tech Canvas…) e outras fontes de renda: só nomes, nunca valores */
+function workOf(inP, sent) {
+  const ids = new Set([...sent.map(d => d.brandId), ...realOnly(S.data.payments).filter(p => inP(p.paid ? (p.paidAt || p.due) : p.due)).map(p => p.brandId)].filter(Boolean));
+  const bs = S.data.brands.filter(b => ids.has(b.id) && !b.example), fr = fronts(), byF = {};
+  bs.forEach(b => (byF[brandFront(b)] = byF[brandFront(b)] || []).push(b.name));
+  const ex = {}; realOnly(S.data.extras).filter(x => inP(x.date)).forEach(x => { const k = x.type || 'Outro'; ex[k] = ex[k] || new Set(); if (x.name) ex[k].add(String(x.name).trim()); });
+  return { brands: bs.map(b => b.name), fronts: [...fr, ...Object.keys(byF).filter(f => !fr.includes(f))].filter(f => byF[f]).map(f => ({ front: f, brands: byF[f] })), extras: Object.keys(ex).map(k => ({ type: k, names: [...ex[k]] })) };
+}
+const extrasN = s => (s.extras || []).reduce((n, e) => n + Math.max(1, e.names.length), 0);
+/* o ano */
+function retroYearStats(y) {
+  const t = today(), end = `${y}-12-31` < t ? `${y}-12-31` : t, inY = v => String(v || '').slice(0, 4) === y, days = [];
+  for (let d = y + '-01-01'; d <= end; d = addDays(d, 1)) days.push(d);
+  const sent = realOnly(S.data.deliveries).filter(d => (d.stage || 0) >= 3 && inY(d.sentAt || d.due));
+  const perM = {}; sent.forEach(d => { const m = monthKey(d.sentAt || d.due); perM[m] = (perM[m] || 0) + 1; });
+  const bestMonth = Object.keys(perM).sort((a, b) => perM[b] - perM[a] || a.localeCompare(b))[0] || '';
+  const tasks = realOnly(S.data.tasks), habits = realOnly(S.data.habits), { rDays, best } = routineDays(days, tasks, habits);
+  const tDone = tasks.filter(x => x.done && inY(x.doneAt || x.date));
+  let hN = 0; habits.forEach(h => days.forEach(d => { if (hDone(h, d)) hN++; }));
+  const have = S.profile.badges || {}, got = RETRO_BADGES.filter(k => have[k] && inY(have[k])).map(k => BADGES.find(x => x[0] === k)).filter(Boolean);
+  return { kind: 'ano', month: y, sent: sent.length, onTime: sent.filter(d => !d.sentAt || !d.due || d.sentAt <= d.due).length, bestMonth, bestMonthN: perM[bestMonth] || 0,
+    ...workOf(inY, sent), tasks: tDone.length, briefTasks: tDone.filter(x => x.briefId).length, rDays, best, habits: hN,
+    goals: realOnly(S.data.goals).filter(g => g.doneAt && inY(g.doneAt)).length, badges: got.map(b => b[1]), badge: got[0] ? { name: got[0][1], desc: got[0][2] } : null };
+}
+const isYear = s => s.kind === 'ano';
+const periodName = s => isYear(s) ? s.month : monthName(s.month);
+const nextPeriod = s => isYear(s) ? String(+s.month + 1) : monthName(shiftMonth(s.month, 1));
+/* metas de cada frase: no ano, os números precisam ser bem maiores */
+const retroT = s => isYear(s) ? { weakSent: 5, weakDays: 30, weakTasks: 30, weakHab: 60, best: 21, sentAll: 40, sent: 20, brands: 5, tasks: 150, habits: 150, w: 'Ano' } : { weakSent: 1, weakDays: 5, weakTasks: 5, weakHab: 10, best: 7, sentAll: 8, sent: 5, brands: 3, tasks: 20, habits: 20, w: 'Mês' };
+const retroWeak = s => { const T = retroT(s); return !extrasN(s) && !s.brands.length && s.sent <= T.weakSent && s.rDays < T.weakDays && s.tasks < T.weakTasks && s.habits < T.weakHab && !s.goals; };
 function retroPhrase(s) {
-  const nb = s.brands.length;
-  if (retroWeak(s)) return `Mês corrido? Faz parte. Bora juntas em ${monthName(shiftMonth(s.month, 1))}.`;
-  if (s.best >= 7) return `Mês de constância: ${s.best} dias seguidos de rotina 🔥`;
-  if (s.sent >= 8 && s.onTime === s.sent) return `Mês de entrega: ${s.sent} vídeos enviados, todos no prazo 🎬`;
-  if (s.sent >= 5) return `Mês produtivo: ${plural(s.sent, 'entrega', 'entregas')} para ${plural(nb, 'marca', 'marcas')} 🎬`;
-  if (nb >= 3) return `Mês de parcerias: ${nb} marcas confiaram no seu trabalho 💌`;
-  if (s.tasks >= 20) return `Mês de foco: ${s.tasks} tarefas riscadas da lista ✅`;
-  if (s.habits >= 20) return `Mês de autocuidado: ${s.habits} hábitos cumpridos 💧`;
-  return `Passo a passo: você seguiu criando em ${monthName(s.month)} ✨`;
+  const nb = s.brands.length, T = retroT(s);
+  if (retroWeak(s)) return `${T.w} corrido? Faz parte. Bora juntas em ${nextPeriod(s)}.`;
+  if (s.best >= T.best) return `${T.w} de constância: ${s.best} dias seguidos de rotina 🔥`;
+  if (s.sent >= T.sentAll && s.onTime === s.sent) return `${T.w} de entrega: ${s.sent} vídeos enviados, todos no prazo 🎬`;
+  if (s.sent >= T.sent) return `${T.w} produtivo: ${plural(s.sent, 'entrega', 'entregas')} para ${plural(nb, 'marca', 'marcas')} 🎬`;
+  if (nb >= T.brands) return `${T.w} de parcerias: ${nb} marcas confiaram no seu trabalho 💌`;
+  if (extrasN(s) && (nb || extrasN(s) >= 2)) return `${T.w} de muitas frentes: ${nb ? plural(nb, 'marca', 'marcas') + ' e ' : ''}${plural(extrasN(s), 'outra fonte de renda', 'outras fontes de renda')} 💼`;
+  if (s.tasks >= T.tasks) return `${T.w} de foco: ${s.tasks} tarefas riscadas da lista ✅`;
+  if (s.habits >= T.habits) return `${T.w} de autocuidado: ${s.habits} hábitos cumpridos 💧`;
+  return `Passo a passo: você seguiu criando em ${periodName(s)} ✨`;
 }
 function retroHighlight(s) {
   if (s.badge) return { name: s.badge.name, desc: s.badge.desc };
   if (s.best >= 3) return { name: `${s.best} dias seguidos`, desc: 'de rotina cumprida' };
   if (s.sent) return { name: plural(s.sent, 'entrega enviada', 'entregas enviadas'), desc: s.brands.length ? `para ${plural(s.brands.length, 'marca', 'marcas')}` : '' };
+  if (s.brands.length) return { name: plural(s.brands.length, 'marca trabalhada', 'marcas trabalhadas'), desc: 'confiaram no seu trabalho' };
+  if (extrasN(s)) return { name: plural(extrasN(s), 'fonte de renda', 'fontes de renda'), desc: 'criando além das marcas' };
   if (s.tasks) return { name: plural(s.tasks, 'tarefa concluída', 'tarefas concluídas'), desc: 'na sua checklist' };
   return null;
 }
 /* gera e guarda a do mês anterior assim que o mês vira */
-let retroBusy = false, retroHash = location.hash === '#mesdecria';
+/* e a do ano anterior no começo do ano (até março, pra quem demorar a abrir o app) */
+let retroBusy = false, retroHash = /^#(mes|ano)decria$/.test(location.hash) ? location.hash.slice(1, 4) : '';
+const hadDataBy = p => COLS.some(c => c !== 'retros' && S.data[c].some(x => !x.example && x.created && String(x.created).slice(0, p.length) <= p));
 function checkRetro() {
   if (S.loading || retroBusy) return;
-  const pm = shiftMonth(today().slice(0, 7), -1);
-  if (!S.data.retros.some(r => r.month === pm) && COLS.some(c => c !== 'retros' && S.data[c].some(x => !x.example && x.created && String(x.created).slice(0, 7) <= pm))) {
-    retroBusy = true; put('retros', { id: newId(), month: pm, stats: retroStats(pm), created: new Date().toISOString() }).finally(() => { retroBusy = false; });
-  }
-  if (retroHash) { retroHash = false; try { history.replaceState(null, '', location.pathname); } catch (_) {} openLatestRetro(); }
+  const t = today(), pm = shiftMonth(t.slice(0, 7), -1), py = String(+t.slice(0, 4) - 1), save = o => { retroBusy = true; put('retros', { id: newId(), ...o, created: new Date().toISOString() }).finally(() => { retroBusy = false; }); };
+  if (!S.data.retros.some(r => r.month === pm) && hadDataBy(pm)) save({ month: pm, stats: retroStats(pm) });
+  else if (+t.slice(5, 7) <= 3 && !S.data.retros.some(r => r.month === py) && hadDataBy(py)) save({ kind: 'ano', month: py, stats: retroYearStats(py) });
+  if (retroHash) { const k = retroHash; retroHash = ''; try { history.replaceState(null, '', location.pathname); } catch (_) {} openLatestRetro(k); }
 }
 const retroOf = ym => [...S.data.retros].filter(r => r.month === ym).sort((a, b) => String(b.created).localeCompare(String(a.created)))[0];
-function openLatestRetro() { const r = [...S.data.retros].sort((a, b) => b.month.localeCompare(a.month))[0]; if (r) openRetro(r.stats); }
+const retroSortKey = r => r.month.length === 4 ? r.month + '-13' : r.month;
+function openLatestRetro(kind) { const r = [...S.data.retros].filter(x => kind === 'ano' ? x.kind === 'ano' : kind === 'mes' ? x.kind !== 'ano' : true).sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)))[0]; if (r) openRetro(r.stats); }
 window.criahubOpenRetro = openLatestRetro;
 function homeRetro() {
-  const t = today(); if (+t.slice(8) > 7) return '';
-  const r = retroOf(shiftMonth(t.slice(0, 7), -1)); if (!r) return '';
-  return `<button class="card rh" data-retro="${r.id}"><span class="rh-e">criahub · meu mês de cria</span><b>Seu mês de cria chegou ✨</b><span>Veja o que você construiu em ${esc(monthName(r.month))}.</span><span class="rh-go">Ver minha retrospectiva</span></button>`;
+  const t = today(), y = retroOf(String(+t.slice(0, 4) - 1));
+  const yc = t.slice(5, 7) === '01' && +t.slice(8) <= 15 && y ? `<button class="card rh" data-retro="${y.id}"><span class="rh-e">criahub · meu ano de cria</span><b>Seu ano de cria chegou 🎉</b><span>Veja tudo o que você construiu em ${esc(y.month)}: marcas, entregas e conquistas.</span><span class="rh-go">Ver meu ano</span></button>` : '';
+  if (+t.slice(8) > 7) return yc;
+  const r = retroOf(shiftMonth(t.slice(0, 7), -1)); if (!r) return yc;
+  return yc + `<button class="card rh" data-retro="${r.id}"><span class="rh-e">criahub · meu mês de cria</span><b>Seu mês de cria chegou ✨</b><span>Veja o que você construiu em ${esc(monthName(r.month))}.</span><span class="rh-go">Ver minha retrospectiva</span></button>`;
 }
 function retroList() {
-  const list = [...new Map([...S.data.retros].sort((a, b) => String(a.created).localeCompare(String(b.created))).map(r => [r.month, r])).values()].sort((a, b) => b.month.localeCompare(a.month));
-  const cur = today().slice(0, 7);
+  const list = [...new Map([...S.data.retros].sort((a, b) => String(a.created).localeCompare(String(b.created))).map(r => [r.month, r])).values()].sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)));
+  /* a do ano é surpresa: o botão só aparece em dezembro */
+  const cur = today().slice(0, 7), cy = cur.slice(0, 4);
   return `<section class="section"><div class="row-h"><h2>Minhas retrospectivas</h2></div>
-    ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria: os números do mês anterior, prontos pra postar no story.</div>'}
-    <div class="row-btns"><button class="btn sm ghost" data-retrotest="${cur}">Gerar retrospectiva de ${esc(monthName(cur))}</button></div></section>`;
+    ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria. Quer ver como está indo? Toque abaixo.</div>'}
+    <div class="row-btns"><button class="btn sm" data-retrotest="${cur}">Retrospectiva de ${esc(monthName(cur))}</button>${cur.slice(5) === '12' ? `<button class="btn sm ghost" data-retroyear="${cy}">Retrospectiva de ${cy}</button>` : ''}</div>
+    ${cur.slice(5) === '11' ? '<div class="sub">Em dezembro, chega por aqui o seu ano em retrospectiva ✨</div>' : ''}</section>`;
 }
 
 /* ---------- telas do story (1080x1920), desenhadas em canvas ---------- */
@@ -2964,31 +3048,54 @@ function rBase(c, k) {
 function rEyebrow(c, t, y) { if ('letterSpacing' in c) c.letterSpacing = '6px'; rText(c, t, 90, y, `800 40px ${RFB}`, RC.rec); if ('letterSpacing' in c) c.letterSpacing = '0px'; }
 function rCard(c, x, y, w, h, fill) { c.fillStyle = fill; c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, 36); else c.rect(x, y, w, h); c.fill(); }
 function retroSlides(s, hide, name) {
-  const mn = monthName(s.month), yr = s.month.slice(0, 4), nb = s.brands.length, weak = retroWeak(s), hl = retroHighlight(s), out = [];
+  const mn = monthName(s.month), yr = s.month.slice(0, 4), nb = s.brands.length, weak = retroWeak(s), hl = retroHighlight(s), out = [], ano = isYear(s), cap = w => w.charAt(0).toUpperCase() + w.slice(1);
   out.push(c => { /* abertura */
-    rBase(c, 0); rEyebrow(c, 'MEU MÊS DE CRIA', 660);
+    rBase(c, 0); rEyebrow(c, ano ? 'MEU ANO DE CRIA' : 'MEU MÊS DE CRIA', 660);
     c.font = `800 150px ${RFD}`;
     let y = 830; const big = (t, col) => { y = rText(c, t, 90, y, `800 150px ${RFD}`, col, { max: 900, lh: 158 }) + 158; };
-    if (name) big(name + ',', '#fff'); big(name ? 'olha o seu' : 'Olha o seu', '#fff'); big(mn + ' ✨', RC.pink);
-    rText(c, `${yr} · o que você construiu`, 90, y + 40, `600 46px ${RFB}`, RC.soft);
+    if (name) big(name + ',', '#fff'); big(name ? 'olha o seu' : 'Olha o seu', '#fff'); big(ano ? yr + ' 🎉' : mn + ' ✨', RC.pink);
+    rText(c, ano ? 'um ano inteiro do que você construiu' : `${yr} · o que você construiu`, 90, y + 40, `600 46px ${RFB}`, RC.soft);
     c.fillStyle = RC.rec; c.beginPath(); c.arc(960, 1600, 34, 0, Math.PI * 2); c.fill();
   });
-  if (s.sent || nb) out.push(c => { /* entregas e marcas */
-    rBase(c, 1); rEyebrow(c, 'ENTREGAS E MARCAS', 420);
+  if (s.sent) out.push(c => { /* entregas */
+    rBase(c, 1); rEyebrow(c, ano ? 'ENTREGAS DO ANO' : 'ENTREGAS DO MÊS', 420);
     rText(c, String(s.sent), 80, 800, `800 360px ${RFD}`, RC.pink);
     rText(c, s.sent === 1 ? 'entrega enviada' : 'entregas enviadas', 90, 900, `800 70px ${RFD}`, '#fff');
     if (s.sent) { const tx = s.onTime === s.sent ? (s.sent === 1 ? 'no prazo ✓' : 'todas no prazo ✓') : `${s.onTime} no prazo`; c.font = `800 44px ${RFB}`; const w = c.measureText(tx).width + 64; rCard(c, 90, 950, w, 84, 'rgba(244,201,216,.16)'); rText(c, tx, 122, 1006, `800 44px ${RFB}`, RC.pink); }
-    if (nb) {
+    if (ano && s.bestMonth) {
       c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(90, 1130, 900, 3);
-      rText(c, String(nb), 80, 1430, `800 260px ${RFD}`, '#fff');
-      rText(c, nb === 1 ? 'marca atendida' : 'marcas atendidas', 90, 1520, `800 64px ${RFD}`, RC.pink);
-      if (!hide) rText(c, s.brands.slice(0, 8).join(' · ') + (nb > 8 ? ` e mais ${nb - 8}` : ''), 90, 1610, `600 44px ${RFB}`, RC.soft, { max: 900, lh: 60, lines: 3 });
+      rText(c, 'Seu mês mais forte', 90, 1260, `700 52px ${RFB}`, RC.soft);
+      rText(c, cap(monthName(s.bestMonth)), 90, 1430, `800 170px ${RFD}`, '#fff');
+      rText(c, plural(s.bestMonthN, 'entrega enviada', 'entregas enviadas'), 90, 1530, `800 60px ${RFD}`, RC.pink);
     }
+    if (!ano && nb) {
+      c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(90, 1130, 900, 3);
+      rText(c, 'para', 90, 1260, `700 52px ${RFB}`, RC.soft);
+      rText(c, plural(nb, 'marca', 'marcas'), 90, 1430, `800 170px ${RFD}`, '#fff');
+    }
+  });
+  if (s.fronts.length || s.extras.length) out.push(c => { /* marcas por frente e outras rendas */
+    rBase(c, 4); rEyebrow(c, 'MARCAS E RENDAS', 400);
+    const ty = rText(c, s.fronts.length ? 'Com quem você trabalhou' : 'Onde você criou', 90, 510, `800 84px ${RFD}`, '#fff', { max: 900, lh: 92, lines: 2 });
+    const blocks = [...s.fronts.map(f => ({ h: f.front, n: plural(f.brands.length, 'marca', 'marcas'), list: hide ? '' : f.brands.join(' · ') })),
+      ...(s.extras.length ? [{ h: 'Outras fontes de renda', n: plural(extrasN(s), 'fonte', 'fontes'), list: s.extras.map(e => hide || !e.names.length ? e.type : `${e.type}: ${e.names.join(', ')}`).join(' · ') }] : [])];
+    if (s.fronts.length > 1) blocks.unshift({ h: 'No total', n: plural(nb, 'marca trabalhada', 'marcas trabalhadas'), list: '' });
+    /* quantas linhas de nomes cabem em cada bloco até o rodapé */
+    let y = ty + 90; c.font = `600 38px ${RFB}`; const bl = blocks.slice(0, 5), full = bl.map(b => b.list ? rWrap(c, b.list, 820).length : 0);
+    let lines = 4; while (lines > 1 && bl.reduce((t, b, i) => t + 216 + Math.min(full[i], lines) * 50, 0) > 1790 - y) lines--;
+    bl.forEach(b => { if (y > 1640) return;
+      c.font = `600 38px ${RFB}`; const all = b.list ? rWrap(c, b.list, 820) : [], ls = all.slice(0, lines), h = 190 + ls.length * 50;
+      rCard(c, 90, y, 900, h, 'rgba(255,255,255,.08)');
+      rText(c, b.h.toUpperCase(), 130, y + 66, `800 34px ${RFB}`, RC.rec, { max: 820, lines: 1 });
+      rText(c, b.n, 130, y + 150, `800 76px ${RFD}`, RC.pink);
+      ls.forEach((l, i) => rText(c, i === lines - 1 && all.length > lines ? l.replace(/\s*\S*$/, '…') : l, 130, y + 210 + i * 50, `600 38px ${RFB}`, RC.soft));
+      y += h + 26;
+    });
   });
   const items = [[s.rDays, s.rDays === 1 ? 'dia de rotina cumprida' : 'dias de rotina cumprida'], [s.best, 'dias seguidos: sua maior sequência'], [s.tasks, s.tasks === 1 ? 'tarefa concluída' : 'tarefas concluídas', s.briefTasks ? `${s.briefTasks} do Briefing` : ''], [s.habits, s.habits === 1 ? 'hábito cumprido' : 'hábitos cumpridos'], [s.goals, s.goals === 1 ? 'meta concluída' : 'metas concluídas']].filter(x => x[0] > (x[1].startsWith('dias seguidos') ? 1 : 0));
   if (items.length) out.push(c => { /* rotina */
     rBase(c, 2); rEyebrow(c, 'ROTINA', 420);
-    rText(c, 'Sua constância', 90, 540, `800 100px ${RFD}`, '#fff');
+    rText(c, ano ? 'Sua constância no ano' : 'Sua constância', 90, 540, `800 ${ano ? 88 : 100}px ${RFD}`, '#fff');
     const w = 435, h = 330, g = 30;
     items.forEach(([n, l, sub], i) => {
       const full = items.length % 2 === 1 && i === items.length - 1, x = 90 + (full ? 0 : (i % 2) * (w + g)), y = 640 + Math.floor(i / 2) * (h + g), ww = full ? 900 : w;
@@ -3001,16 +3108,22 @@ function retroSlides(s, hide, name) {
   out.push(c => { /* destaque ou acolhimento */
     rBase(c, 3);
     if (weak) {
-      rEyebrow(c, 'SEU MÊS', 640);
-      rText(c, 'Mês corrido?', 90, 820, `800 150px ${RFD}`, '#fff', { max: 900, lh: 158 });
+      rEyebrow(c, ano ? 'SEU ANO' : 'SEU MÊS', 640);
+      rText(c, ano ? 'Ano corrido?' : 'Mês corrido?', 90, 820, `800 150px ${RFD}`, '#fff', { max: 900, lh: 158 });
       rText(c, 'Faz parte.', 90, 990, `800 150px ${RFD}`, RC.pink);
-      rText(c, `Bora juntas em ${monthName(shiftMonth(s.month, 1))}.`, 90, 1140, `700 72px ${RFD}`, '#fff', { max: 900, lh: 84 });
+      rText(c, `Bora juntas em ${nextPeriod(s)}.`, 90, 1140, `700 72px ${RFD}`, '#fff', { max: 900, lh: 84 });
       rText(c, 'Organizar a rotina é recomeçar quantas vezes precisar. 💗', 90, 1400, `600 46px ${RFB}`, RC.soft, { max: 900, lh: 62 });
       return;
     }
-    rEyebrow(c, 'DESTAQUE DO MÊS', 420);
+    rEyebrow(c, ano ? 'CONQUISTAS DO ANO' : 'DESTAQUE DO MÊS', 420);
     let y = 560;
-    if (hl) {
+    if (ano && s.badges.length > 1) {
+      rText(c, String(s.badges.length), 90, 800, `800 260px ${RFD}`, RC.pink);
+      rText(c, 'conquistas desbloqueadas', 90, 890, `800 64px ${RFD}`, '#fff');
+      c.font = `700 40px ${RFB}`; let bx = 90, by2 = 960;
+      s.badges.slice(0, 8).forEach(n => { const w = c.measureText(n).width + 60; if (bx + w > 990) { bx = 90; by2 += 92; } rCard(c, bx, by2, w, 72, 'rgba(244,201,216,.16)'); rText(c, n, bx + 30, by2 + 50, `700 40px ${RFB}`, RC.pink); bx += w + 16; });
+      y = by2 + 72;
+    } else if (hl) {
       c.fillStyle = RC.rec; c.beginPath(); c.arc(540, 720, 150, 0, Math.PI * 2); c.fill();
       c.strokeStyle = '#fff'; c.lineWidth = 26; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(470, 725); c.lineTo(520, 775); c.lineTo(615, 670); c.stroke();
       y = rText(c, hl.name, 540, 1000, `800 96px ${RFD}`, '#fff', { align: 'center', max: 900, lh: 104, lines: 2 }) + 80;
@@ -3026,26 +3139,28 @@ function retroSlides(s, hide, name) {
     rLogo(c, 540, 930, 220, 'center');
     rText(c, 'quem cria, se organiza.', 540, 1100, `700 66px ${RFD}`, RC.pink, { align: 'center' });
     rText(c, '@criahubb', 540, 1260, `800 76px ${RFB}`, '#fff', { align: 'center' });
-    rText(c, `Meu mês de cria · ${mn} de ${yr}`, 540, 1760, `600 40px ${RFB}`, 'rgba(255,255,255,.6)', { align: 'center' });
+    rText(c, ano ? `Meu ano de cria · ${yr}` : `Meu mês de cria · ${mn} de ${yr}`, 540, 1760, `600 40px ${RFB}`, 'rgba(255,255,255,.6)', { align: 'center' });
   });
   return out;
 }
 
 /* versão discreta: uma tela só pra celebrar, sem números, marcas nem nome */
 function retroSoftTone(s) {
+  const T = retroT(s);
   if (retroWeak(s)) return ['recomeço', '🌱', 'Um passo de cada vez, no meu ritmo.'];
-  if (s.best >= 7) return ['constância', '🔥', 'Aparecendo pra mim todos os dias.'];
-  if (s.sent >= 5) return ['entregas', '🎬', 'Ideia saindo do papel e virando vídeo.'];
-  if (s.brands.length >= 3) return ['parcerias', '💌', 'Grata por cada marca que confiou em mim.'];
+  if (s.best >= T.best) return ['constância', '🔥', 'Aparecendo pra mim todos os dias.'];
+  if (s.sent >= T.sent) return ['entregas', '🎬', 'Ideia saindo do papel e virando vídeo.'];
+  if (s.brands.length >= T.brands) return ['parcerias', '💌', 'Grata por cada marca que confiou em mim.'];
+  if (extrasN(s) && (s.brands.length || extrasN(s) >= 2)) return ['muitas frentes', '💼', 'Criando de vários jeitos, do meu jeito.'];
   if (s.goals) return ['meta batida', '🎯', 'Celebrando cada passo do caminho.'];
-  if (s.tasks >= 20) return ['foco', '✅', 'Lista riscada e cabeça leve.'];
-  if (s.habits >= 20) return ['autocuidado', '💧', 'Cuidar de mim também é rotina de creator.'];
-  return ['movimento', '✨', 'Celebrando cada passo do meu mês de cria.'];
+  if (s.tasks >= T.tasks) return ['foco', '✅', 'Lista riscada e cabeça leve.'];
+  if (s.habits >= T.habits) return ['autocuidado', '💧', 'Cuidar de mim também é rotina de creator.'];
+  return ['movimento', '✨', `Celebrando cada passo do meu ${isYear(s) ? 'ano' : 'mês'} de cria.`];
 }
 function retroSoft(s) {
-  const [word, emo, sub] = retroSoftTone(s), mn = monthName(s.month);
+  const [word, emo, sub] = retroSoftTone(s), mn = periodName(s);
   return [c => {
-    rBase(c, 1); rEyebrow(c, 'MEU MÊS DE CRIA', 680);
+    rBase(c, 1); rEyebrow(c, isYear(s) ? 'MEU ANO DE CRIA' : 'MEU MÊS DE CRIA', 680);
     rText(c, `${mn.charAt(0).toUpperCase() + mn.slice(1)} foi de`, 90, 850, `800 130px ${RFD}`, '#fff', { max: 900, lh: 140 });
     let fs = 150; c.font = `800 ${fs}px ${RFD}`; while (fs > 104 && c.measureText(`${word} ${emo}`).width > 900) { fs -= 4; c.font = `800 ${fs}px ${RFD}`; }
     const y = rText(c, `${word} ${emo}`, 90, 1010, `800 ${fs}px ${RFD}`, RC.pink, { max: 900, lh: fs + 8, lines: 2 });
@@ -3061,20 +3176,20 @@ const rvList = () => RV.mode === 'soft' ? retroSoft(RV.s) : retroSlides(RV.s, RV
 const rvName = () => S.profile.name || '';
 async function openRetro(stats) {
   let mode = 'full'; try { mode = localStorage.getItem('criahub:rvmode') === 'soft' ? 'soft' : 'full'; } catch (_) {}
-  RV = { s: stats, i: 0, hide: false, mode };
+  RV = { s: { brands: [], fronts: [], extras: [], badges: [], ...stats }, i: 0, hide: false, mode };
   try { await Promise.race([Promise.all([`800 100px ${RFD}`, `700 100px ${RFD}`, `600 40px ${RFB}`, `700 40px ${RFB}`, `800 40px ${RFB}`].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]); } catch (_) {}
   sheet = { col: 'retro' }; rvRender(0);
 }
 function rvCanvas(i) { const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920; rvList()[i](cv.getContext('2d')); return cv; }
-const rvFileName = i => `meu-mes-de-cria-${RV.mode === 'soft' ? 'discreto-' : ''}${monthName(RV.s.month).normalize('NFD').replace(/[̀-ͯ]/g, '')}-${RV.s.month.slice(0, 4)}-${i + 1}.png`;
+const rvFileName = i => isYear(RV.s) ? `meu-ano-de-cria-${RV.mode === 'soft' ? 'discreto-' : ''}${RV.s.month}-${i + 1}.png` : `meu-mes-de-cria-${RV.mode === 'soft' ? 'discreto-' : ''}${monthName(RV.s.month).normalize('NFD').replace(/[̀-ͯ]/g, '')}-${RV.s.month.slice(0, 4)}-${i + 1}.png`;
 function rvRender(dir) {
   const n = rvList().length; RV.i = Math.max(0, Math.min(n - 1, RV.i));
-  if (!$('#layer .rv')) $('#layer').innerHTML = `<div class="rv" role="dialog" aria-modal="true" aria-label="Meu mês de cria">
+  if (!$('#layer .rv')) $('#layer').innerHTML = `<div class="rv" role="dialog" aria-modal="true" aria-label="${isYear(RV.s) ? 'Meu ano de cria' : 'Meu mês de cria'}">
     <div class="rv-top"><div class="rv-bars"></div><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
-    <div class="rv-seg" role="group" aria-label="Versão"><button type="button" data-rvmode="full" aria-pressed="${RV.mode === 'full'}">Completa</button><button type="button" data-rvmode="soft" aria-pressed="${RV.mode === 'soft'}">Discreta</button></div>
-    <div class="rv-hint">${RV.mode === 'soft' ? 'Uma tela só pra celebrar, sem números, marcas nem nome.' : 'Todos os seus números do mês. Prefere algo mais reservado? Use a Discreta.'}</div>
+    <div class="rv-seg" role="group" aria-label="Como ver"><button type="button" data-rvmode="full" aria-pressed="${RV.mode === 'full'}">Com os números</button><button type="button" data-rvmode="soft" aria-pressed="${RV.mode === 'soft'}">Só celebrar</button></div>
+    <div class="rv-hint">${RV.mode === 'soft' ? 'Uma tela leve, sem números, marcas nem nome. Pra celebrar do seu jeito.' : `Seu ${isYear(RV.s) ? 'ano' : 'mês'} completinho. Fica guardado aqui; compartilhar é só se você quiser.`}</div>
     <div class="rv-stage"><div class="rv-slot"></div><button type="button" class="rv-nav l" data-rv="-1" aria-label="Tela anterior"></button><button type="button" class="rv-nav r" data-rv="1" aria-label="Próxima tela"></button></div>
-    <div class="rv-acts">${RV.mode === 'full' && RV.s.brands.length ? '<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder os nomes das marcas</label>' : ''}
+    <div class="rv-acts">${RV.mode === 'full' && (RV.s.brands.length || (RV.s.extras || []).some(e => e.names.length)) ? `<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder nomes de marcas e rendas</label>` : ''}
       <div class="rv-row"><button type="button" class="btn" data-act="rvshare">Compartilhar no story</button><button type="button" class="btn ghost" data-act="rvdl">Baixar imagem</button></div>
       ${n > 1 ? `<button type="button" class="link" data-act="rvdlall">Baixar todas as ${n} telas</button>` : ''}</div></div>`;
   const hb = $('#layer [data-rvhide]'); if (hb) hb.checked = RV.hide;
@@ -3086,7 +3201,7 @@ function rvRender(dir) {
 function rvSave(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
 async function rvShare() {
   const blob = await RV.blob, file = new File([blob], rvFileName(RV.i), { type: 'image/png' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Meu mês de cria' }); } catch (e) { if (e && e.name !== 'AbortError') toast('Não consegui compartilhar. Baixe a imagem e poste pelo Instagram.'); } return; }
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: isYear(RV.s) ? 'Meu ano de cria' : 'Meu mês de cria' }); } catch (e) { if (e && e.name !== 'AbortError') toast('Não consegui compartilhar. Baixe a imagem e poste pelo Instagram.'); } return; }
   rvSave(blob, rvFileName(RV.i)); toast('Seu aparelho não compartilha direto daqui. Baixei a imagem: é só postar no story.');
 }
 /* ================= alertas da início ================= */
@@ -3276,6 +3391,7 @@ async function submitEntity(form) {
     if (ct === 'avulso') { obj.start = ''; obj.end = ''; }
     const mk = obj.mkpay; delete obj.mkpay;
     closeForm(); await put('brands', obj);
+    if (obj.status === 'ativo' && (!prev || prev.status !== 'ativo') && !obj.example) celebSource(obj.name);
     if (!prev && mk && ct !== 'avulso' && +obj.value > 0) await put('payments', { id: newId(), brandId: obj.id, desc: ct === 'ciclo' ? `${obj.name}: ciclo ${fmtD(obj.start)} a ${fmtD(obj.end)}` : `${obj.name}: pacote de ${+obj.videos || 0} vídeos`, amount: +obj.value, currency: obj.currency || 'BRL', due: obj.end || obj.start || today(), paid: false, created: new Date().toISOString() });
     toast(prev ? 'Marca atualizada' : 'Marca cadastrada'); return;
   }
@@ -3291,6 +3407,7 @@ async function submitEntity(form) {
   if (col === 'payments') { if (obj.paid && !obj.paidAt) obj.paidAt = today(); if (!obj.paid) obj.paidAt = ''; }
   if (col === 'payments' || col === 'extras') { if (CURS[obj.currency] && obj.paid && !+obj.rate && fxRate(obj.currency)) obj.rate = fxNet(obj.currency); if (!obj.paid) obj.rate = ''; }
   if (col === 'goals') { const dn = obj.kind === 'check' ? !!obj.done : (+obj.current || 0) >= Math.max(1, +obj.target || 1); obj.doneAt = dn ? (obj.doneAt || today()) : ''; }
+  if (col === 'extras' && !prev && obj.name && !S.data.extras.some(x => wpKey(x.name) === wpKey(obj.name))) { closeForm(); await put(col, obj); toast('Salvo'); celebSource(obj.name); return; }
   if (col === 'tasks' && prev && prev.date !== obj.date && !obj.done && obj.date > prev.date) obj.moved = (prev.moved || 0) + 1;
   closeForm(); await put(col, obj); toast('Salvo');
 }
@@ -3306,10 +3423,11 @@ async function renew(id) {
 }
 async function convertLead(l) {
   const ex = l.brandId && S.data.brands.find(b => b.id === l.brandId);
-  if (ex) { await put('brands', { ...ex, status: 'ativo' }); toast(`${ex.name} voltou a ser cliente!`); return; }
+  if (ex) { await put('brands', { ...ex, status: 'ativo' }); toast(`${ex.name} voltou a ser cliente!`); if (!l.example) celebSource(ex.name); return; }
   const front = leadFront(l);
   await put('brands', { id: newId(), name: l.name, contact: l.contact || '', front, status: 'ativo', ctype: defaultCtype(front), cycle: 30, start: today(), end: '', videos: '', value: l.value || '', currency: l.currency || 'BRL', notes: l.notes || '', created: new Date().toISOString(), ...(l.example ? { example: true } : {}) });
   toast(`${l.name} virou cliente! Complete os dados em Clientes.`);
+  if (!l.example) celebSource(l.name);
 }
 async function advanceLead(id) {
   const l = S.data.leads.find(x => x.id === id); if (!l) return;
@@ -3467,7 +3585,9 @@ document.addEventListener('click', async e => {
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
   if (d.retro) { const r = S.data.retros.find(x => x.id === d.retro); if (r) await openRetro(r.stats); return; }
+  if (t.hasAttribute('data-celebok')) { celebClose(); return; }
   if (d.retrotest) { await openRetro(retroStats(d.retrotest)); return; }
+  if (d.retroyear) { await openRetro(retroYearStats(d.retroyear)); return; }
   if (d.rv && RV) { const k = Number(d.rv), n = rvList().length; if (RV.i + k >= 0 && RV.i + k < n) { RV.i += k; rvRender(k); } return; }
   if (d.rvmode && RV) { if (RV.mode !== d.rvmode) { RV.mode = d.rvmode; RV.i = 0; try { localStorage.setItem('criahub:rvmode', RV.mode); } catch (_) {} $('#layer').innerHTML = ''; rvRender(0); } return; }
   if (d.act === 'rvshare' && RV) { await rvShare(); return; }
@@ -3601,7 +3721,7 @@ document.addEventListener('change', async e => {
   if (e.target.id === 'f_front' && !sheet.id && form.elements.ctype) form.elements.ctype.value = defaultCtype(e.target.value);
   if (e.target.id === 'f_front' || e.target.id === 'f_ctype') applyWhen(form);
 });
-document.addEventListener('keydown', e => { if ($('#tp')) { if (e.key === 'Escape') closePrompter(); else if (e.key === ' ') { e.preventDefault(); tpCmd('play'); } return; } if (sheet?.col === 'retro' && RV && /^Arrow(Left|Right)$/.test(e.key)) { document.querySelector(`[data-rv="${e.key === 'ArrowRight' ? 1 : -1}"]`)?.click(); return; } if (e.key === 'Escape' && sheet) { closeForm(); applyAccent(); } });
+document.addEventListener('keydown', e => { if ($('#tp')) { if (e.key === 'Escape') closePrompter(); else if (e.key === ' ') { e.preventDefault(); tpCmd('play'); } return; } if (e.key === 'Escape' && document.querySelector('.celeb')) { celebClose(); return; } if (sheet?.col === 'retro' && RV && /^Arrow(Left|Right)$/.test(e.key)) { document.querySelector(`[data-rv="${e.key === 'ArrowRight' ? 1 : -1}"]`)?.click(); return; } if (e.key === 'Escape' && sheet) { closeForm(); applyAccent(); } });
 document.addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, kind = f.dataset.form;
   if (kind === 'entity') return submitEntity(f);
