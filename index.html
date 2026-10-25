@@ -3018,7 +3018,7 @@ function retroList() {
   return `<section class="section"><div class="row-h"><h2>Minhas retrospectivas</h2></div>
     ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria. Quer ver como está indo? Toque abaixo.</div>'}
     <div class="row-btns"><button class="btn sm" data-retrotest="${cur}">Retrospectiva de ${esc(monthName(cur))}</button>${cur.slice(5) === '12' ? `<button class="btn sm ghost" data-retroyear="${cy}">Retrospectiva de ${cy}</button>` : ''}</div>
-    ${cur.slice(5) === '11' ? '<div class="sub">Em dezembro, uma lembrancinha do seu ano chega por aqui ✨</div>' : ''}</section>`;
+    ${cur.slice(5) === '11' ? '<div class="sub">Em dezembro, chega por aqui o seu ano em retrospectiva ✨</div>' : ''}</section>`;
 }
 
 /* ---------- telas do story (1080x1920), desenhadas em canvas ---------- */
