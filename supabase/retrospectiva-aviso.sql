@@ -1,15 +1,19 @@
 -- CriaHub · aviso da retrospectiva (usa a ação "send" da função push que já existe)
--- Rode uma vez no SQL Editor. Ninguém precisa ver nem copiar chave:
+-- Instalação completa (pode rodar de novo sem problema: nada é duplicado):
 --   1. liga o agendador (pg_cron) e as chamadas HTTP do banco (pg_net)
 --   2. o banco sorteia uma chave própria da retrospectiva e guarda no schema private
 --   3. radar_key_ok passa a aceitar a chave do Radar (id 1) e essa nova (id 2)
---   4. todo dia às 19h de Brasília o banco confere a data e, só no dia certo, avisa todas as creators:
---        • último dia de cada mês → "Sua retrospectiva de <mês> chegou ✨" (abre a do mês)
---        • 1º de dezembro        → "Sua retrospectiva de <ano> chegou 🎉" (abre a do ano)
+--   4. todo dia às 9h de Brasília (12h UTC) o banco confere a data e, só no dia 1º, avisa todas as creators
+--      com UMA notificação:
+--        • dia 1º de jan a nov → "Sua retrospectiva de <mês anterior> chegou ✨" (abre a do mês anterior)
+--        • 1º de dezembro      → "Sua retrospectiva de <ano> chegou 🎉 / E a de novembro também já está
+--                                 te esperando ✨" (abre a do ano; a de novembro fica no card logo abaixo)
+-- Para só mudar o horário ou as mensagens, basta rodar o bloco a partir de "AGENDAMENTO".
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
 create table if not exists private.retro_key (id int primary key default 1, key text not null);
+alter table private.retro_key enable row level security;
 revoke all on private.retro_key from anon, authenticated;
 insert into private.retro_key (id, key)
   values (1, replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''))
@@ -23,18 +27,20 @@ create or replace function public.radar_key_ok(p_key text) returns boolean
   select coalesce(encode(sha256(convert_to(p_key, 'UTF8')), 'hex') in (select key_hash from private.radar_key where key_hash is not null), false)
 $function$;
 
+-- AGENDAMENTO ------------------------------------------------------------------------------------------
 select cron.unschedule('retrospectiva-criahub') where exists (select 1 from cron.job where jobname = 'retrospectiva-criahub');
-select cron.schedule('retrospectiva-criahub', '0 22 * * *', $cron$
+select cron.schedule('retrospectiva-criahub', '0 12 * * *', $cron$
   with d as (select (now() at time zone 'America/Sao_Paulo')::date as hoje),
   m as (
     select case
-      when extract(month from hoje) = 12 and extract(day from hoje) = 1 then jsonb_build_object(
+      when extract(day from hoje) <> 1 then null
+      when extract(month from hoje) = 12 then jsonb_build_object(
         'title', 'Sua retrospectiva de ' || extract(year from hoje)::int || ' chegou 🎉',
-        'body', 'Veja tudo o que você construiu no ano: marcas, entregas e conquistas.',
+        'body', 'E a de novembro também já está te esperando ✨',
         'url', '/#anodecria', 'tag', 'anodecria')
-      when extract(day from hoje + 1) = 1 then jsonb_build_object(
-        'title', 'Sua retrospectiva de ' || (array['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'])[extract(month from hoje)::int] || ' chegou ✨',
-        'body', 'Veja o que você construiu neste mês. Toque pra abrir.',
+      else jsonb_build_object(
+        'title', 'Sua retrospectiva de ' || (array['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'])[extract(month from hoje - 1)::int] || ' chegou ✨',
+        'body', 'O mês fechou! Veja o que você construiu. Toque pra abrir.',
         'url', '/#mesdecria', 'tag', 'mesdecria')
     end as msg from d
   )
