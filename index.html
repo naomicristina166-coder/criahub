@@ -740,6 +740,14 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .cd.sel{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg) inset}
 .cd .dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}.cd .dot{width:6px;height:6px;border-radius:50%}
 .cd .ev{font-size:9.5px;font-weight:700;line-height:1.15;color:var(--warn);text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%}
+.cd.hasdv{border-color:color-mix(in oklab, #FF5C8A 60%, var(--line));background:color-mix(in oklab, #FF5C8A 9%, var(--surface))}
+.cnt{display:inline-block;min-width:16px;height:16px;padding:0 5px;border-radius:999px;background:#FF5C8A;color:#fff;font-size:10.5px;font-weight:800;line-height:16px;text-align:center;font-variant-numeric:tabular-nums}
+.wp{display:flex;flex-direction:column;gap:10px}
+.wp-day{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
+.wp-it select{flex:1 1 100%;min-height:40px}
+.toast-a{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
 .dot.d-dv{background:#FF5C8A}.dot.d-tk{background:var(--fg)}.dot.d-nt{background:#E0A100}.dot.d-ps{background:#2E9E6B}
 .callg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.callg span{display:inline-flex;align-items:center;gap:5px}
 .ntc{display:flex;flex-direction:column;gap:4px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-left:4px solid #E0A100;border-radius:12px;padding:10px 12px;font:inherit;color:var(--fg);cursor:pointer}
@@ -1616,7 +1624,7 @@ function tkRow(t, showDate) {
   return `<div class="tk ${t.done ? 'done' : ''}">
     <button class="tk-check ${t.done ? 'on' : ''}" data-tdone="${t.id}" aria-label="${t.done ? 'Desmarcar' : 'Concluir'} ${esc(t.title)}">${ic('check')}</button>
     <button class="open" data-edit="tasks:${t.id}"><span class="t">${esc(t.title)}</span>
-      <span class="m">${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
+      <span class="m">${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
     ${!t.done ? `<a class="gcal" href="${esc(gcalUrl(t))}" target="_blank" rel="noopener" title="Criar lembrete no Google Agenda">${ic('bell').replace('class="i"', 'class="i" style="width:13px;height:13px;vertical-align:-2px"')} Agenda</a>` : '<span></span>'}
   </div>`;
 }
@@ -1980,12 +1988,123 @@ async function createFromBrief() {
   const clean = { titulo: String(r.titulo || ''), resumo: String(r.resumo || ''), obrigatorio: arr(r.obrigatorio), proibido: arr(r.proibido), cta: String(r.cta || ''), tom: String(r.tom || ''), publico: String(r.publico || ''), duvidas: arr(r.duvidas), entregas: ents.map(e => ({ titulo: String(e.titulo || ''), formato: String(e.formato || ''), prazo: String(e.prazo || ''), duracao: String(e.duracao || ''), gancho: String(e.gancho || ''), roteiro: String(e.roteiro || ''), cenas: arr(e.cenas) })) };
   const briefId = newId();
   await put('briefs', { id: briefId, brandId: bid, title: clean.titulo || 'Briefing', data: clean, raw: c.bIn.slice(0, 20000), created: new Date().toISOString() });
+  const made = [];
   for (const e of clean.entregas) {
     const due = /^\d{4}-\d{2}-\d{2}$/.test(e.prazo) ? e.prazo : addDays(today(), 3);
-    await put('deliveries', { id: newId(), title: e.titulo || clean.titulo || 'Entrega', brandId: bid, format: FORMATS.includes(e.formato) ? e.formato : 'Reels', due, stage: 0, script: (e.gancho ? 'GANCHO: ' + e.gancho + '\n\n' : '') + e.roteiro, scenes: e.cenas.map(t => ({ t, done: false })), briefId, notes: [e.duracao ? 'Duração: ' + e.duracao : '', clean.cta ? 'CTA: ' + clean.cta : ''].filter(Boolean).join('\n'), created: new Date().toISOString() });
+    const dl = { id: newId(), title: e.titulo || clean.titulo || 'Entrega', brandId: bid, format: FORMATS.includes(e.formato) ? e.formato : 'Reels', due, stage: 0, script: (e.gancho ? 'GANCHO: ' + e.gancho + '\n\n' : '') + e.roteiro, scenes: e.cenas.map(t => ({ t, done: false })), briefId, notes: [e.duracao ? 'Duração: ' + e.duracao : '', clean.cta ? 'CTA: ' + clean.cta : ''].filter(Boolean).join('\n'), created: new Date().toISOString() };
+    made.push(dl); await put('deliveries', dl);
   }
   c.bRes = null; c.bIn = ''; c.bImgs = []; render();
+  if (made.length) { const lbl = bid ? brandName(bid) : clean.titulo; S.wp = { tasks: wpPlan(made, lbl), brandId: bid, briefId, nDel: made.length, label: lbl, adjust: false }; openWeekPlan(); return; }
   toast(clean.entregas.length ? `${clean.entregas.length} entrega${clean.entregas.length === 1 ? '' : 's'} criada${clean.entregas.length === 1 ? '' : 's'} na Agenda` : 'Briefing salvo');
+}
+/* ================= briefing → semana montada (sem IA: tudo calculado aqui) ================= */
+const WP_CAP = 3; /* itens do briefing por dia, quando der */
+const WP_STEP = { gravar: 2, enviar: 3 }; /* etapa da entrega depois que a tarefa é feita */
+const WP_ORDER = { gravar: 0, editar: 1, revisar: 2, enviar: 3 };
+const WP_PILL = { gravar: ['Gravar', 'p-acc'], editar: ['Editar', 'p-warn'], revisar: ['Revisar', 'p-mute'], enviar: ['Enviar', 'p-ok'] };
+const lcFirst = w => /^\p{Lu}\p{Ll}/u.test(w) ? w.charAt(0).toLowerCase() + w.slice(1) : w;
+function ptPlural(w) {
+  if (/s$/i.test(w)) return w;
+  if (/ão$/i.test(w)) return w.slice(0, -2) + 'ões';
+  if (/[^aeiou]y$/i.test(w)) return w.slice(0, -1) + 'ies';
+  if (/[rz]$/i.test(w)) return w + 'es';
+  if (/al$/i.test(w)) return w.slice(0, -1) + 'is';
+  if (/m$/i.test(w)) return w.slice(0, -1) + 'ns';
+  return w + 's';
+}
+/* separa "Reação 01" em { base: 'Reação', num: 1 } e "Vídeo 2 - Unboxing" em { base: 'Unboxing', num: 2 } */
+function wpParts(title) {
+  const t = String(title || '').trim();
+  let m = /^(?:v[ií]deo|entrega|reels?|tiktok|post)\s*(?:n[ºo°.]?\s*)?#?(\d{1,3})\s*[-–—:|.)]\s*(.+)$/i.exec(t);
+  if (m) return { base: m[2].trim(), num: +m[1] };
+  m = /^(.*?)[\s\-–—:#(]*(?:n[ºo°.]\s*)?(\d{1,3})\)?\s*$/i.exec(t);
+  if (m && m[1].trim()) return { base: m[1].trim(), num: +m[2] };
+  return { base: t, num: null };
+}
+const wpKey = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+/* agrupa por tipo de vídeo (título sem a numeração); se nada se repete, agrupa pelo formato */
+function wpGroups(dels) {
+  const by = (keyOf, baseOf) => { const m = new Map(); dels.forEach(d => { const k = keyOf(d); if (!m.has(k)) m.set(k, { base: baseOf(d), items: [] }); m.get(k).items.push(d); }); return [...m.values()]; };
+  let gs = by(d => wpKey(wpParts(d.title).base), d => wpParts(d.title).base);
+  if (gs.length === dels.length && dels.length > 1) gs = by(d => d.format || 'Reels', d => d.format || 'Reels').map(g => ({ ...g, byFormat: true }));
+  return gs;
+}
+function wpRecTitle(g, sfx) {
+  const n = g.items.length, nums = g.items.map(d => wpParts(d.title).num), oneWord = !/\s/.test(g.base);
+  if (n === 1) return `Gravar ${g.items[0].title}${sfx}`;
+  if (g.byFormat) return oneWord ? `Gravar ${n} ${ptPlural(g.base)}${sfx}` : `Gravar ${n} vídeos · ${g.base}${sfx}`;
+  if (oneWord) return `Gravar ${n} ${ptPlural(lcFirst(g.base))}${sfx}`;
+  if (nums.every(x => x != null)) { const a = Math.min(...nums), b = Math.max(...nums); if (b - a + 1 === n) return `Gravar ${lcFirst(g.base)} ${pad(a)}–${pad(b)}${sfx}`; }
+  return `Gravar ${lcFirst(g.base)} (${n} vídeos)${sfx}`;
+}
+/* distribui gravar → editar → enviar do dia seguinte até o prazo de cada lote */
+function wpPlan(dels, lbl) {
+  const t = today(), start = addDays(t, 1), load = {}, out = [], sfx = lbl ? ` (${lbl})` : '';
+  S.data.tasks.filter(x => x.briefId && !x.done && x.date >= t).forEach(x => { load[x.date] = (load[x.date] || 0) + 1; });
+  const add = (d, k) => { load[d] = (load[d] || 0) + k; };
+  const fits = k => d => (load[d] || 0) + k <= WP_CAP;
+  const free = r => r.filter(d => !isWorkDay(d)), work = r => r.filter(d => isWorkDay(d));
+  /* tenta cada lista na ordem de prioridade; se todas estão cheias, vai no dia mais leve (de preferência livre) */
+  const pick = (lists, k) => { for (const l of lists) { const d = l.find(fits(k)); if (d) return d; } const all = [...new Set(lists.flat())], fr = free(all); return [...(fr.length ? fr : all)].sort((a, b) => (load[a] || 0) - (load[b] || 0) || a.localeCompare(b))[0]; };
+  const lots = {}; dels.forEach(d => (lots[d.due] = lots[d.due] || []).push(d));
+  Object.keys(lots).sort().forEach(due => {
+    const items = lots[due], N = items.length, last = due < start ? (due < t ? t : due) : due, days = [];
+    for (let d = due < start ? last : start; d <= last; d = addDays(d, 1)) days.push(d);
+    /* gravar: de preferência até 2 dias antes do prazo; se lá não tem dia livre, a véspera livre também serve */
+    const n = days.length, ideal = n >= 3 ? days.slice(0, n - 2) : days.slice(0, 1), ext = n >= 3 ? [days[n - 2]] : [];
+    const recLists = [free(ideal), free(ext), work(ideal), work(ext)];
+    const mk = (step, title, date, ids) => ({ key: newId(), step, title, date, delIds: ids, max: last });
+    let lastRec = days[0];
+    wpGroups(items).forEach(g => { const d = pick(recLists, 1); add(d, 1); if (d > lastRec) lastRec = d; out.push(mk('gravar', wpRecTitle(g, sfx), d, g.items.map(x => x.id))); });
+    const edR = days.filter(d => d > lastRec && d < last), edRange = edR.length ? edR : [last], ed = pick([free(edRange), work(edRange)], 2); add(ed, 2);
+    const all = items.map(x => x.id), one = N === 1 ? items[0].title : '';
+    out.push(mk('editar', one ? `Editar ${one}${sfx}` : `Editar as ${N}${sfx}`, ed, all));
+    out.push(mk('revisar', 'Revisar legendas', ed, all));
+    add(last, 1); out.push(mk('enviar', one ? `Enviar ${one}${lbl ? ' pra ' + lbl : ''}` : `Enviar as ${N}${lbl ? ' pra ' + lbl : ' entregas'}`, last, all));
+  });
+  return out;
+}
+const wpSort = a => [...a].sort((x, y) => x.date.localeCompare(y.date) || WP_ORDER[x.step] - WP_ORDER[y.step]);
+function openWeekPlan() {
+  const p = S.wp; if (!p) return;
+  const keep = $('#layer .sheet')?.scrollTop || 0, t = today(), list = wpSort(p.tasks), days = [...new Set(list.map(x => x.date))];
+  const dayOpts = x => { const o = []; for (let d = t; d <= x.max; d = addDays(d, 1)) o.push(`<option value="${d}" ${d === x.date ? 'selected' : ''}>${esc(dayLabel(d))}${S.profile.workMode && isWorkDay(d) ? ' · ' + esc(workLabel()) : ''}</option>`); return o.join(''); };
+  const order = list.some(a => list.some(b => a.delIds.some(id => b.delIds.includes(id)) && WP_ORDER[a.step] < WP_ORDER[b.step] && a.date > b.date));
+  sheet = { col: 'weekplan' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Sua semana montada">
+    <div class="sh"><h2>Sua semana montada</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">${p.nDel} entrega${p.nDel === 1 ? '' : 's'} criada${p.nDel === 1 ? '' : 's'} na Agenda. Separei o trabalho por etapa, na ordem gravar → editar → enviar${S.profile.workMode ? `, com a gravação nos seus dias livres de ${esc(workLabel())} sempre que der` : ''}.</div>
+    <div class="wp">${days.map(d => `<div class="wp-day"><div class="wp-dh"><b>${esc(dayLabel(d))}</b><span class="sub">${esc(fmtD(d))}${S.profile.workMode ? ` · ${isWorkDay(d) ? 'dia de ' + esc(workLabel()) : 'dia livre'}` : ''}</span></div>
+      ${list.filter(x => x.date === d).map(x => `<div class="wp-it"><span class="pill ${WP_PILL[x.step][1]}">${WP_PILL[x.step][0]}</span><span class="t">${esc(x.title)}</span>${p.adjust ? `<select data-wpday="${x.key}" aria-label="Dia de: ${esc(x.title)}">${dayOpts(x)}</select>` : ''}</div>`).join('')}</div>`).join('')}</div>
+    ${order ? '<div class="err">Atenção: alguma etapa ficou antes da anterior (ex.: editar antes de gravar).</div>' : ''}
+    <div class="sub">Ao marcar uma tarefa como feita no Meu dia, as entregas dela avançam sozinhas na Agenda: gravou, vão pra Edição; enviou, ficam como Enviado.</div>
+    <div class="foot"><button type="button" class="btn ghost" data-act="wpadjust">${p.adjust ? 'Pronto' : 'Ajustar'}</button><div class="r"><button type="button" class="btn" data-act="wpsave">Salvar na minha rotina</button></div></div>
+  </div></div>`;
+  const sh = $('#layer .sheet'); if (sh) sh.scrollTop = keep;
+}
+async function saveWeekPlan() {
+  const p = S.wp; if (!p) return; S.wp = null; closeForm();
+  const names = id => S.data.deliveries.find(v => v.id === id)?.title || '';
+  for (const x of wpSort(p.tasks)) await put('tasks', { id: newId(), title: x.title, date: x.date, time: '', done: false, brandId: p.brandId || '', notes: 'Entregas: ' + x.delIds.map(names).filter(Boolean).join(', '), briefId: p.briefId, step: x.step, delIds: x.delIds, created: new Date().toISOString() });
+  const first = wpSort(p.tasks)[0]?.date || today();
+  toastAct(`${p.nDel} entrega${p.nDel === 1 ? ' criada' : 's criadas'} e sua semana está montada`, 'ver no Meu dia', `data-gomyday="${first}"`);
+}
+/* marcar/desmarcar tarefa do briefing faz as entregas dela andarem (ou voltarem) na Agenda */
+async function setTaskDone(x, done) {
+  const upd = { ...x, done, doneAt: done ? today() : '' }, st = WP_STEP[x.step]; let moved = 0;
+  if (st != null && Array.isArray(x.delIds)) {
+    const prev = { ...(x.prev || {}) };
+    for (const id of x.delIds) {
+      const dl = S.data.deliveries.find(v => v.id === id); if (!dl) continue; const cur = dl.stage || 0;
+      if (done && cur < st) { prev[id] = cur; moved++; await put('deliveries', { ...dl, stage: st }); }
+      else if (!done && cur === st && prev[id] != null) { const back = prev[id]; delete prev[id]; moved++; await put('deliveries', { ...dl, stage: back }); }
+    }
+    upd.prev = prev;
+  }
+  await put('tasks', upd);
+  if (moved) toast(done ? `${moved} entrega${moved === 1 ? (st === 3 ? ' marcada como Enviado' : ' foi pra Edição') : (st === 3 ? 's marcadas como Enviado' : 's foram pra Edição')}` : `${moved} entrega${moved === 1 ? ' voltou' : 's voltaram'} de etapa na Agenda`);
+  return moved;
 }
 function openBrief(id) {
   const x = S.data.briefs.find(v => v.id === id); if (!x) return;
@@ -2574,16 +2693,17 @@ function vCalendar() {
   const by = (arr, k, d) => arr.filter(x => x[k] === d);
   const cell = d => {
     const inM = d.slice(0, 7) === m, cd = cds.filter(x => x.date === d), sp = by(nts, 'date', d).filter(n => n.special);
-    const dots = [by(dv, 'due', d).length ? '<span class="dot d-dv"></span>' : '', by(tks, 'date', d).length ? '<span class="dot d-tk"></span>' : '', by(nts, 'date', d).length ? '<span class="dot d-nt"></span>' : '', cds.some(x => x.start === d) ? '<span class="dot d-ps"></span>' : ''].join('');
+    const nDv = by(dv, 'due', d).length;
+    const dots = [nDv ? `<span class="cnt" aria-hidden="true">${nDv}</span>` : '', by(tks, 'date', d).length ? '<span class="dot d-tk"></span>' : '', by(nts, 'date', d).length ? '<span class="dot d-nt"></span>' : '', cds.some(x => x.start === d) ? '<span class="dot d-ps"></span>' : ''].join('');
     const ev = [...cd.map(x => x.name), ...sp.map(n => n.title)][0];
-    return `<button class="cd ${inM ? '' : 'out'} ${d === t ? 'tdy' : ''} ${d === sel ? 'sel' : ''}" data-calday="${d}" aria-label="${esc(dayLabel(d))}${ev ? ', ' + esc(ev) : ''}"><span class="n">${+d.slice(8)}</span><span class="dots">${dots}</span>${ev ? `<span class="ev">${esc(ev)}</span>` : ''}</button>`;
+    return `<button class="cd ${inM ? '' : 'out'} ${d === t ? 'tdy' : ''} ${d === sel ? 'sel' : ''} ${nDv ? 'hasdv' : ''}" data-calday="${d}" aria-label="${esc(dayLabel(d))}${nDv ? `, ${nDv} entrega${nDv > 1 ? 's' : ''}` : ''}${ev ? ', ' + esc(ev) : ''}"><span class="n">${+d.slice(8)}</span><span class="dots">${dots}</span>${ev ? `<span class="ev">${esc(ev)}</span>` : ''}</button>`;
   };
   const days = Array.from({ length: weeks * 7 }, (_, i) => addDays(start, i));
   const sDv = by(dv, 'due', sel), sTk = by(tks, 'date', sel), sNt = by(nts, 'date', sel), sCd = cds.filter(x => x.date === sel), sPs = cds.filter(x => x.start === sel);
   const coming = [...upcomingDates().slice(0, 3).map(x => ({ d: x.date, t: x.name, s: x.start <= t ? 'Hora de prospectar' : 'prospectar a partir de ' + fmtD(x.start) })), ...nts.filter(n => n.special && n.date >= t).map(n => ({ d: n.date, t: n.title, s: 'sua data' }))].sort((a, b) => a.d.localeCompare(b.d)).slice(0, 4);
   return `<section class="section"><div class="calnav"><button class="iconbtn" data-calm="-1" aria-label="Mês anterior">‹</button><h2>${esc((s => s.charAt(0).toUpperCase() + s.slice(1))(first.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })))}</h2><button class="iconbtn" data-calm="1" aria-label="Próximo mês">›</button></div>
     <div class="calg">${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(w => `<span class="wd">${w}</span>`).join('')}${days.map(cell).join('')}</div>
-    <div class="callg"><span><i class="dot d-dv" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Entrega</span><span><i class="dot d-tk" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Tarefa</span><span><i class="dot d-nt" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Observação</span><span><i class="dot d-ps" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Começar a prospectar</span>${m !== t.slice(0, 7) ? '<button class="link" data-calm="0">Voltar para hoje</button>' : ''}</div></section>
+    <div class="callg"><span><i class="cnt" style="font-style:normal">3</i>Entregas no dia</span><span><i class="dot d-tk" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Tarefa</span><span><i class="dot d-nt" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Observação</span><span><i class="dot d-ps" style="display:inline-block;width:8px;height:8px;border-radius:50%"></i>Começar a prospectar</span>${m !== t.slice(0, 7) ? '<button class="link" data-calm="0">Voltar para hoje</button>' : ''}</div></section>
   <section class="section"><div class="row-h"><h2>${esc(dayLabel(sel))}</h2><div class="row-btns"><button class="btn sm ghost" data-calnew="tasks">${ic('plus')}Tarefa</button><button class="btn sm ghost" data-calnew="notes">${ic('plus')}Observação</button></div></div>
     ${sCd.map(x => `<article class="card date-card open"><div><h3>${esc(x.name)}</h3><div class="sub">Data comemorativa · ideias de conteúdo:</div></div><div class="chips">${x.ideas.map(i => `<span class="chip" style="cursor:default">${esc(i)}</span>`).join('')}</div><div class="row-btns"><button class="btn sm ghost" data-didea="${x.key}|${x.date}">Salvar ideias</button></div></article>`).join('')}
     ${sPs.map(x => `<article class="card date-card"><div><h3>Hora de prospectar: ${esc(x.name)}</h3><div class="sub">Faltam ${diff(sel, x.date)} dias para ${esc(x.name)}. As marcas fecham campanhas agora — aborde as marcas hoje.</div></div><div class="row-btns"><button class="btn sm" data-dtask="${x.key}|${x.date}">${ic('plus')}Tarefa de prospecção</button></div></article>`).join('')}
@@ -3027,6 +3147,7 @@ async function clearExamples() {
 
 /* ================= toast ================= */
 let tt;
+function toastAct(msg, label, attrs) { toast(msg); const el = $('#toast'); el.innerHTML = `${esc(msg)} — <button type="button" class="toast-a" ${attrs}>${esc(label)}</button>`; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 7000); }
 function toast(msg) { let el = $('#toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); } el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2600); }
 
 /* ================= events ================= */
@@ -3097,6 +3218,9 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.act === 'wpadjust') { if (S.wp) { S.wp.adjust = !S.wp.adjust; openWeekPlan(); } return; }
+  if (d.act === 'wpsave') { await saveWeekPlan(); return; }
+  if (d.gomyday) { $('#toast').hidden = true; closeForm(); S.tab = 'rotina'; S.f.rview = 'hoje'; S.f.day = d.gomyday; try { sessionStorage.setItem('criahub:tab', 'rotina'); } catch (_) {} render(); window.scrollTo(0, 0); return; }
   if (d.act === 'briefclear') { S.ct.bRes = null; render(); return; }
   if (d.openbrief) { openBrief(d.openbrief); return; }
   if (d.act === 'review') { const c = S.ct, dl = S.data.deliveries.find(x => x.id === c.rDeliv); if (!dl) { toast('Escolha a entrega'); return; } if (!c.rImgs.length && !c.rTxt.trim()) { toast('Envie prints ou cole o roteiro'); return; } await gated('studio', () => ask('rvOut', reviewPrompt(dl, briefFor(dl), c.rImgs.length), c.rImgs)); return; }
@@ -3124,7 +3248,7 @@ document.addEventListener('click', async e => {
   if (d.day) { S.f.day = d.day === '0' ? today() : addDays(S.f.day, Number(d.day)); render(); return; }
   if (d.goday) { S.f.day = d.goday; S.f.rview = 'hoje'; render(); window.scrollTo(0, 0); return; }
   if (d.wk) { S.f.wk = Math.min(0, S.f.wk + Number(d.wk)); render(); return; }
-  if (d.tdone) { const x = S.data.tasks.find(v => v.id === d.tdone); if (x) { await put('tasks', { ...x, done: !x.done, doneAt: !x.done ? today() : '' }); if (!x.done) { const left = tasksOn(x.date).filter(v => !v.done).length; if (!left && x.date === today()) toast('Dia fechado. Tudo feito!'); } } return; }
+  if (d.tdone) { const x = S.data.tasks.find(v => v.id === d.tdone); if (x) { const mv = await setTaskDone(x, !x.done); if (!x.done && !mv) { const left = tasksOn(x.date).filter(v => !v.done).length; if (!left && x.date === today()) toast('Dia fechado. Tudo feito!'); } } return; }
   if (d.hstep) { const [id, v] = d.hstep.split(':'); await habitStep(id, v); return; }
   if (d.gstep) { const [id, v] = d.gstep.split(':'); const g = S.data.goals.find(x => x.id === id); if (!g) return; let ng;
     if (v === 't') ng = { ...g, done: !g.done, doneAt: !g.done ? today() : '' };
@@ -3132,7 +3256,7 @@ document.addEventListener('click', async e => {
     await put('goals', ng); return; }
   if (d.hsugg) { const h = HABIT_SUGG[+d.hsugg]; if (h) { await put('habits', { id: newId(), ...h, active: true, created: new Date().toISOString() }); toast(`${h.name} adicionado`); } return; }
   if (d.gsugg) { const txt = GOAL_SUGG[+d.gsugg] || ''; const m = /(\d[\d.]*)/.exec(txt); const money = /R\$/.test(txt); openForm('goals', null, { title: txt, kind: m ? 'numero' : 'check', target: m ? Number(m[1].replace(/\./g, '')) : '', unit: money ? 'reais' : /marcas/.test(txt) ? 'marcas' : 'vídeos', money, current: 0 }); return; }
-  if (d.nudge) { const n = NUDGE.cur; if (!n) return; if (d.nudge === 'ok') { if (n.kind === 'task') { const x = S.data.tasks.find(v => v.id === n.id); if (x) await put('tasks', { ...x, done: true, doneAt: today() }); NUDGE.seen[n.key] = 1; } else await habitStep(n.id, 1); } else { NUDGE.snooze[n.key] = Date.now() + 20 * 60000; if (n.kind === 'habit') NUDGE.snooze[n.key] = Date.now(); } NUDGE.cur = null; render(); setTimeout(checkNudges, 300); return; }
+  if (d.nudge) { const n = NUDGE.cur; if (!n) return; if (d.nudge === 'ok') { if (n.kind === 'task') { const x = S.data.tasks.find(v => v.id === n.id); if (x) await setTaskDone(x, true); NUDGE.seen[n.key] = 1; } else await habitStep(n.id, 1); } else { NUDGE.snooze[n.key] = Date.now() + 20 * 60000; if (n.kind === 'habit') NUDGE.snooze[n.key] = Date.now(); } NUDGE.cur = null; render(); setTimeout(checkNudges, 300); return; }
   if (d.act === 'carry') { for (const x of lateTasks()) await put('tasks', { ...x, date: today(), moved: (x.moved || 0) + 1 }); toast('Pendências trazidas pra hoje'); return; }
   if (d.act === 'replan') { const w = weekData(S.f.wk), nws = addDays(weekStart(today()), 7 * Math.max(1, S.f.wk + 1)); const free = [0, 1, 2, 3, 4, 5, 6].filter(i => !isWorkDay(addDays(nws, i)) && i < 5); const days = free.length ? free : [0, 1, 2, 3, 4]; const load = days.map(i => S.data.tasks.filter(x => x.date === addDays(nws, i) && !x.done).length);
     for (const x of w.tOpen) { const j = load.indexOf(Math.min(...load)); load[j]++; await put('tasks', { ...x, date: addDays(nws, days[j]), moved: (x.moved || 0) + 1 }); }
@@ -3186,7 +3310,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'settings') { openSettings(); return; }
   if (d.act === 'toggletheme') { await setTheme(isDark() ? 'light' : 'dark'); return; }
   if (d.themeset) { document.querySelectorAll('[data-themeset]').forEach(b => b.setAttribute('aria-pressed', b === t)); await setTheme(d.themeset); return; }
-  if (d.act === 'close') { closeForm(); applyAccent(); return; }
+  if (d.act === 'close') { const wp = sheet?.col === 'weekplan' && S.wp; closeForm(); applyAccent(); if (wp) { S.wp = null; toast(`${wp.nDel} entrega${wp.nDel === 1 ? ' criada' : 's criadas'} na Agenda. A semana não foi salva na rotina.`); } return; }
   if (d.act === 'examples') { await loadExamples(); return; }
   if (d.act === 'clearex') { await clearExamples(); return; }
   if (d.act === 'delete') {
@@ -3209,6 +3333,7 @@ document.addEventListener('change', async e => {
       if (window.criahubImport) { await window.criahubImport(j); return; }
       for (const c of COLS) for (const o of (Array.isArray(j.data[c]) ? j.data[c] : [])) if (o && o.id) await put(c, o);
       await saveProfile({ ...(j.profile || {}), ...S.profile }); toast('Dados importados'); } catch (_) { toast('Arquivo inválido. Use um backup exportado do CriaHub.'); } return; }
+  if (e.target.dataset?.wpday && S.wp) { const x = S.wp.tasks.find(v => v.key === e.target.dataset.wpday); if (x) { x.date = e.target.value; openWeekPlan(); } return; }
   if (e.target.matches('[data-fag]')) { S.f.agBrand = e.target.value; render(); return; }
   if (e.target.dataset?.pr) { const k = e.target.dataset.pr; PR[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; prUpdate(); return; }
   if (e.target.id === 'r_deliv' || e.target.id === 'g_deliv') { const k = e.target.id === 'r_deliv' ? 'rDeliv' : 'gDeliv'; S.ct[k] = e.target.value; if (k === 'rDeliv') { const dl = S.data.deliveries.find(x => x.id === e.target.value); S.ct.rvOut = ''; if (dl && !S.ct.rTxt.trim()) S.ct.rTxt = dl.script || ''; } render(); return; }
