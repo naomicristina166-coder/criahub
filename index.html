@@ -464,6 +464,7 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke
 .btn.soft{background:var(--accent-soft);color:var(--accent-ink)}
 .btn.danger{background:transparent;color:var(--bad);border-color:color-mix(in oklab, var(--bad) 40%, var(--line))}
 .btn.danger.armed{background:var(--bad);color:#fff}
+.btn.soft.armed{background:var(--warn);color:#fff}
 .btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
 .link{background:none;border:0;padding:0;color:var(--accent-ink);font-weight:700;font-size:13.5px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
@@ -747,6 +748,22 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.bc-open{display:block;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;min-width:0}.bc-open .bc-go{color:var(--muted);font-weight:500}
+.bp-back{align-self:flex-start;margin-bottom:-10px}
+.bp-cyc{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}@media (max-width:520px){.bp-cyc{grid-template-columns:1fr 1fr}.bp-cyc .btn{grid-column:1 / -1}}
+.bp-edit summary{cursor:pointer;font-weight:700;color:var(--accent-ink);font-size:14px}.bp-edit[open] summary{margin-bottom:10px}
+.plat-cmp{display:flex;flex-direction:column;gap:14px}.pc-h{display:flex;justify-content:space-between;gap:8px}.pc-bar{height:12px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:5px 0}.pc-bar span{display:block;height:100%;border-radius:999px;background:var(--rec)}
+.pc-m{font-size:12.5px;color:var(--muted)}.pc-tot{border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.vrow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.vrow .open{display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0;background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.vr-n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+.vr-b{display:flex;flex-direction:column;gap:3px;min-width:0}.vr-b .t{font-weight:700}.vr-b .m{font-size:12.5px;color:var(--muted)}
+.vr-m{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px;color:var(--muted)}.vr-m b{color:var(--fg)}
+.vr-l{flex:none}
+.rk{display:flex;justify-content:space-between;gap:8px;font-size:14px}.rk small{color:var(--muted)}
+.acc-c{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.acc-c > div{display:flex;flex-direction:column;gap:2px;min-width:0}.acc-h{font-size:18px;font-family:var(--display)}
+.acc-new{flex-direction:column;align-items:stretch}.acc-new .btn{align-self:flex-start}
+.cy-h{display:flex;flex-direction:column;gap:4px}
 .rh{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;background:#420725;color:#fff;border:0;cursor:pointer;padding:18px 18px 20px;font:inherit}
 .rh .rh-e{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#FF8FB0}
 .rh b{font-family:var(--display);font-size:22px;line-height:1.15}.rh span{color:rgb(255 255 255 / .85)}
@@ -994,7 +1011,7 @@ const BRAND_STATUS = { ativo: ['Ativo', 'p-ok'], negociando: ['Negociando', 'p-a
 const IDEA_TAGS = ['Gancho', 'Roteiro', 'Tendência', 'Referência', 'Trend de áudio'];
 const IDEA_STATUS = { nova: ['Nova', 'p-acc'], separada: ['Separada', 'p-warn'], gravada: ['Gravada', 'p-ok'] };
 const COLORS = ['#420725', '#1F3A5F', '#0F4C3A', '#5B2A86', '#8A3B12', '#222222', '#B0124F'];
-const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros'];
+const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
@@ -1040,7 +1057,7 @@ const LEAD_NEXT = { contatada: 3, respondeu: 2, proposta: 4 };
 const CHANNELS = ['DM Instagram', 'E-mail', 'DM TikTok', 'LinkedIn', 'WhatsApp', 'Indicação', 'Plataforma de UGC'];
 
 /* ================= state & storage ================= */
-const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [] }, profile: {}, mode: 'local', loading: true,
+const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
   f: { brand: 'todas', idea: 'todas', month: monthKey(today()), agBrand: '', front: '', mview: 'clientes', rview: 'hoje', day: today(), wk: 0, sview: 'briefing', fview: 'marcas', year: 0, cur: 'USD', aview: 'calendario', calM: today().slice(0, 7), calDay: today() },
   ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
   sample: null, imgLimits: null, news: [], newsReady: false };
@@ -1297,6 +1314,7 @@ function vBrands() {
   const btn = ac ? `<button class="btn" data-new="accounts">${ic('plus')}Nova conta</button>` : per ? `<button class="btn" data-new="perms">${ic('plus')}Nova permuta</button>` : ctr || lic || kt ? '' : pro ? `<button class="btn" data-new="leads">${ic('plus')}Nova prospecção</button>` : `<button class="btn" data-new="brands">${ic('plus')}Nova marca</button>`;
   const head = `<div class="head"><div><h1>Marcas</h1><div class="sub">${subTxt}</div></div>${btn}</div>
   <div class="seg" role="group" aria-label="Visão"><button data-mview="clientes" aria-pressed="${!pro && !ctr && !lic && !per && !kt && !ac}">Clientes</button><button data-mview="contas" aria-pressed="${ac}">Contas</button><button data-mview="prospec" aria-pressed="${pro}">Prospecção${nOpen ? `<span class="n">${nOpen}</span>` : ''}</button><button data-mview="permutas" aria-pressed="${per}">Permutas${nPer ? `<span class="n">${nPer}</span>` : ''}</button><button data-mview="contratos" aria-pressed="${ctr}">Contratos</button><button data-mview="licencas" aria-pressed="${lic}">Licenças${nLic ? `<span class="n">${nLic}</span>` : ''}</button><button data-mview="kit" aria-pressed="${kt}">Mídia kit</button></div>`;
+  if (!ac && !pro && !ctr && !lic && !per && !kt && S.f.bpage) { const bp = S.data.brands.find(x => x.id === S.f.bpage); if (bp) return vBrandPage(bp); S.f.bpage = ''; }
   if (ac) return head + vAccounts();
   if (lic) return head + vLicenses();
   if (per) return head + vPerms();
@@ -1335,11 +1353,12 @@ function brandCard(b) {
     : [[moneyV(b.value, b.currency), 'por vídeo'], [String(done), 'vídeos entregues'], [brl(paid), 'já recebido']];
   const canNew = (ct === 'ciclo' && b.status === 'ativo') || (ct === 'pacote' && (done >= vids || !live));
   return `<article class="card bc">
-    <div class="top-r"><div style="min-width:0"><div class="eyebrow" style="font-size:10.5px">${esc(brandFront(b))} · ${esc(typeTxt)}</div><h3>${esc(b.name)}${exTag(b)}</h3>${b.contact ? `<div class="contact">${esc(b.contact)}</div>` : ''}</div><span class="pill ${st[1]}">${st[0]}</span></div>
+    <div class="top-r"><button class="bc-open" data-bpage="${b.id}" aria-label="Abrir a página de ${esc(b.name)}"><div class="eyebrow" style="font-size:10.5px">${esc(brandFront(b))} · ${esc(typeTxt)}</div><h3>${esc(b.name)}${exTag(b)} <span class="bc-go" aria-hidden="true">›</span></h3>${b.contact ? `<div class="contact">${esc(b.contact)}</div>` : ''}</button><span class="pill ${st[1]}">${st[0]}</span></div>
     ${prog}
     <div class="kv">${kv.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
     ${hint ? `<div class="renew-hint">${hint}</div>` : ''}
     <div class="acts">
+      <button class="btn sm" data-bpage="${b.id}">Abrir</button>
       <button class="btn sm ghost" data-edit="brands:${b.id}">Editar</button>
       <button class="btn sm ghost" data-new="deliveries" data-brand="${b.id}">${ic('plus')}Entrega</button>
       ${canNew ? `<button class="btn sm soft" data-renew="${b.id}">${ct === 'ciclo' ? 'Renovar ciclo' : 'Novo pacote'}</button>` : ''}
@@ -2668,6 +2687,131 @@ function openPost(did, aid) {
     <div class="foot">${p.date ? '<button type="button" class="btn danger" data-unpost="1">Desmarcar</button>' : ''}<div class="r"><button class="btn">Salvar</button></div></div>
   </form></div>`;
 }
+/* ================= página da marca: 3 contas, ciclo e métricas por vídeo (tudo calculado aqui, sem IA) ================= */
+const VPLATS = ['Instagram', 'TikTok', 'YouTube'];
+const VFORMATS = ['POV', 'Tutorial', 'Review', 'Unboxing', 'Antes e depois', 'Dica rápida', 'Storytelling', 'Trend', 'Comparação', 'Bastidores', 'Lista', 'Outro'];
+const PLAT_LBL = { Instagram: 'Instagram', TikTok: 'TikTok', YouTube: 'YouTube Shorts' };
+const nCompact = n => (+n || 0).toLocaleString('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+const nFull = n => (+n || 0).toLocaleString('pt-BR');
+const pctTxt = x => (x * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
+const accOf = (bid, pl) => S.data.accounts.find(a => a.brandId === bid && a.platform === pl);
+const vEng = v => (+v.views || 0) ? ((+v.likes || 0) + (+v.comments || 0) + (+v.shares || 0) + (+v.saves || 0)) / +v.views : 0;
+const vTitle = v => { const dl = v.deliveryId && S.data.deliveries.find(d => d.id === v.deliveryId); return dl ? dl.title : v.hook || 'Vídeo de ' + fmtD(v.date); };
+/* período de análise: o ciclo atual; marcas sem ciclo usam todos os vídeos */
+function bPeriod(b) { const c = ctypeOf(b) === 'ciclo' && b.start ? { from: b.start, to: b.end || addDays(b.start, (+b.cycle || 30) - 1) } : null; return c || { from: '0000', to: '9999', all: true }; }
+const bVideos = (b, per = bPeriod(b)) => realOnly(S.data.videos).filter(v => v.brandId === b.id && (v.date || '') >= per.from && (v.date || '') <= per.to);
+function platStats(vs) {
+  const views = vs.reduce((s, v) => s + (+v.views || 0), 0), withV = vs.filter(v => +v.views);
+  return { n: vs.length, views, avg: vs.length ? views / vs.length : 0, eng: withV.length ? withV.reduce((s, v) => s + vEng(v), 0) / withV.length : 0, followers: vs.reduce((s, v) => s + (+v.followers || 0), 0) };
+}
+/* formato ou gancho que rende mais: média de views, só com 2 vídeos ou mais */
+function bestBy(vs, key) {
+  const g = {}; vs.filter(v => v[key] && +v.views).forEach(v => (g[v[key]] = g[v[key]] || []).push(+v.views));
+  return Object.entries(g).filter(([, a]) => a.length >= 2).map(([k, a]) => ({ k, n: a.length, avg: a.reduce((s, x) => s + x, 0) / a.length })).sort((a, b) => b.avg - a.avg);
+}
+const bGoal = b => +b.goalViews || VPLATS.reduce((s, p) => s + (+(accOf(b.id, p) || {}).goalViews || 0), 0);
+function cycleSnap(b) {
+  const vs = bVideos(b), st = platStats(vs), goal = bGoal(b), best = [...vs].sort((x, y) => (+y.views || 0) - (+x.views || 0))[0];
+  return { start: b.start, end: b.end || addDays(b.start, (+b.cycle || 30) - 1), goal, views: st.views, n: st.n, followers: st.followers, hit: goal ? st.views >= goal : null,
+    plats: Object.fromEntries(VPLATS.map(p => { const x = platStats(vs.filter(v => v.platform === p)); return [p, { n: x.n, views: x.views }]; })),
+    best: best ? { title: vTitle(best), platform: best.platform, views: +best.views || 0, url: best.url || '' } : null };
+}
+/* a grade semanal (Marcas › Contas) também alimenta a página da marca */
+async function gridSync(dd, aid, po) {
+  const a = S.data.accounts.find(x => x.id === aid); if (!a || !VPLATS.includes(a.platform)) return;
+  const ex = S.data.videos.find(v => v.deliveryId === dd.id && v.accountId === aid);
+  if (!po) { if (ex && ex.fromGrid) await del('videos', ex.id); return; }
+  await put('videos', { ...(ex || { id: newId(), created: new Date().toISOString(), fromGrid: true, brandId: dd.brandId || a.brandId, platform: a.platform, accountId: aid, deliveryId: dd.id }), date: po.date || today(), ...(po.views !== undefined && po.views !== '' ? { views: +po.views, numbersAt: today() } : {}), ...(po.url ? { url: po.url } : {}) });
+}
+function vRow(v, rank) {
+  const m = [['views', nCompact(v.views)], ['curt.', nCompact(v.likes)], ['coment.', nCompact(v.comments)], ['compart.', nCompact(v.shares)], ['salv.', nCompact(v.saves)], ['seg.', '+' + nCompact(v.followers)]];
+  const u = safeUrl(v.url);
+  return `<div class="vrow"><button class="open" data-edit="videos:${v.id}">${rank ? `<span class="vr-n">${rank}</span>` : ''}<span class="vr-b"><span class="t">${esc(vTitle(v))}</span>
+    <span class="m">${PLAT_S[v.platform] || ''} · ${fmtD(v.date)}${v.format ? ' · ' + esc(v.format) : ''}${v.hookType ? ' · gancho ' + esc(v.hookType.toLowerCase()) : ''}${v.numbersAt ? ` · números de ${fmtD(v.numbersAt)}` : ''}</span>
+    <span class="vr-m">${m.map(([l, x]) => `<span><b>${x}</b> ${l}</span>`).join('')}${+v.views ? `<span><b>${pctTxt(vEng(v))}</b> engaj.</span>` : ''}</span></span></button>
+    ${u ? `<a class="iconbtn vr-l" href="${esc(u)}" target="_blank" rel="noopener" aria-label="Abrir o vídeo">${ic('ext')}</a>` : ''}</div>`;
+}
+function vBrandPage(b) {
+  const tab = VPLATS.includes(S.f.btab) ? S.f.btab : 'geral', st = BRAND_STATUS[b.status] || BRAND_STATUS.ativo, per = bPeriod(b), vs = bVideos(b, per);
+  const head = `<button class="link bp-back" data-bback>‹ Marcas</button>
+  <div class="head"><div style="min-width:0"><div class="eyebrow">${esc(brandFront(b))}</div><h1>${esc(b.name)}${exTag(b)}</h1><div class="sub"><span class="pill ${st[1]}">${st[0]}</span>${b.contact ? ' · ' + esc(b.contact) : ''}</div></div><button class="btn ghost" data-edit="brands:${b.id}">Editar marca</button></div>
+  <div class="seg" role="group" aria-label="Página da marca"><button data-btab="geral" aria-pressed="${tab === 'geral'}">Visão geral</button>${VPLATS.map(p => `<button data-btab="${p}" aria-pressed="${tab === p}">${p}${(() => { const n = vs.filter(v => v.platform === p).length; return n ? `<span class="n">${n}</span>` : ''; })()}</button>`).join('')}</div>`;
+  return head + (tab === 'geral' ? bOverview(b, vs, per) : bPlatTab(b, tab, vs, per));
+}
+function bCycleCard(b, vs) {
+  if (ctypeOf(b) !== 'ciclo') return `<section class="card section"><div class="row-h"><h2>Ciclo</h2></div><div class="sub">Essa marca está como ${ctypeOf(b) === 'pacote' ? 'pacote de vídeos' : 'vídeos avulsos'}. Os números abaixo somam todos os vídeos. Se for um perfil por ciclo, comece um ciclo aqui:</div>
+    <form class="bp-cyc" data-form="bcycle" data-brand="${b.id}"><div class="field"><label for="bc_start">Início do ciclo</label><input type="date" id="bc_start" name="start" value="${today()}"></div><div class="field"><label for="bc_goal">Meta de views</label><input type="number" id="bc_goal" name="goal" min="0" inputmode="numeric" placeholder="Ex.: 300000"></div><button class="btn">Começar ciclo</button></form></section>`;
+  const days = +b.cycle || 30, end = b.end || addDays(b.start, days - 1), day = Math.min(days, Math.max(0, diff(b.start, today()) + 1)), left = diff(today(), end);
+  const goal = bGoal(b), views = vs.reduce((s, v) => s + (+v.views || 0), 0), gp = goal ? Math.min(100, Math.round(views / goal * 100)) : 0;
+  const pace = goal && day > 0 && left >= 0 ? Math.round(goal * day / days) : 0;
+  return `<section class="card section bp-cycle"><div class="row-h"><h2>${day < 1 ? 'Ciclo começa ' + fmtD(b.start) : left < 0 ? 'Ciclo encerrado' : `Dia ${day} de ${days}`}</h2><span class="sub">${fmtD(b.start)} a ${fmtD(end)}</span></div>
+    <div class="bar ${left <= 5 ? 'warn' : ''}"><span style="width:${Math.min(100, Math.round(Math.max(0, day) / days * 100))}%"></span></div>
+    ${goal ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Meta de views</span><span class="num">${nCompact(views)} de ${nCompact(goal)} · ${Math.round(views / goal * 100)}%</span></div><div class="bar ${views >= goal ? 'ok' : ''}"><span style="width:${gp}%"></span></div>
+      <div class="sub">${views >= goal ? 'Meta batida! 🎉' : pace ? (views >= pace ? `No ritmo: pra hoje o esperado era ${nCompact(pace)}.` : `Pra estar no ritmo, hoje seriam ${nCompact(pace)}. Faltam ${nCompact(pace - views)}.`) : ''}</div>` : '<div class="sub">Sem meta de views. Coloque abaixo pra acompanhar o progresso.</div>'}
+    <details class="bp-edit"><summary>Ajustar início e meta</summary><form class="bp-cyc" data-form="bcycle" data-brand="${b.id}"><div class="field"><label for="bc_start">Início do ciclo</label><input type="date" id="bc_start" name="start" value="${esc(b.start)}"></div><div class="field"><label for="bc_goal">Meta de views do ciclo</label><input type="number" id="bc_goal" name="goal" min="0" inputmode="numeric" value="${esc(b.goalViews ?? '')}" placeholder="Ex.: 300000"></div><button class="btn sm">Salvar</button></form></details>
+    <div class="row-btns"><button class="btn sm soft" data-renew="${b.id}" ${left > 3 ? 'data-confirm="1"' : ''}>Renovar ciclo</button><button class="btn sm ghost" data-claudecopy="${b.id}">Copiar dados pro Claude</button></div></section>`;
+}
+function bOverview(b, vs, per) {
+  const ps = VPLATS.map(p => ({ p, ...platStats(vs.filter(v => v.platform === p)) })), max = Math.max(1, ...ps.map(x => x.views)), tot = platStats(vs);
+  const top = [...vs].filter(v => +v.views).sort((x, y) => (+y.views || 0) - (+x.views || 0)).slice(0, 5);
+  const fm = bestBy(vs, 'format'), hk = bestBy(vs, 'hookType');
+  const used = new Set(S.data.videos.map(v => v.deliveryId).filter(Boolean)), pend = sortBy(S.data.deliveries.filter(d => d.brandId === b.id && [3, 4].includes(d.stage || 0) && !used.has(d.id)), 'due');
+  const hist = (Array.isArray(b.cycles) ? b.cycles : []).slice().reverse();
+  const period = per.all ? 'todos os vídeos' : 'neste ciclo';
+  return `${bCycleCard(b, vs)}
+  <section class="section"><div class="row-h"><h2>Views por plataforma</h2><span class="sub">${period}</span></div>
+    ${tot.n ? `<div class="card plat-cmp">${ps.map(x => `<div class="pc-row"><div class="pc-h"><b>${PLAT_LBL[x.p]}</b><span class="num">${nCompact(x.views)}</span></div><div class="pc-bar"><span style="width:${Math.round(x.views / max * 100)}%"></span></div>
+      <div class="pc-m">${x.n} vídeo${x.n === 1 ? '' : 's'}${x.n ? ` · média ${nCompact(x.avg)} · engaj. ${pctTxt(x.eng)} · +${nCompact(x.followers)} seguidores` : ''}</div></div>`).join('')}
+      <div class="pc-tot">Total: <b>${nFull(tot.views)}</b> views em ${tot.n} vídeo${tot.n === 1 ? '' : 's'} · +${nFull(tot.followers)} seguidores</div></div>`
+      : `<div class="empty"><strong>Nenhum vídeo lançado ${per.all ? 'ainda' : 'neste ciclo'}</strong>Abra a aba da plataforma e toque em + Vídeo postado pra lançar os números.</div>`}
+  </section>
+  ${top.length ? `<section class="section"><div class="row-h"><h2>Top vídeos</h2><span class="sub">${period}</span></div><div class="list">${top.map((v, i) => vRow(v, i + 1)).join('')}</div></section>` : ''}
+  ${fm.length || hk.length ? `<section class="section"><div class="row-h"><h2>O que rende mais</h2><span class="sub">média de views, com 2+ vídeos</span></div><div class="grid2">
+    ${[['Formato', fm], ['Gancho', hk]].map(([t, a]) => `<div class="card section" style="gap:8px"><b>${t}</b>${a.length ? a.slice(0, 5).map((x, i) => `<div class="rk"><span>${i === 0 ? '🏆 ' : ''}${esc(x.k)} <small>(${x.n})</small></span><b class="num">${nCompact(x.avg)}</b></div>`).join('') : '<span class="sub">Lance o tipo em 2 vídeos ou mais pra comparar.</span>'}</div>`).join('')}</div></section>` : ''}
+  ${pend.length ? `<section class="section"><div class="row-h"><h2>Entregas prontas sem vídeo postado</h2></div><div class="list">${pend.map(d => `<div class="lead"><button class="open" data-edit="deliveries:${d.id}"><span class="t">${esc(d.title)}</span><span class="m">${STAGES[d.stage || 0]}${d.due ? ' · prazo ' + fmtD(d.due) : ''}</span></button><button class="btn sm soft" data-newvideo="${b.id}||${d.id}">Lançar vídeo</button></div>`).join('')}</div></section>` : ''}
+  ${hist.length ? `<section class="section"><div class="row-h"><h2>Ciclos anteriores</h2></div><div class="list">${hist.map(c => `<div class="card cy-h"><div class="row-h"><b>${fmtD(c.start)} a ${fmtD(c.end)}</b>${c.hit === true ? '<span class="pill p-ok">meta batida</span>' : c.hit === false ? '<span class="pill p-warn">meta não batida</span>' : ''}</div>
+      <div class="sub" style="color:var(--fg)"><b>${nFull(c.views)}</b> views${c.goal ? ` de ${nFull(c.goal)}` : ''} · ${c.n} vídeo${c.n === 1 ? '' : 's'} · +${nFull(c.followers)} seguidores</div>
+      <div class="sub">${VPLATS.map(p => `${PLAT_S[p]} ${nCompact((c.plats || {})[p]?.views)}`).join(' · ')}${c.best ? ` · melhor: ${esc(c.best.title)} (${nCompact(c.best.views)})` : ''}</div></div>`).join('')}</div></section>` : ''}
+  ${ctypeOf(b) !== 'ciclo' && vs.length ? `<div class="row-btns"><button class="btn sm ghost" data-claudecopy="${b.id}">Copiar dados pro Claude</button></div>` : ''}`;
+}
+function bPlatTab(b, p, vs, per) {
+  const a = accOf(b.id, p), mine = vs.filter(v => v.platform === p).sort((x, y) => (+y.views || 0) - (+x.views || 0)), stt = platStats(mine), goal = +(a || {}).goalViews || 0;
+  const older = per.all ? [] : realOnly(S.data.videos).filter(v => v.brandId === b.id && v.platform === p && (v.date || '') < per.from).sort((x, y) => String(y.date).localeCompare(String(x.date)));
+  const u = a && safeUrl(a.url);
+  const accCard = a ? `<div class="card acc-c"><div><div class="eyebrow">${PLAT_LBL[p]}</div><b class="acc-h">${esc(a.handle || 'sem @')}</b>${u ? `<a class="link" href="${esc(u)}" target="_blank" rel="noopener">Abrir perfil ${ic('ext').replace('class="i"', 'class="i" style="width:14px;height:14px;vertical-align:-2px"')}</a>` : '<span class="sub">sem link</span>'}</div><button class="btn sm ghost" data-edit="accounts:${a.id}">Editar conta</button></div>`
+    : `<form class="card acc-c acc-new" data-form="acc" data-brand="${b.id}" data-plat="${p}"><div class="eyebrow">${PLAT_LBL[p]} · conta da marca</div><div class="grid2"><div class="field"><label for="ac_h_${p}">@ do perfil</label><input type="text" id="ac_h_${p}" name="handle" placeholder="@perfil" autocomplete="off"></div><div class="field"><label for="ac_u_${p}">Link do perfil</label><input type="text" id="ac_u_${p}" name="url" placeholder="https://…" autocomplete="off"></div></div><button class="btn sm">Salvar conta</button></form>`;
+  return `${accCard}
+  <div class="stats"><div class="stat hero"><div class="l">Views ${per.all ? 'no total' : 'no ciclo'}</div><div class="v">${nFull(stt.views)}</div>${goal ? `<div class="bar ${stt.views >= goal ? 'ok' : ''}" style="margin-top:8px"><span style="width:${Math.min(100, Math.round(stt.views / goal * 100))}%"></span></div><div class="l" style="margin-top:4px">meta ${nCompact(goal)}</div>` : ''}</div>
+    <div class="stat"><div class="l">Vídeos</div><div class="v">${stt.n}</div></div><div class="stat"><div class="l">Média por vídeo</div><div class="v">${nCompact(stt.avg)}</div></div><div class="stat"><div class="l">Engajamento</div><div class="v">${pctTxt(stt.eng)}</div></div><div class="stat"><div class="l">Seguidores ganhos</div><div class="v">+${nCompact(stt.followers)}</div></div></div>
+  <div class="row-btns"><button class="btn" data-newvideo="${b.id}|${p}">${ic('plus')}Vídeo postado</button></div>
+  ${mine.length ? `<section class="section"><div class="row-h"><h2>Ranking ${per.all ? '' : 'do ciclo'}</h2><span class="sub">toque pra atualizar os números</span></div><div class="list">${mine.map((v, i) => vRow(v, i + 1)).join('')}</div></section>`
+    : `<div class="empty"><strong>Nenhum vídeo no ${PLAT_LBL[p]} ${per.all ? 'ainda' : 'neste ciclo'}</strong>Lance cada vídeo com o link e os números. Dá pra atualizar depois.</div>`}
+  ${older.length ? `<details class="card rl"><summary><b>Vídeos de ciclos anteriores</b><span class="sub">${older.length}</span></summary><div class="list">${older.map(v => vRow(v)).join('')}</div></details>` : ''}`;
+}
+function brandClaudeText(bid) {
+  const b = S.data.brands.find(x => x.id === bid); if (!b) return '';
+  const per = bPeriod(b), vs = bVideos(b, per).sort((x, y) => (+y.views || 0) - (+x.views || 0)), tot = platStats(vs), goal = bGoal(b), days = +b.cycle || 30;
+  const L = [`Dados do perfil da marca ${b.name} (${brandFront(b)}) — gerado pelo CriaHub`];
+  if (!per.all) L.push(`Ciclo: ${fmtD(per.from)} a ${fmtD(per.to)} (dia ${Math.min(days, Math.max(0, diff(b.start, today()) + 1))} de ${days})`);
+  if (goal) L.push(`Meta de views do ciclo: ${nFull(goal)} · atingido até agora: ${nFull(tot.views)} (${Math.round(tot.views / goal * 100)}%)`);
+  L.push('', 'Contas:'); VPLATS.forEach(p => { const a = accOf(b.id, p); L.push(`- ${PLAT_LBL[p]}: ${a ? (a.handle || '') + (a.url ? ' ' + a.url : '') : 'não cadastrada'}`); });
+  L.push('', 'Resumo por plataforma:'); VPLATS.forEach(p => { const x = platStats(vs.filter(v => v.platform === p)); L.push(`- ${PLAT_LBL[p]}: ${plural(x.n, 'vídeo', 'vídeos')} · ${nFull(x.views)} views · média ${nFull(Math.round(x.avg))} · engajamento ${pctTxt(x.eng)} · +${nFull(x.followers)} seguidores`); });
+  L.push(`- Total: ${plural(tot.n, 'vídeo', 'vídeos')} · ${nFull(tot.views)} views · +${nFull(tot.followers)} seguidores`);
+  L.push('', 'Vídeos (do mais visto ao menos visto):');
+  vs.forEach((v, i) => L.push(`${i + 1}. [${PLAT_LBL[v.platform] || v.platform}] ${fmtD(v.date)} · ${vTitle(v)}${v.format ? ' · formato: ' + v.format : ''}${v.hookType ? ' · tipo de gancho: ' + v.hookType : ''}${v.hook ? ` · gancho: "${v.hook}"` : ''}\n   views ${nFull(v.views)} · curtidas ${nFull(v.likes)} · comentários ${nFull(v.comments)} · compartilhamentos ${nFull(v.shares)} · salvamentos ${nFull(v.saves)} · seguidores ganhos ${nFull(v.followers)} · engajamento ${pctTxt(vEng(v))}${v.url ? '\n   ' + v.url : ''}`));
+  const fm = bestBy(vs, 'format'), hk = bestBy(vs, 'hookType');
+  if (fm.length) L.push('', 'Formatos (média de views): ' + fm.map(x => `${x.k} ${nFull(Math.round(x.avg))} (${x.n} vídeos)`).join(' · '));
+  if (hk.length) L.push('Tipos de gancho (média de views): ' + hk.map(x => `${x.k} ${nFull(Math.round(x.avg))} (${x.n} vídeos)`).join(' · '));
+  const hist = Array.isArray(b.cycles) ? b.cycles.slice(-3) : [];
+  if (hist.length) { L.push('', 'Ciclos anteriores:'); hist.forEach(c => L.push(`- ${fmtD(c.start)} a ${fmtD(c.end)}: ${nFull(c.views)} views${c.goal ? ` de ${nFull(c.goal)}` : ''} · ${plural(c.n, 'vídeo', 'vídeos')}`)); }
+  L.push('', 'Analise esses dados como estrategista de conteúdo: o que está funcionando em cada plataforma, quais formatos e ganchos repetir, o que mudar, e se estou no ritmo de bater a meta do ciclo. Termine com 3 ideias de vídeo pros próximos dias.');
+  return L.join('\n');
+}
+function openClaudeSheet(txt) {
+  sheet = { col: 'claude' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Dados pro Claude"><div class="sh"><h2>Dados pro Claude</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">Seu aparelho não deixou copiar sozinho. Toque no texto, selecione tudo e copie.</div><textarea readonly style="min-height:300px" onfocus="this.select()">${esc(txt)}</textarea></div></div>`;
+}
 /* ================= gravar em lote ================= */
 function vBatch() {
   const list = sortBy(S.data.deliveries.filter(d => (d.stage || 0) <= 1 && inFront(d.brandId)), 'due');
@@ -3238,6 +3382,18 @@ function homeAlerts() {
 /* ================= forms ================= */
 const brandOpts = () => [['', 'Sem marca'], ...S.data.brands.map(b => [b.id, b.name])];
 const FORMS = {
+  videos: { title: 'vídeo', fields: [
+    { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: () => VPLATS.map(p => [p, p === 'YouTube' ? 'YouTube Shorts' : p]), d: 'TikTok' }, { k: 'date', l: 'Data da postagem', t: 'date', d: today }] },
+    { k: 'url', l: 'Link do vídeo', t: 'text', ph: 'https://…' },
+    { row: [{ k: 'format', l: 'Formato', t: 'select', o: [['', 'Escolha'], ...VFORMATS.map(x => [x, x])] }, { k: 'hookType', l: 'Tipo de gancho', t: 'select', o: [['', 'Escolha'], ...HOOK_TYPES.map(x => [x, x])] }] },
+    { k: 'hook', l: 'Gancho (a primeira frase)', t: 'text', ph: 'Ex.: Ninguém te conta isso sobre…' },
+    { row: [{ k: 'views', l: 'Views', t: 'number' }, { k: 'likes', l: 'Curtidas', t: 'number' }] },
+    { row: [{ k: 'comments', l: 'Comentários', t: 'number' }, { k: 'shares', l: 'Compartilhamentos', t: 'number' }] },
+    { row: [{ k: 'saves', l: 'Salvamentos', t: 'number' }, { k: 'followers', l: 'Seguidores ganhos', t: 'number' }] },
+    { k: 'brandId', l: 'Marca', t: 'select', o: brandOpts },
+    { k: 'deliveryId', l: 'É qual entrega da Agenda? (opcional)', t: 'select', o: () => [['', 'Nenhuma'], ...sortBy(S.data.deliveries.filter(d => !S.f.bpage || d.brandId === S.f.bpage), 'due').reverse().map(d => [d.id, `${d.title}${d.due ? ' · ' + fmtD(d.due) : ''}`])], hint: 'Ligando, a entrega vai para Publicado na Agenda.' },
+    { k: 'notes', l: 'Observações', t: 'textarea', ph: 'O que funcionou, comentário da marca, ideia pro próximo…' },
+  ] },
   brands: { title: 'marca', fields: [
     { k: 'name', l: 'Nome da marca', t: 'text', req: 1, ph: 'Ex.: Lumi Skincare' },
     { row: [{ k: 'front', l: 'Frente de trabalho', t: 'select', o: () => fronts().map(f => [f, f]), d: () => S.f.front || fronts()[0] },
@@ -3246,6 +3402,7 @@ const FORMS = {
     { k: 'cnpj', l: 'CNPJ da marca (para a nota fiscal)', t: 'text', ph: '00.000.000/0000-00', hint: 'Opcional. Se a marca for de fora do Brasil, deixe vazio.' },
     { k: 'ctype', l: 'Tipo de trabalho', t: 'select', o: CTYPES, d: () => defaultCtype(S.f.front || fronts()[0]) },
     { k: 'cycle', l: 'Duração do ciclo', t: 'select', o: [['30', '30 dias'], ['60', '60 dias'], ['90', '90 dias']], d: '30', when: 'ciclo' },
+    { k: 'goalViews', l: 'Meta de views do ciclo', t: 'number', hint: 'Soma do Instagram, TikTok e YouTube. Opcional.', when: 'ciclo' },
     { row: [{ k: 'start', l: 'Início', t: 'date', d: today, when: 'ciclo pacote' }, { k: 'end', l: 'Fim ou prazo final', t: 'date', hint: 'No ciclo, se ficar vazio eu calculo', when: 'ciclo pacote' }] },
     { row: [{ k: 'videos', l: 'Quantos vídeos', t: 'number', d: 4, when: 'ciclo pacote' }, { k: 'value', l: 'Valor', t: 'number', step: '0.01', hint: 'Ciclo: valor do ciclo · Pacote: valor total · Avulso: valor por vídeo' }] },
     { k: 'currency', l: 'Moeda em que a marca paga', t: 'select', o: [['BRL', 'Real (R$)'], ['USD', 'Dólar (US$)'], ['EUR', 'Euro (€)']], d: () => /canvas|tech/i.test(S.f.front || '') ? 'USD' : 'BRL' },
@@ -3369,7 +3526,7 @@ function openForm(col, id, preset = {}) {
   sheet = { col, id };
   const flds = F.fields.filter(f => !(f.newOnly && id)).map(f => f.row ? `<div class="grid2">${f.row.map(x => fieldHtml(x, obj)).join('')}</div>` : fieldHtml(f, obj)).join('');
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="entity" role="dialog" aria-modal="true" aria-label="${id ? 'Editar' : 'Nova'} ${F.title}">
-    <div class="sh"><h2>${id ? 'Editar' : (['pagamento', 'hábito', 'feedback', 'gasto'].includes(F.title) ? 'Novo' : 'Nova')} ${F.title}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sh"><h2>${id ? 'Editar' : (['pagamento', 'hábito', 'feedback', 'gasto', 'vídeo'].includes(F.title) ? 'Novo' : 'Nova')} ${F.title}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     ${obj.example ? '<div class="sub"><span class="ex">exemplo</span> Este item é de exemplo. Edite ou apague à vontade.</div>' : ''}
     ${flds}
     <div class="foot">${id ? `<button type="button" class="btn danger" data-act="delete">Excluir</button>` : ''}${col === 'deliveries' && id ? (TIMER?.id === id ? '<button type="button" class="btn soft" data-act="tstop">Parar cronômetro</button>' : `<button type="button" class="btn ghost" data-tstart="${id}">Cronômetro</button>`) : ''}<div class="r"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn">Salvar</button></div></div>
@@ -3423,6 +3580,15 @@ async function submitEntity(form) {
   if (col === 'payments' || col === 'extras') { if (CURS[obj.currency] && obj.paid && !+obj.rate && fxRate(obj.currency)) obj.rate = fxNet(obj.currency); if (!obj.paid) obj.rate = ''; }
   if (col === 'goals') { const dn = obj.kind === 'check' ? !!obj.done : (+obj.current || 0) >= Math.max(1, +obj.target || 1); obj.doneAt = dn ? (obj.doneAt || today()) : ''; }
   if (col === 'extras' && !prev && obj.name && !S.data.extras.some(x => wpKey(x.name) === wpKey(obj.name))) { closeForm(); await put(col, obj); toast('Salvo'); celebSource(obj.name); return; }
+  if (col === 'videos') {
+    const NUMS = ['views', 'likes', 'comments', 'shares', 'saves', 'followers'];
+    if (!prev || NUMS.some(k => String(prev[k] ?? '') !== String(obj[k] ?? ''))) obj.numbersAt = today();
+    const acc = accOf(obj.brandId, obj.platform); obj.accountId = acc ? acc.id : '';
+    closeForm(); await put('videos', obj);
+    const dl = obj.deliveryId && S.data.deliveries.find(x => x.id === obj.deliveryId);
+    if (dl) { const up = { ...dl, stage: Math.max(5, dl.stage || 0) }; if (acc) up.posts = { ...postsOf(dl), [acc.id]: { date: obj.date || today(), views: obj.views === '' ? '' : +obj.views, url: obj.url || '' } }; await put('deliveries', up); }
+    toast(dl && (dl.stage || 0) < 5 ? 'Vídeo salvo e entrega marcada como Publicado' : 'Vídeo salvo'); return;
+  }
   if (col === 'tasks' && prev && prev.date !== obj.date && !obj.done && obj.date > prev.date) obj.moved = (prev.moved || 0) + 1;
   closeForm(); await put(col, obj); toast('Salvo');
 }
@@ -3432,7 +3598,8 @@ async function renew(id) {
   let start, end;
   if (ct === 'ciclo') { const days = +b.cycle || 30; start = b.end && b.end >= addDays(today(), -days) ? addDays(b.end, 1) : today(); end = addDays(start, days - 1); }
   else { start = today(); end = b.start && b.end ? addDays(start, Math.max(0, diff(b.start, b.end))) : ''; }
-  await put('brands', { ...b, start, end, status: 'ativo' });
+  const hist = ct === 'ciclo' && b.start ? [...(Array.isArray(b.cycles) ? b.cycles : []), cycleSnap(b)].slice(-36) : b.cycles;
+  await put('brands', { ...b, start, end, status: 'ativo', ...(hist ? { cycles: hist } : {}) });
   if (+b.value > 0) await put('payments', { id: newId(), brandId: b.id, desc: ct === 'ciclo' ? `${b.name}: ciclo ${fmtD(start)} a ${fmtD(end)}` : `${b.name}: novo pacote de ${+b.videos || 0} vídeos`, amount: +b.value, currency: b.currency || 'BRL', due: end || start, paid: false, created: new Date().toISOString(), ...(b.example ? { example: true } : {}) });
   toast(ct === 'ciclo' ? `Ciclo renovado até ${fmtD(end)}` : 'Novo pacote aberto');
 }
@@ -3539,6 +3706,7 @@ document.addEventListener('click', async e => {
   if (t.matches('[data-scrim]')) { if (e.target === t) closeForm(); return; }
   const d = t.dataset;
   if (d.tab && TAB_ALIAS[d.tab]) { const [tb, fk, fv] = TAB_ALIAS[d.tab]; S.f[fk] = fv; S.tab = tb; render(); window.scrollTo(0, 0); return; }
+  if (d.tab === 'marcas' && S.tab === 'marcas') S.f.bpage = '';
   if (d.tab) { S.tab = d.tab; S.ct.err = ''; try { sessionStorage.setItem('criahub:tab', d.tab); } catch (_) {} render(); window.scrollTo(0, 0); document.querySelectorAll(`.tab[data-tab="${d.tab}"],.nav[data-tab="${d.tab}"]`).forEach(b => { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }); return; }
   if (d.tp) { tpCmd(d.tp); return; }
   if (d.aview) { S.f.aview = d.aview; render(); return; }
@@ -3546,8 +3714,8 @@ document.addEventListener('click', async e => {
   if (d.calday) { S.f.calDay = d.calday; S.f.calM = d.calday.slice(0, 7); render(); if (d.calgo) window.scrollTo(0, 0); return; }
   if (d.nf) { openNf(d.nf); return; }
   if (d.pwk) { S.f.pwk = d.pwk === '0' ? 0 : (S.f.pwk || 0) + Number(d.pwk); render(); return; }
-  if (d.post) { const [did, aid] = d.post.split(':'), dd = S.data.deliveries.find(x => x.id === did); if (!dd) return; if (postsOf(dd)[aid]) { openPost(did, aid); return; } await put('deliveries', { ...dd, posts: { ...postsOf(dd), [aid]: { date: today() } } }); toast('Postado hoje ✓'); return; }
-  if (d.unpost) { const f = t.closest('form'), dd = S.data.deliveries.find(x => x.id === f.dataset.id); if (dd) { const ps = { ...postsOf(dd) }; delete ps[f.dataset.aid]; closeForm(); await put('deliveries', { ...dd, posts: ps }); } return; }
+  if (d.post) { const [did, aid] = d.post.split(':'), dd = S.data.deliveries.find(x => x.id === did); if (!dd) return; if (postsOf(dd)[aid]) { openPost(did, aid); return; } await put('deliveries', { ...dd, posts: { ...postsOf(dd), [aid]: { date: today() } } }); await gridSync(dd, aid, { date: today() }); toast('Postado hoje ✓'); return; }
+  if (d.unpost) { const f = t.closest('form'), dd = S.data.deliveries.find(x => x.id === f.dataset.id); if (dd) { const ps = { ...postsOf(dd) }; delete ps[f.dataset.aid]; closeForm(); await put('deliveries', { ...dd, posts: ps }); await gridSync(dd, f.dataset.aid, null); } return; }
   if (d.acrep) { try { await navigator.clipboard.writeText(acReport(d.acrep)); toast('Relatório copiado'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
   if (d.lotesel) { S.ct.lote = S.ct.lote || {}; S.ct.lote[d.lotesel] = S.ct.lote[d.lotesel] === false; render(); return; }
   if (d.act === 'lotetp') { const sel = sortBy(S.data.deliveries.filter(x => (x.stage || 0) <= 1 && inFront(x.brandId) && (S.ct.lote || {})[x.id] !== false), 'due'); openPrompter(sel.map((x, i) => `▶ VÍDEO ${i + 1} DE ${sel.length}\n${brandName(x.brandId)} · ${x.title}\n\n${x.script || '(sem roteiro)'}`).join('\n\n\n\n')); return; }
@@ -3599,6 +3767,11 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-bback')) { S.f.bpage = ''; render(); window.scrollTo(0, 0); return; }
+  if (d.btab) { S.f.btab = d.btab; render(); return; }
+  if (d.newvideo) { const [bid, pl, did] = d.newvideo.split('|'); openForm('videos', null, { brandId: bid, platform: pl || 'TikTok', date: today(), deliveryId: did || '' }); return; }
+  if (d.claudecopy) { const txt = brandClaudeText(d.claudecopy); try { await navigator.clipboard.writeText(txt); toast('Copiado! Cole no chat do Claude e peça a análise.'); } catch (_) { openClaudeSheet(txt); } return; }
   if (d.retro) { const r = S.data.retros.find(x => x.id === d.retro); if (r) await openRetro(r.stats); return; }
   if (t.hasAttribute('data-celebok')) { celebClose(); return; }
   if (d.retrotest) { await openRetro(retroStats(d.retrotest)); return; }
@@ -3657,7 +3830,7 @@ document.addEventListener('click', async e => {
   if (d.adv) { const x = S.data.deliveries.find(v => v.id === d.adv); if (x) { const st = Math.min(5, (x.stage || 0) + 1); await put('deliveries', { ...x, stage: st }); if (st === 5) toast('Vídeo no ar. Boa!'); } return; }
   if (d.paid) { const p = S.data.payments.find(v => v.id === d.paid); if (p) await put('payments', { ...p, paid: !p.paid, paidAt: !p.paid ? today() : '', rate: !p.paid && isFx(p) ? fxNet(p.currency) : '' }); return; }
   if (d.istat) { const i = S.data.ideas.find(v => v.id === d.istat); if (i) { const ks = Object.keys(IDEA_STATUS); await put('ideas', { ...i, status: ks[(ks.indexOf(i.status || 'nova') + 1) % ks.length] }); } return; }
-  if (d.renew) { await renew(d.renew); return; }
+  if (d.renew) { if (d.confirm && !t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'O ciclo ainda não acabou. Toque de novo pra renovar'; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Renovar ciclo'; }, 4000); return; } await renew(d.renew); return; }
   if (d.front !== undefined) { S.f.front = d.front; try { localStorage.setItem('criahub:front', d.front); } catch (_) {} render(); return; }
   if (d.xpaid) { const x = S.data.extras.find(v => v.id === d.xpaid); if (x) await put('extras', { ...x, paid: !x.paid, rate: !x.paid && isFx(x) ? fxNet(x.currency) : '' }); return; }
   if (d.act === 'recur') { const [y, m] = S.f.month.split('-').map(Number); const pd = new Date(y, m - 2, 1); const pk = `${pd.getFullYear()}-${pad(pd.getMonth() + 1)}`;
@@ -3740,8 +3913,10 @@ document.addEventListener('keydown', e => { if ($('#tp')) { if (e.key === 'Escap
 document.addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, kind = f.dataset.form;
   if (kind === 'entity') return submitEntity(f);
-  if (kind === 'post') { const dd = S.data.deliveries.find(x => x.id === f.dataset.id); if (!dd) return; const v = f.elements.views.value; closeForm(); await put('deliveries', { ...dd, posts: { ...postsOf(dd), [f.dataset.aid]: { date: f.elements.date.value || today(), views: v === '' ? '' : +v, url: f.elements.url.value.trim() } } }); toast('Salvo'); return; }
+  if (kind === 'post') { const dd = S.data.deliveries.find(x => x.id === f.dataset.id); if (!dd) return; const v = f.elements.views.value, po = { date: f.elements.date.value || today(), views: v === '' ? '' : +v, url: f.elements.url.value.trim() }; closeForm(); await put('deliveries', { ...dd, posts: { ...postsOf(dd), [f.dataset.aid]: po } }); await gridSync(dd, f.dataset.aid, po); toast('Salvo'); return; }
   if (kind === 'nf') { const p = S.data.payments.find(x => x.id === f.dataset.id); if (!p) return; const num = f.elements.num.value.trim(), dt = f.elements.date.value || today(), desc = f.elements.desc.value.trim(); const cn = f.elements.cnpj ? f.elements.cnpj.value.trim() : null; const b = S.data.brands.find(x => x.id === p.brandId); if (b && cn !== null && cn !== (b.cnpj || '')) await put('brands', { ...b, cnpj: cn }); if (!num) { toast('Coloque o número da nota depois de emitir'); return; } closeForm(); await put('payments', { ...p, nf: { num, date: dt, desc } }); toast('Nota guardada'); return; }
+  if (kind === 'acc') { const b = S.data.brands.find(x => x.id === f.dataset.brand), pl = f.dataset.plat; if (!b) return; let h = f.elements.handle.value.trim(); const u = f.elements.url.value.trim(); if (!h && !u) { toast('Coloque o @ ou o link do perfil'); return; } if (h && !h.startsWith('@')) h = '@' + h; const ex = accOf(b.id, pl); await put('accounts', { ...(ex || { id: newId(), created: new Date().toISOString(), goalWeek: 7 }), platform: pl, handle: h || (ex && ex.handle) || '', url: u, brandId: b.id }); toast('Conta salva'); return; }
+  if (kind === 'bcycle') { const b = S.data.brands.find(x => x.id === f.dataset.brand); if (!b) return; const st = f.elements.start.value || b.start || today(), days = +b.cycle || 30, g = f.elements.goal.value; await put('brands', { ...b, ctype: 'ciclo', start: st, end: addDays(st, days - 1), goalViews: g === '' ? '' : +g }); toast('Ciclo atualizado'); return; }
   if (kind === 'name') { const n = f.elements.name.value.trim(); if (n) await saveProfile({ name: n }); return; }
   if (kind === 'licrenew') return saveLicRenew(f);
   if (kind === 'qexp') { const ds = f.elements.desc.value.trim(), am = +f.elements.amount.value || 0; if (!ds || !am) return; f.reset(); await put('expenses', { id: newId(), desc: ds, amount: am, cat: 'Outro', currency: 'BRL', date: S.f.month === monthKey(today()) ? today() : S.f.month + '-01', created: new Date().toISOString() }); toast('Gasto anotado. Toque nele para escolher a categoria.'); return; }
