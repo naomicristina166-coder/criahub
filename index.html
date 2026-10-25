@@ -755,8 +755,12 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .rv-top{width:100%;max-width:460px;display:flex;align-items:center;gap:12px}
 .rv-top .iconbtn{background:rgb(255 255 255 / .12);border-color:transparent;color:#fff}
 .rv-bars{flex:1;display:flex;gap:5px}.rv-bars i{flex:1;height:4px;border-radius:4px;background:rgb(255 255 255 / .22);transition:background .3s}.rv-bars i.on{background:#F4C9D8}
+.rv-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:100%;max-width:460px;background:rgb(255 255 255 / .1);border-radius:12px;padding:4px}
+.rv-seg button{border:0;background:none;color:#fff;font:inherit;font-weight:700;font-size:14px;padding:8px;border-radius:9px;cursor:pointer}
+.rv-seg button[aria-pressed=true]{background:#fff;color:#420725}
+.rv-hint{width:100%;max-width:460px;text-align:center;font-size:13px;color:rgb(255 255 255 / .72);margin-top:-4px}
 .rv-stage{position:relative;flex:1;min-height:0;width:100%;display:flex;justify-content:center;align-items:center}
-.rv-slot{width:min(100%, 460px, calc((100vh - 220px) * 9 / 16));width:min(100%, 460px, calc((100dvh - 220px) * 9 / 16));aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgb(0 0 0 / .5);background:#420725}
+.rv-slot{width:min(100%, 460px, calc((100vh - 300px) * 9 / 16));width:min(100%, 460px, calc((100dvh - 300px) * 9 / 16));aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgb(0 0 0 / .5);background:#420725}
 .rv-slot canvas{display:block;width:100%;height:100%}
 .rv-nav{position:absolute;top:0;bottom:0;width:40%;background:none;border:0;z-index:2;-webkit-tap-highlight-color:transparent}.rv-nav.l{left:0}.rv-nav.r{right:0}
 .rv-acts{width:100%;max-width:460px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
@@ -3027,24 +3031,53 @@ function retroSlides(s, hide, name) {
   return out;
 }
 
+/* versão discreta: uma tela só pra celebrar, sem números, marcas nem nome */
+function retroSoftTone(s) {
+  if (retroWeak(s)) return ['recomeço', '🌱', 'Um passo de cada vez, no meu ritmo.'];
+  if (s.best >= 7) return ['constância', '🔥', 'Aparecendo pra mim todos os dias.'];
+  if (s.sent >= 5) return ['entregas', '🎬', 'Ideia saindo do papel e virando vídeo.'];
+  if (s.brands.length >= 3) return ['parcerias', '💌', 'Grata por cada marca que confiou em mim.'];
+  if (s.goals) return ['meta batida', '🎯', 'Celebrando cada passo do caminho.'];
+  if (s.tasks >= 20) return ['foco', '✅', 'Lista riscada e cabeça leve.'];
+  if (s.habits >= 20) return ['autocuidado', '💧', 'Cuidar de mim também é rotina de creator.'];
+  return ['movimento', '✨', 'Celebrando cada passo do meu mês de cria.'];
+}
+function retroSoft(s) {
+  const [word, emo, sub] = retroSoftTone(s), mn = monthName(s.month);
+  return [c => {
+    rBase(c, 1); rEyebrow(c, 'MEU MÊS DE CRIA', 680);
+    rText(c, `${mn.charAt(0).toUpperCase() + mn.slice(1)} foi de`, 90, 850, `800 130px ${RFD}`, '#fff', { max: 900, lh: 140 });
+    let fs = 150; c.font = `800 ${fs}px ${RFD}`; while (fs > 104 && c.measureText(`${word} ${emo}`).width > 900) { fs -= 4; c.font = `800 ${fs}px ${RFD}`; }
+    const y = rText(c, `${word} ${emo}`, 90, 1010, `800 ${fs}px ${RFD}`, RC.pink, { max: 900, lh: fs + 8, lines: 2 });
+    rText(c, sub, 90, y + 120, `600 50px ${RFB}`, RC.soft, { max: 860, lh: 66, lines: 3 });
+    c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(90, 1560, 900, 3);
+    rText(c, 'quem cria, se organiza.', 90, 1660, `700 58px ${RFD}`, RC.pink);
+  }];
+}
+
 /* ---------- visualizador ---------- */
 let RV = null;
+const rvList = () => RV.mode === 'soft' ? retroSoft(RV.s) : retroSlides(RV.s, RV.hide, rvName());
 const rvName = () => S.profile.name || '';
 async function openRetro(stats) {
-  RV = { s: stats, i: 0, hide: false };
+  let mode = 'full'; try { mode = localStorage.getItem('criahub:rvmode') === 'soft' ? 'soft' : 'full'; } catch (_) {}
+  RV = { s: stats, i: 0, hide: false, mode };
   try { await Promise.race([Promise.all([`800 100px ${RFD}`, `700 100px ${RFD}`, `600 40px ${RFB}`, `700 40px ${RFB}`, `800 40px ${RFB}`].map(f => document.fonts.load(f))), new Promise(r => setTimeout(r, 2500))]); } catch (_) {}
   sheet = { col: 'retro' }; rvRender(0);
 }
-function rvCanvas(i) { const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920; retroSlides(RV.s, RV.hide, rvName())[i](cv.getContext('2d')); return cv; }
-const rvFileName = i => `meu-mes-de-cria-${monthName(RV.s.month).normalize('NFD').replace(/[̀-ͯ]/g, '')}-${RV.s.month.slice(0, 4)}-${i + 1}.png`;
+function rvCanvas(i) { const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1920; rvList()[i](cv.getContext('2d')); return cv; }
+const rvFileName = i => `meu-mes-de-cria-${RV.mode === 'soft' ? 'discreto-' : ''}${monthName(RV.s.month).normalize('NFD').replace(/[̀-ͯ]/g, '')}-${RV.s.month.slice(0, 4)}-${i + 1}.png`;
 function rvRender(dir) {
-  const n = retroSlides(RV.s, RV.hide, rvName()).length; RV.i = Math.max(0, Math.min(n - 1, RV.i));
+  const n = rvList().length; RV.i = Math.max(0, Math.min(n - 1, RV.i));
   if (!$('#layer .rv')) $('#layer').innerHTML = `<div class="rv" role="dialog" aria-modal="true" aria-label="Meu mês de cria">
     <div class="rv-top"><div class="rv-bars"></div><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="rv-seg" role="group" aria-label="Versão"><button type="button" data-rvmode="full" aria-pressed="${RV.mode === 'full'}">Completa</button><button type="button" data-rvmode="soft" aria-pressed="${RV.mode === 'soft'}">Discreta</button></div>
+    <div class="rv-hint">${RV.mode === 'soft' ? 'Uma tela só pra celebrar, sem números, marcas nem nome.' : 'Todos os seus números do mês. Prefere algo mais reservado? Use a Discreta.'}</div>
     <div class="rv-stage"><div class="rv-slot"></div><button type="button" class="rv-nav l" data-rv="-1" aria-label="Tela anterior"></button><button type="button" class="rv-nav r" data-rv="1" aria-label="Próxima tela"></button></div>
-    <div class="rv-acts">${RV.s.brands.length ? '<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder os nomes das marcas</label>' : ''}
+    <div class="rv-acts">${RV.mode === 'full' && RV.s.brands.length ? '<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder os nomes das marcas</label>' : ''}
       <div class="rv-row"><button type="button" class="btn" data-act="rvshare">Compartilhar no story</button><button type="button" class="btn ghost" data-act="rvdl">Baixar imagem</button></div>
-      <button type="button" class="link" data-act="rvdlall">Baixar todas as ${n} telas</button></div></div>`;
+      ${n > 1 ? `<button type="button" class="link" data-act="rvdlall">Baixar todas as ${n} telas</button>` : ''}</div></div>`;
+  const hb = $('#layer [data-rvhide]'); if (hb) hb.checked = RV.hide;
   $('#layer .rv-bars').innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k <= RV.i ? 'on' : ''}"></i>`).join('');
   const cv = rvCanvas(RV.i); cv.className = 'rv-c ' + (dir > 0 ? 'in-r' : dir < 0 ? 'in-l' : 'in-0'); cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `Tela ${RV.i + 1} de ${n}`);
   const slot = $('#layer .rv-slot'); slot.innerHTML = ''; slot.appendChild(cv);
@@ -3435,10 +3468,11 @@ document.addEventListener('click', async e => {
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
   if (d.retro) { const r = S.data.retros.find(x => x.id === d.retro); if (r) await openRetro(r.stats); return; }
   if (d.retrotest) { await openRetro(retroStats(d.retrotest)); return; }
-  if (d.rv && RV) { const k = Number(d.rv), n = retroSlides(RV.s, RV.hide, rvName()).length; if (RV.i + k >= 0 && RV.i + k < n) { RV.i += k; rvRender(k); } return; }
+  if (d.rv && RV) { const k = Number(d.rv), n = rvList().length; if (RV.i + k >= 0 && RV.i + k < n) { RV.i += k; rvRender(k); } return; }
+  if (d.rvmode && RV) { if (RV.mode !== d.rvmode) { RV.mode = d.rvmode; RV.i = 0; try { localStorage.setItem('criahub:rvmode', RV.mode); } catch (_) {} $('#layer').innerHTML = ''; rvRender(0); } return; }
   if (d.act === 'rvshare' && RV) { await rvShare(); return; }
   if (d.act === 'rvdl' && RV) { rvSave(await RV.blob, rvFileName(RV.i)); toast('Imagem salva'); return; }
-  if (d.act === 'rvdlall' && RV) { const n = retroSlides(RV.s, RV.hide, rvName()).length; for (let i = 0; i < n; i++) { const b = await new Promise(r => rvCanvas(i).toBlob(r, 'image/png')); rvSave(b, rvFileName(i)); await new Promise(r => setTimeout(r, 350)); } toast(`${n} imagens salvas`); return; }
+  if (d.act === 'rvdlall' && RV) { const n = rvList().length; for (let i = 0; i < n; i++) { const b = await new Promise(r => rvCanvas(i).toBlob(r, 'image/png')); rvSave(b, rvFileName(i)); await new Promise(r => setTimeout(r, 350)); } toast(`${n} imagens salvas`); return; }
   if (d.act === 'wpadjust') { if (S.wp) { S.wp.adjust = !S.wp.adjust; openWeekPlan(); } return; }
   if (d.act === 'wpsave') { await saveWeekPlan(); return; }
   if (d.gomyday) { $('#toast').hidden = true; closeForm(); S.tab = 'rotina'; S.f.rview = 'hoje'; S.f.day = d.gomyday; try { sessionStorage.setItem('criahub:tab', 'rotina'); } catch (_) {} render(); window.scrollTo(0, 0); return; }
