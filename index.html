@@ -772,6 +772,17 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 @keyframes rvL{from{opacity:0;transform:translateX(-36px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes rv0{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.rv-c{animation:none!important}}
+.celeb{position:fixed;inset:0;z-index:90;background:rgb(20 6 12 / .55);display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+.celeb-card{position:relative;background:#420725;color:#fff;border-radius:24px;padding:26px 22px 22px;max-width:380px;width:100%;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:0 24px 60px rgb(0 0 0 / .45);animation:celebIn .5s cubic-bezier(.3,1.5,.5,1)}
+.celeb-card h2{font-size:24px;color:#fff}.celeb-card p{margin:0;color:rgb(255 255 255 / .85);font-weight:500}
+.celeb-e{font-size:52px;line-height:1;animation:celebPop .7s cubic-bezier(.3,1.7,.5,1) .15s both}
+.celeb-tag{color:#F4C9D8;font-family:var(--display);font-weight:700;font-size:15px}
+.celeb-card .btn{background:#FF5C8A;border-color:#FF5C8A;color:#fff;margin-top:4px;justify-content:center;min-width:160px}
+.celeb-fx i{position:absolute;top:-20px;width:9px;height:14px;border-radius:3px;animation:celebFall 1.6s ease-in forwards}
+@keyframes celebIn{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:none}}
+@keyframes celebPop{from{transform:scale(0)}to{transform:none}}
+@keyframes celebFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+@media (prefers-reduced-motion: reduce){.celeb-card,.celeb-e,.celeb-fx i{animation:none}.celeb-fx{display:none}}
 .toast-a{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
 .dot.d-dv{background:#FF5C8A}.dot.d-tk{background:var(--fg)}.dot.d-nt{background:#E0A100}.dot.d-ps{background:#2E9E6B}
 .callg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.callg span{display:inline-flex;align-items:center;gap:5px}
@@ -1147,7 +1158,7 @@ function render() {
   v.innerHTML = ({ inicio: vHome, radar: vNews, rotina: vRoutine, marcas: vBrands, agenda: vAgenda, estudio: vStudio, financeiro: vFinance })[S.tab]();
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -2865,9 +2876,40 @@ function checkBadges() {
 }
 function vBadges() {
   const have = S.profile.badges || {}, got = BADGES.filter(b => have[b[0]]);
-  return `<div class="card section"><div class="progress-top"><span style="color:var(--fg);font-weight:700">${got.length} de ${BADGES.length} conquistas</span><span class="num">${Math.round(got.length / BADGES.length * 100)}%</span></div><div class="bar ok"><span style="width:${Math.round(got.length / BADGES.length * 100)}%"></span></div></div>
+  return `${retroList()}
+  <div class="card section"><div class="progress-top"><span style="color:var(--fg);font-weight:700">${got.length} de ${BADGES.length} conquistas</span><span class="num">${Math.round(got.length / BADGES.length * 100)}%</span></div><div class="bar ok"><span style="width:${Math.round(got.length / BADGES.length * 100)}%"></span></div></div>
   <div class="badges">${BADGES.map(([id, n, d]) => `<div class="badge ${have[id] ? 'on' : ''}"><div class="bi">${have[id] ? ic('check') : '<span>?</span>'}</div><b>${esc(n)}</b><span>${esc(d)}</span>${have[id] ? `<small>${fmtD(have[id])}</small><button class="link" data-bshare="${id}">Copiar pra postar</button>` : ''}</div>`).join('')}</div>
-  ${retroList()}`;
+`;
+}
+/* ================= comemorações: nova fonte de renda e faturamento crescendo ================= */
+const celebQ = [];
+function celebrate(emoji, title, body) {
+  celebQ.push({ emoji, title, body }); if (celebQ.length === 1) celebShow();
+}
+function celebShow() {
+  const c = celebQ[0]; if (!c) return;
+  const el = document.createElement('div'); el.className = 'celeb'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', c.title);
+  el.innerHTML = `<div class="celeb-fx" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="left:${(i * 7.3 + 3) % 100}%;animation-delay:${(i % 7) * 90}ms;background:${['#FF5C8A', '#F4C9D8', '#fff', '#E0A100'][i % 4]}"></i>`).join('')}</div>
+    <div class="celeb-card"><div class="celeb-e">${c.emoji}</div><h2>${esc(c.title)}</h2><p>${esc(c.body)}</p><div class="celeb-tag">quem cria, se organiza.</div><button type="button" class="btn" data-celebok>Obrigada! 💗</button></div>`;
+  document.body.appendChild(el); setTimeout(() => el.querySelector('[data-celebok]')?.focus(), 50);
+}
+function celebClose() { document.querySelector('.celeb')?.remove(); celebQ.shift(); if (celebQ.length) setTimeout(celebShow, 250); }
+const celebSource = name => celebrate('🎉', 'Mais uma fonte de renda!', `${name} entrou pra sua lista. Parabéns: isso é fruto da sua organização, de cada contato, entrega e cobrança que você registra aqui.`);
+/* faturamento: quando o mês passa o anterior (uma vez por mês) e quando vira o melhor mês até agora */
+let growT = 0;
+function checkGrowth() {
+  clearTimeout(growT); growT = setTimeout(() => {
+    if (S.loading || hasExamples()) return;
+    const mk = monthKey(today()), pm = shiftMonth(mk, -1), cur = monthIncome(mk), prv = monthIncome(pm), done = S.profile.celebrated || {};
+    if (!(cur > 0)) return;
+    const past = [...new Set([...S.data.payments.filter(p => p.paid).map(p => monthKey(p.paidAt || p.due)), ...S.data.extras.filter(x => x.paid).map(x => monthKey(x.date))])].filter(m => m && m < mk);
+    const best = Math.max(0, ...past.map(monthIncome)), mn = monthName(mk), pn = monthName(pm);
+    let key = '', msg = null;
+    if (past.length >= 2 && cur > best && !done['rec' + mk]) { key = 'rec' + mk; msg = ['🏆', 'Seu melhor mês até agora!', `${mn.charAt(0).toUpperCase() + mn.slice(1)} já é o mês em que você mais faturou. Parabéns pela organização: é ela que transforma trabalho em resultado.`]; }
+    else if (prv > 0 && cur > prv && !done['fat' + mk] && !done['rec' + mk]) { key = 'fat' + mk; msg = ['📈', 'Seu faturamento cresceu!', `${mn.charAt(0).toUpperCase() + mn.slice(1)} já passou ${pn}. Parabéns pela organização: cada entrega registrada e cada cobrança feita fazem diferença.`]; }
+    if (!msg) return;
+    saveProfile({ celebrated: { ...done, [key]: today(), ...(key.startsWith('rec') ? { ['fat' + mk]: today() } : {}) } }); celebrate(...msg);
+  }, 1500);
 }
 /* ================= meu mês de cria: retrospectiva mensal (sem IA: tudo calculado aqui) ================= */
 const RETRO_BADGES = ['v50', 'agua30', 'v10', 'semana', 'gringa', 'lic5', 'hab7', 'meta1', 'kit', 'marca1', 'pago1', 'lic1', 'brief1', 'check3']; /* as de dinheiro (k10, k50) ficam de fora */
@@ -2973,8 +3015,8 @@ function retroList() {
   const list = [...new Map([...S.data.retros].sort((a, b) => String(a.created).localeCompare(String(b.created))).map(r => [r.month, r])).values()].sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)));
   const cur = today().slice(0, 7), cy = cur.slice(0, 4);
   return `<section class="section"><div class="row-h"><h2>Minhas retrospectivas</h2></div>
-    ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria: os números do mês anterior, prontos pra postar no story.</div>'}
-    <div class="row-btns"><button class="btn sm ghost" data-retrotest="${cur}">Gerar retrospectiva de ${esc(monthName(cur))}</button><button class="btn sm ghost" data-retroyear="${cy}">Gerar retrospectiva de ${cy}</button></div></section>`;
+    ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria. Quer ver como está indo? Toque abaixo.</div>'}
+    <div class="row-btns"><button class="btn sm" data-retrotest="${cur}">Retrospectiva de ${esc(monthName(cur))}</button><button class="btn sm ghost" data-retroyear="${cy}">Retrospectiva de ${cy}</button></div></section>`;
 }
 
 /* ---------- telas do story (1080x1920), desenhadas em canvas ---------- */
@@ -3347,6 +3389,7 @@ async function submitEntity(form) {
     if (ct === 'avulso') { obj.start = ''; obj.end = ''; }
     const mk = obj.mkpay; delete obj.mkpay;
     closeForm(); await put('brands', obj);
+    if (obj.status === 'ativo' && (!prev || prev.status !== 'ativo') && !obj.example) celebSource(obj.name);
     if (!prev && mk && ct !== 'avulso' && +obj.value > 0) await put('payments', { id: newId(), brandId: obj.id, desc: ct === 'ciclo' ? `${obj.name}: ciclo ${fmtD(obj.start)} a ${fmtD(obj.end)}` : `${obj.name}: pacote de ${+obj.videos || 0} vídeos`, amount: +obj.value, currency: obj.currency || 'BRL', due: obj.end || obj.start || today(), paid: false, created: new Date().toISOString() });
     toast(prev ? 'Marca atualizada' : 'Marca cadastrada'); return;
   }
@@ -3362,6 +3405,7 @@ async function submitEntity(form) {
   if (col === 'payments') { if (obj.paid && !obj.paidAt) obj.paidAt = today(); if (!obj.paid) obj.paidAt = ''; }
   if (col === 'payments' || col === 'extras') { if (CURS[obj.currency] && obj.paid && !+obj.rate && fxRate(obj.currency)) obj.rate = fxNet(obj.currency); if (!obj.paid) obj.rate = ''; }
   if (col === 'goals') { const dn = obj.kind === 'check' ? !!obj.done : (+obj.current || 0) >= Math.max(1, +obj.target || 1); obj.doneAt = dn ? (obj.doneAt || today()) : ''; }
+  if (col === 'extras' && !prev && obj.name && !S.data.extras.some(x => wpKey(x.name) === wpKey(obj.name))) { closeForm(); await put(col, obj); toast('Salvo'); celebSource(obj.name); return; }
   if (col === 'tasks' && prev && prev.date !== obj.date && !obj.done && obj.date > prev.date) obj.moved = (prev.moved || 0) + 1;
   closeForm(); await put(col, obj); toast('Salvo');
 }
@@ -3377,10 +3421,11 @@ async function renew(id) {
 }
 async function convertLead(l) {
   const ex = l.brandId && S.data.brands.find(b => b.id === l.brandId);
-  if (ex) { await put('brands', { ...ex, status: 'ativo' }); toast(`${ex.name} voltou a ser cliente!`); return; }
+  if (ex) { await put('brands', { ...ex, status: 'ativo' }); toast(`${ex.name} voltou a ser cliente!`); if (!l.example) celebSource(ex.name); return; }
   const front = leadFront(l);
   await put('brands', { id: newId(), name: l.name, contact: l.contact || '', front, status: 'ativo', ctype: defaultCtype(front), cycle: 30, start: today(), end: '', videos: '', value: l.value || '', currency: l.currency || 'BRL', notes: l.notes || '', created: new Date().toISOString(), ...(l.example ? { example: true } : {}) });
   toast(`${l.name} virou cliente! Complete os dados em Clientes.`);
+  if (!l.example) celebSource(l.name);
 }
 async function advanceLead(id) {
   const l = S.data.leads.find(x => x.id === id); if (!l) return;
@@ -3538,6 +3583,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
   if (d.retro) { const r = S.data.retros.find(x => x.id === d.retro); if (r) await openRetro(r.stats); return; }
+  if (t.hasAttribute('data-celebok')) { celebClose(); return; }
   if (d.retrotest) { await openRetro(retroStats(d.retrotest)); return; }
   if (d.retroyear) { await openRetro(retroYearStats(d.retroyear)); return; }
   if (d.rv && RV) { const k = Number(d.rv), n = rvList().length; if (RV.i + k >= 0 && RV.i + k < n) { RV.i += k; rvRender(k); } return; }
@@ -3673,7 +3719,7 @@ document.addEventListener('change', async e => {
   if (e.target.id === 'f_front' && !sheet.id && form.elements.ctype) form.elements.ctype.value = defaultCtype(e.target.value);
   if (e.target.id === 'f_front' || e.target.id === 'f_ctype') applyWhen(form);
 });
-document.addEventListener('keydown', e => { if ($('#tp')) { if (e.key === 'Escape') closePrompter(); else if (e.key === ' ') { e.preventDefault(); tpCmd('play'); } return; } if (sheet?.col === 'retro' && RV && /^Arrow(Left|Right)$/.test(e.key)) { document.querySelector(`[data-rv="${e.key === 'ArrowRight' ? 1 : -1}"]`)?.click(); return; } if (e.key === 'Escape' && sheet) { closeForm(); applyAccent(); } });
+document.addEventListener('keydown', e => { if ($('#tp')) { if (e.key === 'Escape') closePrompter(); else if (e.key === ' ') { e.preventDefault(); tpCmd('play'); } return; } if (e.key === 'Escape' && document.querySelector('.celeb')) { celebClose(); return; } if (sheet?.col === 'retro' && RV && /^Arrow(Left|Right)$/.test(e.key)) { document.querySelector(`[data-rv="${e.key === 'ArrowRight' ? 1 : -1}"]`)?.click(); return; } if (e.key === 'Escape' && sheet) { closeForm(); applyAccent(); } });
 document.addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, kind = f.dataset.form;
   if (kind === 'entity') return submitEntity(f);
