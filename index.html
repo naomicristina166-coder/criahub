@@ -301,7 +301,7 @@ window.CRIAHUB_CONFIG = {
       return box('<span class="sub">Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o app pelo ícone da Tela de Início (iPhone).</span>');
     }
     if (Notification.permission === 'denied') return box('<span class="sub">As notificações estão bloqueadas para o CriaHub. Libere nos ajustes do celular (Notificações › CriaHub) e volte aqui.</span>');
-    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário e o seu mês de cria todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
+    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário e a sua retrospectiva no último dia de cada mês.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
     return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar UGC todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
@@ -751,7 +751,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .rh .rh-e{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#FF8FB0}
 .rh b{font-family:var(--display);font-size:22px;line-height:1.15}.rh span{color:rgb(255 255 255 / .85)}
 .rh .rh-go{align-self:flex-start;margin-top:6px;background:#FF5C8A;color:#fff;border-radius:11px;padding:9px 14px;font-weight:800;font-size:14px}
-.rv{position:fixed;inset:0;z-index:70;background:#1C0611;color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.rv{position:fixed;inset:0;z-index:70;background:#1C0611;color:#fff;display:flex;flex-direction:column;align-items:center;gap:12px;overflow-y:auto;overscroll-behavior:contain;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px))}
 .rv-top{width:100%;max-width:460px;display:flex;align-items:center;gap:12px}
 .rv-top .iconbtn{background:rgb(255 255 255 / .12);border-color:transparent;color:#fff}
 .rv-bars{flex:1;display:flex;gap:5px}.rv-bars i{flex:1;height:4px;border-radius:4px;background:rgb(255 255 255 / .22);transition:background .3s}.rv-bars i.on{background:#F4C9D8}
@@ -759,13 +759,17 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .rv-seg button{border:0;background:none;color:#fff;font:inherit;font-weight:700;font-size:14px;padding:8px;border-radius:9px;cursor:pointer}
 .rv-seg button[aria-pressed=true]{background:#fff;color:#420725}
 .rv-hint{width:100%;max-width:460px;text-align:center;font-size:13px;color:rgb(255 255 255 / .72);margin-top:-4px}
-.rv-stage{position:relative;flex:1;min-height:0;width:100%;display:flex;justify-content:center;align-items:center}
-.rv-slot{width:min(100%, 460px, calc((100vh - 300px) * 9 / 16));width:min(100%, 460px, calc((100dvh - 300px) * 9 / 16));aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgb(0 0 0 / .5);background:#420725}
+.rv-stage{position:relative;flex:none;width:100%;display:flex;justify-content:center;align-items:center}
+.rv-slot{width:min(100%, 460px, calc((100vh - 330px) * 9 / 16));width:min(100%, 460px, calc((100dvh - 330px) * 9 / 16));min-width:min(100%, 220px);aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px rgb(0 0 0 / .5);background:#420725}
 .rv-slot canvas{display:block;width:100%;height:100%}
 .rv-nav{position:absolute;top:0;bottom:0;width:40%;background:none;border:0;z-index:2;-webkit-tap-highlight-color:transparent}.rv-nav.l{left:0}.rv-nav.r{right:0}
 .rv-acts{width:100%;max-width:460px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .rv-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .rv-acts .btn{justify-content:center}.rv-acts .btn:not(.ghost){background:#FF5C8A;color:#fff;border-color:#FF5C8A}.rv-acts .btn.ghost{color:#fff;border-color:rgb(255 255 255 / .35);background:transparent}.rv-acts .link{color:#F4C9D8;align-self:center}
+.rl summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;list-style:none}.rl summary::-webkit-details-marker{display:none}
+.rl summary::after{content:"›";font-size:22px;line-height:1;color:var(--muted);transition:transform .2s}.rl[open] summary::after{transform:rotate(90deg)}.rl[open] summary{margin-bottom:10px}.rl .sub{margin-left:auto}
+.rv-priv{background:rgb(255 255 255 / .08);border-radius:12px;padding:8px 12px;font-size:14px}.rv-priv summary{cursor:pointer;font-weight:700;color:#F4C9D8}
+.rv-priv .sub{color:rgb(255 255 255 / .65);margin-top:6px}.rv-priv ul{margin:6px 0 2px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
 .rv-ck{display:flex;align-items:center;gap:9px;font-weight:600;font-size:14px;justify-content:center}.rv-ck input{width:20px;height:20px;accent-color:#FF5C8A}
 .rv-c.in-r{animation:rvR .45s cubic-bezier(.2,.8,.2,1)}.rv-c.in-l{animation:rvL .45s cubic-bezier(.2,.8,.2,1)}.rv-c.in-0{animation:rv0 .5s ease}
 @keyframes rvR{from{opacity:0;transform:translateX(36px) scale(.97)}to{opacity:1;transform:none}}
@@ -2967,7 +2971,7 @@ const periodName = s => isYear(s) ? s.month : monthName(s.month);
 const nextPeriod = s => isYear(s) ? String(+s.month + 1) : monthName(shiftMonth(s.month, 1));
 /* metas de cada frase: no ano, os números precisam ser bem maiores */
 const retroT = s => isYear(s) ? { weakSent: 5, weakDays: 30, weakTasks: 30, weakHab: 60, best: 21, sentAll: 40, sent: 20, brands: 5, tasks: 150, habits: 150, w: 'Ano' } : { weakSent: 1, weakDays: 5, weakTasks: 5, weakHab: 10, best: 7, sentAll: 8, sent: 5, brands: 3, tasks: 20, habits: 20, w: 'Mês' };
-const retroWeak = s => { const T = retroT(s); return !extrasN(s) && !s.brands.length && s.sent <= T.weakSent && s.rDays < T.weakDays && s.tasks < T.weakTasks && s.habits < T.weakHab && !s.goals; };
+const retroWeak = s => { const T = retroT(s); return !s.brands.length && s.sent <= T.weakSent && s.rDays < T.weakDays && s.tasks < T.weakTasks && s.habits < T.weakHab && !s.goals; };
 function retroPhrase(s) {
   const nb = s.brands.length, T = retroT(s);
   if (retroWeak(s)) return `${T.w} corrido? Faz parte. Bora juntas em ${nextPeriod(s)}.`;
@@ -2975,7 +2979,6 @@ function retroPhrase(s) {
   if (s.sent >= T.sentAll && s.onTime === s.sent) return `${T.w} de entrega: ${s.sent} vídeos enviados, todos no prazo 🎬`;
   if (s.sent >= T.sent) return `${T.w} produtivo: ${plural(s.sent, 'entrega', 'entregas')} para ${plural(nb, 'marca', 'marcas')} 🎬`;
   if (nb >= T.brands) return `${T.w} de parcerias: ${nb} marcas confiaram no seu trabalho 💌`;
-  if (extrasN(s) && (nb || extrasN(s) >= 2)) return `${T.w} de muitas frentes: ${nb ? plural(nb, 'marca', 'marcas') + ' e ' : ''}${plural(extrasN(s), 'outra fonte de renda', 'outras fontes de renda')} 💼`;
   if (s.tasks >= T.tasks) return `${T.w} de foco: ${s.tasks} tarefas riscadas da lista ✅`;
   if (s.habits >= T.habits) return `${T.w} de autocuidado: ${s.habits} hábitos cumpridos 💧`;
   return `Passo a passo: você seguiu criando em ${periodName(s)} ✨`;
@@ -2985,7 +2988,6 @@ function retroHighlight(s) {
   if (s.best >= 3) return { name: `${s.best} dias seguidos`, desc: 'de rotina cumprida' };
   if (s.sent) return { name: plural(s.sent, 'entrega enviada', 'entregas enviadas'), desc: s.brands.length ? `para ${plural(s.brands.length, 'marca', 'marcas')}` : '' };
   if (s.brands.length) return { name: plural(s.brands.length, 'marca trabalhada', 'marcas trabalhadas'), desc: 'confiaram no seu trabalho' };
-  if (extrasN(s)) return { name: plural(extrasN(s), 'fonte de renda', 'fontes de renda'), desc: 'criando além das marcas' };
   if (s.tasks) return { name: plural(s.tasks, 'tarefa concluída', 'tarefas concluídas'), desc: 'na sua checklist' };
   return null;
 }
@@ -3002,23 +3004,31 @@ function checkRetro() {
 }
 const retroOf = ym => [...S.data.retros].filter(r => r.month === ym).sort((a, b) => String(b.created).localeCompare(String(a.created)))[0];
 const retroSortKey = r => r.month.length === 4 ? r.month + '-13' : r.month;
-function openLatestRetro(kind) { const r = [...S.data.retros].filter(x => kind === 'ano' ? x.kind === 'ano' : kind === 'mes' ? x.kind !== 'ano' : true).sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)))[0]; if (r) openRetro(r.stats); }
+const isLastDay = (t = today()) => addDays(t, 1).slice(8) === '01';
+function openLatestRetro(kind) {
+  const t = today();
+  if (kind === 'mes' && isLastDay(t)) return openRetro(retroStats(t.slice(0, 7)));
+  if (kind === 'ano' && t.slice(5, 7) === '12') return openRetro(retroYearStats(t.slice(0, 4)));
+  const r = [...S.data.retros].filter(x => kind === 'ano' ? x.kind === 'ano' : kind === 'mes' ? x.kind !== 'ano' : true).sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)))[0]; if (r) openRetro(r.stats);
+}
 window.criahubOpenRetro = openLatestRetro;
+/* a do mês chega no último dia do mês; a do ano, em 1º de dezembro (card até o dia 7) */
 function homeRetro() {
-  const t = today(), y = retroOf(String(+t.slice(0, 4) - 1));
-  const yc = t.slice(5, 7) === '01' && +t.slice(8) <= 15 && y ? `<button class="card rh" data-retro="${y.id}"><span class="rh-e">criahub · meu ano de cria</span><b>Seu ano de cria chegou 🎉</b><span>Veja tudo o que você construiu em ${esc(y.month)}: marcas, entregas e conquistas.</span><span class="rh-go">Ver meu ano</span></button>` : '';
-  if (+t.slice(8) > 7) return yc;
-  const r = retroOf(shiftMonth(t.slice(0, 7), -1)); if (!r) return yc;
-  return yc + `<button class="card rh" data-retro="${r.id}"><span class="rh-e">criahub · meu mês de cria</span><b>Seu mês de cria chegou ✨</b><span>Veja o que você construiu em ${esc(monthName(r.month))}.</span><span class="rh-go">Ver minha retrospectiva</span></button>`;
+  const t = today(), cm = t.slice(0, 7), cy = t.slice(0, 4);
+  const card = (attr, eye, title, txt, go) => `<button class="card rh" ${attr}><span class="rh-e">${eye}</span><b>${title}</b><span>${txt}</span><span class="rh-go">${go}</span></button>`;
+  return (t.slice(5, 7) === '12' && +t.slice(8) <= 7 ? card(`data-retroyear="${cy}"`, 'criahub · meu ano de cria', `Sua retrospectiva de ${cy} chegou 🎉`, 'Veja tudo o que você construiu no ano: marcas, entregas e conquistas.', 'Ver meu ano') : '')
+    + (isLastDay(t) ? card(`data-retrotest="${cm}"`, 'criahub · meu mês de cria', `Sua retrospectiva de ${esc(monthName(cm))} chegou ✨`, 'Veja o que você construiu neste mês.', 'Ver minha retrospectiva') : '');
 }
 function retroList() {
   const list = [...new Map([...S.data.retros].sort((a, b) => String(a.created).localeCompare(String(b.created))).map(r => [r.month, r])).values()].sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)));
-  /* a do ano é surpresa: o botão só aparece em dezembro */
-  const cur = today().slice(0, 7), cy = cur.slice(0, 4);
-  return `<section class="section"><div class="row-h"><h2>Minhas retrospectivas</h2></div>
-    ${list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase(r.stats))}</span></button></div>`).join('')}</div>` : '<div class="sub">Todo dia 1º chega o seu mês de cria. Quer ver como está indo? Toque abaixo.</div>'}
-    <div class="row-btns"><button class="btn sm" data-retrotest="${cur}">Retrospectiva de ${esc(monthName(cur))}</button>${cur.slice(5) === '12' ? `<button class="btn sm ghost" data-retroyear="${cy}">Retrospectiva de ${cy}</button>` : ''}</div>
-    ${cur.slice(5) === '11' ? '<div class="sub">Em dezembro, chega por aqui o seu ano em retrospectiva ✨</div>' : ''}</section>`;
+  const t = today(), cur = t.slice(0, 7), cy = cur.slice(0, 4), last = isLastDay(t), dec = cur.slice(5) === '12', nov = cur.slice(5) === '11';
+  const items = list.length ? `<div class="list">${list.map(r => `<div class="lead"><button class="open" data-retro="${r.id}"><span class="t">${r.kind === 'ano' ? `Ano de ${esc(r.month)} <span class="pill p-acc" style="font-size:11px">anual</span>` : esc(monthLabel(r.month))}</span><span class="m">${esc(retroPhrase({ brands: [], ...r.stats }))}</span></button></div>`).join('')}</div>` : '';
+  /* a do ano é surpresa: o botão só aparece em dezembro; a do mês, só no último dia */
+  const btns = (last ? `<button class="btn sm" data-retrotest="${cur}">Retrospectiva de ${esc(monthName(cur))}</button>` : '') + (dec ? `<button class="btn sm ${last ? 'ghost' : ''}" data-retroyear="${cy}">Retrospectiva de ${cy}</button>` : '');
+  const teaser = nov ? '<div class="sub">Em dezembro, chega por aqui o seu ano em retrospectiva ✨</div>' : '';
+  if (btns) return `<section class="section"><div class="row-h"><h2>Minhas retrospectivas</h2></div><div class="row-btns">${btns}</div>${items}</section>`;
+  if (!list.length) return teaser ? `<section class="section">${teaser}</section>` : '';
+  return `<details class="card rl"><summary><b>Minhas retrospectivas</b><span class="sub">${list.length}</span></summary>${items}</details>${teaser}`;
 }
 
 /* ---------- telas do story (1080x1920), desenhadas em canvas ---------- */
@@ -3074,11 +3084,10 @@ function retroSlides(s, hide, name) {
       rText(c, plural(nb, 'marca', 'marcas'), 90, 1430, `800 170px ${RFD}`, '#fff');
     }
   });
-  if (s.fronts.length || s.extras.length) out.push(c => { /* marcas por frente e outras rendas */
-    rBase(c, 4); rEyebrow(c, 'MARCAS E RENDAS', 400);
-    const ty = rText(c, s.fronts.length ? 'Com quem você trabalhou' : 'Onde você criou', 90, 510, `800 84px ${RFD}`, '#fff', { max: 900, lh: 92, lines: 2 });
-    const blocks = [...s.fronts.map(f => ({ h: f.front, n: plural(f.brands.length, 'marca', 'marcas'), list: hide ? '' : f.brands.join(' · ') })),
-      ...(s.extras.length ? [{ h: 'Outras fontes de renda', n: plural(extrasN(s), 'fonte', 'fontes'), list: s.extras.map(e => hide || !e.names.length ? e.type : `${e.type}: ${e.names.join(', ')}`).join(' · ') }] : [])];
+  if (s.fronts.length) out.push(c => { /* marcas trabalhadas por frente (as outras rendas ficam só no app, nunca na imagem) */
+    rBase(c, 4); rEyebrow(c, 'MARCAS TRABALHADAS', 400);
+    const ty = rText(c, 'Com quem você trabalhou', 90, 510, `800 84px ${RFD}`, '#fff', { max: 900, lh: 92, lines: 2 });
+    const blocks = [...s.fronts.map(f => ({ h: f.front, n: plural(f.brands.length, 'marca', 'marcas'), list: hide ? '' : f.brands.join(' · ') })),];
     if (s.fronts.length > 1) blocks.unshift({ h: 'No total', n: plural(nb, 'marca trabalhada', 'marcas trabalhadas'), list: '' });
     /* quantas linhas de nomes cabem em cada bloco até o rodapé */
     let y = ty + 90; c.font = `600 38px ${RFB}`; const bl = blocks.slice(0, 5), full = bl.map(b => b.list ? rWrap(c, b.list, 820).length : 0);
@@ -3151,7 +3160,6 @@ function retroSoftTone(s) {
   if (s.best >= T.best) return ['constância', '🔥', 'Aparecendo pra mim todos os dias.'];
   if (s.sent >= T.sent) return ['entregas', '🎬', 'Ideia saindo do papel e virando vídeo.'];
   if (s.brands.length >= T.brands) return ['parcerias', '💌', 'Grata por cada marca que confiou em mim.'];
-  if (extrasN(s) && (s.brands.length || extrasN(s) >= 2)) return ['muitas frentes', '💼', 'Criando de vários jeitos, do meu jeito.'];
   if (s.goals) return ['meta batida', '🎯', 'Celebrando cada passo do caminho.'];
   if (s.tasks >= T.tasks) return ['foco', '✅', 'Lista riscada e cabeça leve.'];
   if (s.habits >= T.habits) return ['autocuidado', '💧', 'Cuidar de mim também é rotina de creator.'];
@@ -3189,9 +3197,10 @@ function rvRender(dir) {
     <div class="rv-seg" role="group" aria-label="Como ver"><button type="button" data-rvmode="full" aria-pressed="${RV.mode === 'full'}">Com os números</button><button type="button" data-rvmode="soft" aria-pressed="${RV.mode === 'soft'}">Só celebrar</button></div>
     <div class="rv-hint">${RV.mode === 'soft' ? 'Uma tela leve, sem números, marcas nem nome. Pra celebrar do seu jeito.' : `Seu ${isYear(RV.s) ? 'ano' : 'mês'} completinho. Fica guardado aqui; compartilhar é só se você quiser.`}</div>
     <div class="rv-stage"><div class="rv-slot"></div><button type="button" class="rv-nav l" data-rv="-1" aria-label="Tela anterior"></button><button type="button" class="rv-nav r" data-rv="1" aria-label="Próxima tela"></button></div>
-    <div class="rv-acts">${RV.mode === 'full' && (RV.s.brands.length || (RV.s.extras || []).some(e => e.names.length)) ? `<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder nomes de marcas e rendas</label>` : ''}
+    <div class="rv-acts">${RV.mode === 'full' && RV.s.brands.length ? '<label class="rv-ck"><input type="checkbox" data-rvhide> Esconder os nomes das marcas</label>' : ''}
       <div class="rv-row"><button type="button" class="btn" data-act="rvshare">Compartilhar no story</button><button type="button" class="btn ghost" data-act="rvdl">Baixar imagem</button></div>
-      ${n > 1 ? `<button type="button" class="link" data-act="rvdlall">Baixar todas as ${n} telas</button>` : ''}</div></div>`;
+      ${n > 1 ? `<button type="button" class="link" data-act="rvdlall">Baixar todas as ${n} telas</button>` : ''}
+      ${RV.s.extras.length ? `<details class="rv-priv"><summary>🔒 Só pra você: ${plural(extrasN(RV.s), 'outra renda', 'outras rendas')} ${isYear(RV.s) ? 'no ano' : 'no mês'}</summary><div class="sub">Pra você lembrar. Isso não aparece nas imagens.</div><ul>${RV.s.extras.map(e => `<li><b>${esc(e.type)}</b>${e.names.length ? ': ' + esc(e.names.join(', ')) : ''}</li>`).join('')}</ul></details>` : ''}</div></div>`;
   const hb = $('#layer [data-rvhide]'); if (hb) hb.checked = RV.hide;
   $('#layer .rv-bars').innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k <= RV.i ? 'on' : ''}"></i>`).join('');
   const cv = rvCanvas(RV.i); cv.className = 'rv-c ' + (dir > 0 ? 'in-r' : dir < 0 ? 'in-l' : 'in-0'); cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', `Tela ${RV.i + 1} de ${n}`);

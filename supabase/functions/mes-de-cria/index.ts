@@ -1,4 +1,4 @@
-/* CriaHub · aviso do "Meu mês de cria" (todo dia 1º) e do "Meu ano de cria" (1º de janeiro)
+/* CriaHub · aviso da retrospectiva do mês (último dia de cada mês) e do ano (1º de dezembro)
    Manda a notificação para todas as inscrições de push_subs. Não usa IA e não lê dados das creators:
    a retrospectiva é calculada no próprio app quando ela abre.
 
@@ -7,7 +7,8 @@
         VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (ex.: mailto:contato@criahub.app.br)
         CRON_SECRET = uma senha longa qualquer
    2. supabase functions deploy mes-de-cria --no-verify-jwt
-   3. Rode supabase/mes-de-cria.sql no SQL Editor (troque o segredo pelo CRON_SECRET). */
+   3. Rode supabase/mes-de-cria.sql no SQL Editor (troque o segredo pelo CRON_SECRET).
+   A função é chamada todo dia e decide sozinha se é dia de avisar. */
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
@@ -19,12 +20,15 @@ Deno.serve(async req => {
   webpush.setVapidDetails(Deno.env.get('VAPID_SUBJECT') ?? 'mailto:contato@criahub.app.br', Deno.env.get('VAPID_PUBLIC_KEY')!, Deno.env.get('VAPID_PRIVATE_KEY')!);
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-  /* mês anterior no horário de Brasília */
-  const br = new Date(Date.now() - 3 * 3600e3), mes = MESES[(br.getUTCMonth() + 11) % 12];
-  /* em 1º de janeiro o aviso é do ano inteiro (a de dezembro fica na lista do app) */
-  const payload = JSON.stringify(br.getUTCMonth() === 0
-    ? { title: 'Seu ano de cria chegou 🎉', body: `Veja tudo o que você construiu em ${br.getUTCFullYear() - 1}: marcas, rendas e conquistas.`, tag: 'anodecria', url: '/#anodecria' }
-    : { title: 'Seu mês de cria chegou ✨', body: `Veja o que você construiu em ${mes}.`, tag: 'mesdecria', url: '/#mesdecria' });
+  /* roda todo dia às 19h de Brasília e só avisa no último dia do mês (retrospectiva do mês)
+     e em 1º de dezembro (retrospectiva do ano) */
+  const br = new Date(Date.now() - 3 * 3600e3), amanha = new Date(br.getTime() + 864e5);
+  const ultimoDia = amanha.getUTCDate() === 1, dezembro1 = br.getUTCMonth() === 11 && br.getUTCDate() === 1;
+  if (!ultimoDia && !dezembro1) return Response.json({ skipped: true });
+  const mes = MESES[br.getUTCMonth()], ano = br.getUTCFullYear();
+  const payload = JSON.stringify(dezembro1
+    ? { title: `Sua retrospectiva de ${ano} chegou 🎉`, body: 'Veja tudo o que você construiu no ano: marcas, entregas e conquistas.', tag: 'anodecria', url: '/#anodecria' }
+    : { title: `Sua retrospectiva de ${mes} chegou ✨`, body: 'Veja o que você construiu neste mês. Toque pra abrir.', tag: 'mesdecria', url: '/#mesdecria' });
 
   const subs: { endpoint: string; sub: webpush.PushSubscription }[] = [];
   for (let from = 0; ; from += 1000) {
