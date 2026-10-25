@@ -1,4 +1,4 @@
-/* CriaHub · aviso do "Meu mês de cria" (todo dia 1º)
+/* CriaHub · aviso do "Meu mês de cria" (todo dia 1º) e do "Meu ano de cria" (1º de janeiro)
    Manda a notificação para todas as inscrições de push_subs. Não usa IA e não lê dados das creators:
    a retrospectiva é calculada no próprio app quando ela abre.
 
@@ -21,7 +21,10 @@ Deno.serve(async req => {
 
   /* mês anterior no horário de Brasília */
   const br = new Date(Date.now() - 3 * 3600e3), mes = MESES[(br.getUTCMonth() + 11) % 12];
-  const payload = JSON.stringify({ title: 'Seu mês de cria chegou ✨', body: `Veja o que você construiu em ${mes}.`, tag: 'mesdecria', url: '/#mesdecria' });
+  /* em 1º de janeiro o aviso é do ano inteiro (a de dezembro fica na lista do app) */
+  const payload = JSON.stringify(br.getUTCMonth() === 0
+    ? { title: 'Seu ano de cria chegou 🎉', body: `Veja tudo o que você construiu em ${br.getUTCFullYear() - 1}: marcas, rendas e conquistas.`, tag: 'anodecria', url: '/#anodecria' }
+    : { title: 'Seu mês de cria chegou ✨', body: `Veja o que você construiu em ${mes}.`, tag: 'mesdecria', url: '/#mesdecria' });
 
   const subs: { endpoint: string; sub: webpush.PushSubscription }[] = [];
   for (let from = 0; ; from += 1000) {
