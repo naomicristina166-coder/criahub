@@ -212,6 +212,13 @@ window.CRIAHUB_CONFIG = {
     const t = setInterval(load, 15 * 60 * 1000);
     return () => clearInterval(t);
   } };
+  /* Em alta: músicas e trends da semana (tabela trends, publicada pela tarefa semanal) */
+  const trendsQ = { orderBy() { return trendsQ; }, limit() { return trendsQ; }, onSnapshot(cb, onErr) {
+    let last = '';
+    const load = () => sb.from('trends').select('week,data,updated_at').order('week', { ascending: false }).limit(4).then(({ data, error }) => { if (error) { onErr && onErr(error); return; } const sig = (data || []).map(r => r.week + r.updated_at).join('|'); if (sig === last && last) return; last = sig; cb({ docs: (data || []).map(r => ({ id: r.week, data: () => ({ ...r.data, week: r.week }) })) }); }, () => onErr && onErr());
+    load(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+    return () => {};
+  } };
   /* cotações (comerciais, AwesomeAPI) */
   let fxP = null;
   const fxLoad = () => (fxP = fxP || fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL').then(r => r.json()).catch(() => ({})));
@@ -219,7 +226,7 @@ window.CRIAHUB_CONFIG = {
   const empty = { orderBy() { return empty; }, limit() { return empty; }, onSnapshot(cb) { cb({ docs: [] }); return () => {}; } };
   const db = {
     doc(path) { if (/^data\/users\/[^/]+\/profile$/.test(path)) return profRef; const m = /^data\/news\/fx\/(usd|eur)$/.exec(path); if (m) return fxRef(m[1]); return { onSnapshot(cb) { cb({ exists: false, data: () => ({}) }); return () => {}; }, collection: () => empty }; },
-    collection(path) { return path === 'data/news/days' ? newsQ : empty; },
+    collection(path) { return path === 'data/news/days' ? newsQ : path === 'data/trends' ? trendsQ : empty; },
   };
   const user = { id: async () => uid(), isOwner: () => true, canEdit: () => true };
   const downloads = { async save({ filename, data }) { const blob = data instanceof Blob ? data : new Blob([data]); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); return { status: 'saved' }; } };
@@ -750,6 +757,9 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.tr-it{display:flex;flex-direction:column;gap:6px}.tr-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.tr-how{font-size:14px}
+.tr-f{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px}.tr-top h2{font-size:19px;margin-top:4px}
+.tr-warn{display:flex;flex-direction:column;gap:4px;border-color:color-mix(in oklab, var(--warn) 45%, var(--line));font-size:14px}.tr-warn span{color:var(--muted)}
 .helpq{margin-left:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:700 13px/1 var(--body);vertical-align:middle;cursor:pointer;display:inline-grid;place-items:center;padding:0}
 .gl summary{cursor:pointer;font-weight:700}.gl dl{margin:10px 0 0;display:grid;gap:8px}.gl dt{font-weight:800}.gl dd{margin:0;color:var(--muted);font-size:14px}
 .tl-g{display:flex;flex-direction:column;gap:6px}.chip.tl[aria-pressed=true]{background:var(--accent-btn);color:#fff;border-color:transparent}.chip.tl[disabled]{opacity:.7}
@@ -1141,6 +1151,7 @@ async function connect() {
     const [db, user] = await Promise.all([c.use('db'), c.use('user')]);
     const uid = user ? await user.id() : null;
     if (db) Object.entries(CURS).forEach(([c, m]) => db.doc('data/news/fx/' + m.file).onSnapshot(s => { if (s.exists) { Object.assign(FXD[c], s.data()); if (!sheet) render(); } }, () => {}));
+    if (db) db.collection('data/trends').orderBy('week', 'desc').limit(4).onSnapshot(s => { S.trends = s.docs.map(d => ({ ...d.data(), week: d.id })); S.trendsReady = true; if (!sheet && S.tab === 'estudio') render(); }, () => { S.trendsReady = true; });
     if (db) db.collection('data/news/days').orderBy('date', 'desc').limit(14).onSnapshot(s => { S.news = s.docs.map(d => ({ ...d.data(), id: d.id })); S.newsReady = true; if (!sheet) render(); }, () => { S.newsReady = true; });
     if (!db || !uid) { S.loading = false; render(); return; }
     const base = db.doc(`data/users/${uid}/profile`);
@@ -2087,9 +2098,9 @@ function workBanner(d) {
 }
 
 /* ================= estúdio ================= */
-const STVIEWS = [['briefing', 'Briefing'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
+const STVIEWS = [['briefing', 'Briefing'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
 const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
-function vStudio() { return ({ briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
+function vStudio() { return ({ alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
 function studioUsage() {
   if (window.CRIAHUB_STANDALONE) return '';
   const u = usage(), used = u.studio || 0, max = LIMITS.studio, pct = Math.min(100, Math.round(used / max * 100));
@@ -2296,21 +2307,70 @@ async function setTaskDone(x, done) {
   if (moved) toast(done ? `${moved} entrega${moved === 1 ? (st === 3 ? ' marcada como Enviado' : ' foi pra Edição') : (st === 3 ? 's marcadas como Enviado' : 's foram pra Edição')}` : `${moved} entrega${moved === 1 ? ' voltou' : 's voltaram'} de etapa na Agenda`);
   return moved;
 }
+/* ================= Em alta: músicas e trends da semana por nicho (dados reais da tarefa semanal, com fonte) ================= */
+const NICHES = [['beleza', 'Beleza e skincare'], ['moda', 'Moda'], ['fitness', 'Fitness e saúde'], ['alimentacao', 'Alimentação'], ['maternidade', 'Maternidade'], ['casa', 'Casa e decoração'], ['pets', 'Pets'], ['tech', 'Tecnologia e apps'], ['financas', 'Finanças'], ['games', 'Games'], ['viagem', 'Viagem'], ['lifestyle', 'Lifestyle e humor']];
+const myNiches = () => arr(S.profile.niches).filter(k => NICHES.some(n => n[0] === k));
+const nicheName = k => (NICHES.find(n => n[0] === k) || [k, k])[1];
+window.criahubSetTrends = list => { S.trends = list; S.trendsReady = true; render(); };
+function trItem(x, kind, key) {
+  const u = safeUrl(x.url);
+  return `<article class="card tr-it"><div class="tr-h"><b>${esc(x.title)}</b>${kind === 's' && x.kind ? `<span class="pill p-acc" style="font-size:11px">${esc(x.kind)}</span>` : ''}</div>
+    ${x.artist ? `<div class="sub" style="color:var(--fg)">${esc(x.artist)}</div>` : ''}
+    ${x.what || x.why ? `<div class="sub">${esc(x.what || x.why)}</div>` : ''}
+    ${x.how ? `<div class="tr-how"><b>Como usar</b> ${esc(x.how)}</div>` : ''}
+    <div class="tr-f">${u ? `<a class="link" href="${esc(u)}" target="_blank" rel="noopener">${kind === 's' ? 'Ouvir' : 'Ver fonte'} · ${esc(x.source || '')} ${ic('ext').replace('class="i"', 'class="i" style="width:12px;height:12px;vertical-align:-1px"')}</a>` : x.source ? `<span class="sub">Fonte: ${esc(x.source)}</span>` : ''}${x.when ? `<span class="sub">${esc(x.when)}</span>` : ''}<button class="link" data-tsave="${key}">Salvar nas ideias</button></div></article>`;
+}
+function vTrends() {
+  const c = S.ct, T = (S.trends || [])[0], mine = myNiches();
+  const head = `<div class="head"><div><h1>Estúdio</h1><div class="sub">Músicas e trends da semana, com a fonte de cada uma.</div></div></div>${studioSeg()}`;
+  const pick = `<section class="card section" style="gap:8px"><div class="row-h"><b>Seu nicho</b><span class="sub">toque pra escolher, pode ser mais de um</span></div><div class="chips">${NICHES.map(([k, l]) => `<button class="chip" data-niche="${k}" aria-pressed="${mine.includes(k)}">${l}</button>`).join('')}</div></section>`;
+  if (!T) return head + pick + `<div class="empty"><strong>${S.trendsReady ? 'A primeira lista sai na segunda de manhã' : 'Carregando o que está em alta…'}</strong>${S.trendsReady ? 'Toda segunda eu pesquiso as músicas e trends da semana em fontes confiáveis e trago aqui, separadas por nicho.' : ''}</div>`;
+  const sounds = Array.isArray(T.sounds) ? T.sounds : [], gen = Array.isArray(T.general) ? T.general : [], byN = T.niches && typeof T.niches === 'object' ? T.niches : {};
+  const nicheBlocks = mine.map(k => [k, Array.isArray(byN[k]) ? byN[k] : []]);
+  return head + pick + `
+  <div class="card tr-top"><div class="eyebrow">Semana de ${esc(fmtD(T.week))}${T.updatedAt ? ' · atualizado ' + esc(new Date(T.updatedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')) : ''}</div>${T.headline ? `<h2>${esc(T.headline)}</h2>` : ''}</div>
+  ${nicheBlocks.length ? nicheBlocks.map(([k, a]) => `<section class="section"><div class="row-h"><h2>Em alta em ${esc(nicheName(k))}</h2></div>${a.length ? `<div class="list">${a.map((x, i) => trItem(x, 'n', 'n:' + k + ':' + i)).join('')}</div>` : '<div class="sub">Nada confirmado nesse nicho nesta semana. Veja as trends gerais abaixo.</div>'}</section>`).join('')
+    : '<div class="sub">Escolha seu nicho aqui em cima pra ver as trends que combinam com você.</div>'}
+  ${sounds.length ? `<section class="section"><div class="row-h"><h2>Músicas e áudios em alta</h2></div><div class="list">${sounds.map((x, i) => trItem(x, 's', 's:' + i)).join('')}</div>
+    <div class="card tr-warn"><b>⚠️ Vídeo de marca? Cuidado com a música.</b><span>Em publi e anúncio, música famosa geralmente não pode ser usada (direito autoral). Use a Biblioteca de Música Comercial do TikTok ou os áudios liberados pra marcas no Instagram. As músicas daqui são pro conteúdo do seu perfil.</span></div></section>` : ''}
+  ${gen.length ? `<section class="section"><div class="row-h"><h2>Trends da semana</h2><span class="sub">pra todos os nichos</span></div><div class="list">${gen.map((x, i) => trItem(x, 'g', 'g:' + i)).join('')}</div></section>` : ''}
+  <section class="card section"><h2>Adaptar pro meu nicho</h2><div class="sub">Eu pego as trends e músicas desta lista e sugiro 5 ideias de vídeo pro seu nicho, com gancho e qual áudio usar. Gasta 1 uso de IA.</div>
+    <div class="row-btns"><button class="btn" data-act="tradapt" ${c.busy ? 'disabled' : ''}>${c.busy === 'trOut' ? 'Pensando nas ideias…' : 'Me dá 5 ideias'}</button>${c.trOut && !c.busy ? '<button class="btn ghost" data-copy="trOut">Copiar</button>' : ''}</div>
+    ${c.err && S.f.sview === 'alta' ? `<div class="err">${esc(c.err)}</div>` : ''}${aiBox('trOut')}</section>`;
+}
+function trendPrompt() {
+  const T = (S.trends || [])[0] || {}, mine = myNiches(), byN = T.niches || {};
+  const L = (a, f) => (Array.isArray(a) ? a : []).map(f).join('\n') || '(nada)';
+  return `Você ajuda uma creator brasileira de UGC a ter ideias de vídeo pro perfil dela, a partir das tendências REAIS desta semana listadas abaixo (coletadas de fontes confiáveis).
+Nicho dela: ${mine.length ? mine.map(nicheName).join(', ') : 'não informado (use as trends gerais)'}.
+
+Músicas e áudios em alta:
+${L(T.sounds, x => `- ${x.title}${x.artist ? ' — ' + x.artist : ''}${x.why ? ': ' + x.why : ''}`)}
+
+Trends gerais:
+${L(T.general, x => `- ${x.title}: ${x.what || ''}`)}
+
+${mine.map(k => `Trends de ${nicheName(k)}:\n${L(byN[k], x => `- ${x.title}: ${x.what || ''}`)}`).join('\n\n')}
+
+Sugira 5 ideias de vídeo curto pro nicho dela. Para cada uma: título curto, gancho (a primeira frase), roteiro em 3 passos, qual trend ela aproveita e qual áudio da lista usar (ou "áudio original"). Use SÓ as trends e músicas da lista; não invente músicas, números nem trends. Se a lista estiver vazia pro nicho, adapte as trends gerais.
+No fim, lembre em 1 frase que, em vídeo pra marca (publi ou anúncio), música famosa geralmente não pode ser usada e o certo é usar a biblioteca comercial da plataforma.
+Responda em português do Brasil, texto simples sem markdown, com as ideias numeradas.`;
+}
 /* ================= fácil pra quem está começando: ferramentas que eu uso, boas-vindas, primeiros passos e "o que é isso?" ================= */
 /* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
 const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
-const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} return !!S.profile.tools[tab + '.' + v]; };
+const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
 const allTools = () => Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, toolOn(tab, v)])));
 /* se a tela escolhida está desligada, abre a primeira ligada */
 function toolsFix() { Object.entries(TOOLS).forEach(([tab, T]) => { if (!toolOn(tab, S.f[T.f])) S.f[T.f] = T.list[0][0]; }); }
 function toolsFor(kinds, focus) {
-  const on = ['rotina.metas', 'rotina.habitos', 'rotina.conquistas', 'marcas.prospec', 'marcas.kit', 'agenda.entregas', 'agenda.datas', 'estudio.ideias', 'financeiro.rendas', 'financeiro.preco'];
+  const on = ['estudio.alta', 'rotina.metas', 'rotina.habitos', 'rotina.conquistas', 'marcas.prospec', 'marcas.kit', 'agenda.entregas', 'agenda.datas', 'estudio.ideias', 'financeiro.rendas', 'financeiro.preco'];
   if (kinds.includes('ugc')) on.push('estudio.gravar', 'estudio.revisor', 'estudio.ganchos', 'marcas.contratos');
   if (kinds.includes('canvas')) on.push('marcas.contas', 'financeiro.dolar', 'estudio.ganchos');
   if (kinds.includes('rendas')) on.push('financeiro.gastos');
@@ -2344,7 +2404,8 @@ function obRender() {
     <div class="ob-opts two">${opt('data-obwork', 'nao', 'Não tenho', '', o.work === 'nao')}${opt('data-obwork', 'sim', 'Tenho sim', 'CLT, clínica, faculdade…', o.work === 'sim')}</div>
     ${o.work === 'sim' ? `<div class="ob-q">Em quais dias você trabalha nele?</div><div class="ob-days">${[1, 2, 3, 4, 5, 6, 0].map(d => `<button type="button" class="chip" data-obday="${d}" aria-pressed="${o.days.includes(d)}">${WD[d]}</button>`).join('')}</div>
       <label class="ob-f">Nome desse trabalho<input type="text" id="ob_label" value="${esc(o.label)}" placeholder="Ex.: Clínica"></label>` : ''}`;
-  else body = `<h2>O que você quer organizar primeiro?</h2><p>Eu monto os primeiros passos a partir daqui.</p><div class="ob-opts">${OB_FOCUS.map(([k, l, d]) => opt('data-obfocus', k, l, d, o.focus === k)).join('')}</div>`;
+  else body = `<h2>O que você quer organizar primeiro?</h2><p>Eu monto os primeiros passos a partir daqui.</p><div class="ob-opts">${OB_FOCUS.map(([k, l, d]) => opt('data-obfocus', k, l, d, o.focus === k)).join('')}</div>
+    <div class="ob-q">Seu nicho <small>opcional, pra te mostrar o que está em alta</small></div><div class="ob-days">${NICHES.map(([k, l]) => `<button type="button" class="chip" data-obniche="${k}" aria-pressed="${(o.niches || []).includes(k)}">${l}</button>`).join('')}</div>`;
   const can = o.i === 0 ? o.kinds.length : o.i === 1 ? o.work && (o.work === 'nao' || o.days.length) : o.focus;
   el.innerHTML = `<div class="ob-box"><div class="ob-top"><span class="logo-w">cr<span class="ii">ı<b></b></span>a<em>hub</em></span><div class="ob-dots" aria-label="Passo ${o.i + 1} de 3">${dots}</div></div>${body}
     <div class="ob-acts">${o.i ? '<button type="button" class="ob-link" data-ob="back">Voltar</button>' : '<button type="button" class="ob-link" data-ob="skip">Pular</button>'}<button type="button" class="ob-go" data-ob="${o.i === 2 ? 'finish' : 'next'}" ${can ? '' : 'disabled'}>${o.i === 2 ? 'Começar' : 'Continuar'}</button></div></div>`;
@@ -2353,7 +2414,7 @@ function obRead() { const n = $('#ob_name'), l = $('#ob_label'); if (n) OB.name 
 async function obFinish(skip) {
   const o = OB; OB = null; document.getElementById('ob')?.remove();
   if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}) }); return; }
-  const patch = { onboarded: o.keep ? 'antes' : today(), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
+  const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
   if (o.name) patch.name = o.name;
   if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
   await saveProfile(patch);
@@ -2413,6 +2474,7 @@ const HELP = {
   'agenda.entregas': ['Entregas', 'Cada vídeo que você deve a uma marca, com prazo e etapa: roteiro, gravação, edição, enviado, aprovado e publicado.'],
   'agenda.datas': ['Datas comerciais', 'Datas que movimentam as marcas (Dia das Mães, Black Friday…) e quando começar a prospectar pra cada uma.'],
   'estudio.briefing': ['Briefing', 'Cole o pedido da marca. Eu separo as regras, monto os roteiros e mando os vídeos pra sua semana, em 3 passos.'],
+  'estudio.alta': ['Em alta', 'Músicas e trends que estão bombando nesta semana, com a fonte de cada uma. Escolha seu nicho pra ver o que combina com você. A lista nova sai toda segunda de manhã.'],
   'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
@@ -4101,6 +4163,10 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.niche) { const a = myNiches(), k = d.niche; await saveProfile({ niches: a.includes(k) ? a.filter(x => x !== k) : [...a, k] }); return; }
+  if (d.tsave) { const T = (S.trends || [])[0]; if (!T) return; const [kd, a, b] = d.tsave.split(':'); const x = kd === 's' ? T.sounds[+a] : kd === 'g' ? T.general[+a] : (T.niches[a] || [])[+b]; if (!x) return;
+    await put('ideas', { id: newId(), title: kd === 's' ? `Áudio em alta: ${x.title}${x.artist ? ' — ' + x.artist : ''}` : x.title, tag: kd === 's' ? 'Trend de áudio' : 'Tendência', status: 'nova', notes: [x.what || x.why || '', x.how ? 'Como usar: ' + x.how : '', x.url ? 'Fonte: ' + x.url : ''].filter(Boolean).join('\n'), created: new Date().toISOString() }); toast('Salvo nas Ideias'); return; }
+  if (d.act === 'tradapt') { if (!(S.trends || []).length) { toast('A lista da semana ainda não saiu'); return; } await gated('studio', () => ask('trOut', trendPrompt())); return; }
   if (d.help) { openHelp(d.help); return; }
   if (d.tool) { const cur = allTools(), on = !cur[d.tool]; await saveProfile({ tools: { ...cur, [d.tool]: on } }); t.setAttribute('aria-pressed', toolOn(...d.tool.split('.'))); if (!on && toolOn(...d.tool.split('.'))) toast('Essa tela tem dados seus, então continua aparecendo.'); return; }
   if (d.act === 'obredo') { closeForm(); OB = { keep: !isEmpty(), i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '' }; obRender(); return; }
@@ -4112,6 +4178,7 @@ document.addEventListener('click', async e => {
   if (d.obwork) { obRead(); OB.work = d.obwork; obRender(); return; }
   if (d.obday) { obRead(); const n = +d.obday; OB.days = OB.days.includes(n) ? OB.days.filter(x => x !== n) : [...OB.days, n]; obRender(); return; }
   if (d.obfocus) { obRead(); OB.focus = d.obfocus; obRender(); return; }
+  if (d.obniche) { const a = OB.niches || [], k = d.obniche; OB.niches = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
   if (d.ttype) { const f = t.closest('form'); if (!f) return; f.querySelectorAll('[data-ttype]').forEach(b => b.setAttribute('aria-pressed', b === t)); f.elements.ttype.value = d.ttype; const ci = f.elements.cat; if (ci) { ci.value = d.tcat || ''; ci.hidden = !(d.ttype === 'outro' && !d.tcat); if (!ci.hidden) ci.focus(); } if (f.dataset.form === 'quicktask') { S.ct.qtype = d.ttype; S.ct.qcat = d.tcat || ''; } else applyWhen(f); return; }
   if (d.tfilter !== undefined) { S.f.ttype = d.tfilter; render(); return; }
   if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
