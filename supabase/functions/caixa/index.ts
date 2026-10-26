@@ -8,7 +8,7 @@
    1. Edge Functions › Deploy a new function › Via Editor › nome: caixa › cole este arquivo › Deploy
    2. Na função caixa › Details: desligue "Verify JWT with legacy secret" (o Postmark não manda login) › Save
    3. Rode supabase/emails.sql no SQL Editor
-   O lembrete no celular usa as mesmas chaves VAPID da função "push" (Edge Functions › Secrets). */
+   O lembrete no celular usa as mesmas chaves da função "push" (tabela private.push_vapid). */
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
@@ -60,10 +60,19 @@ async function inbound(req: Request, url: URL) {
   return Response.json({ ok: true, kind: row.kind });
 }
 
-function vapid() {
-  const pub = env('VAPID_PUBLIC_KEY', 'VAPID_PUBLIC', 'VAPID_PUB'), priv = env('VAPID_PRIVATE_KEY', 'VAPID_PRIVATE', 'VAPID_PRIV');
+/* as mesmas chaves da função "push" (tabela private.push_vapid, lida pela função mail_vapid) */
+const b64u = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = (s: string) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0));
+const asJwk = (v: unknown) => { if (v && typeof v === 'object') return v as Record<string, string>; if (typeof v === 'string' && v.trim().startsWith('{')) try { return JSON.parse(v); } catch { /* texto */ } return null; };
+async function vapid() {
+  let pub: unknown = env('VAPID_PUBLIC_KEY'), priv: unknown = env('VAPID_PRIVATE_KEY');
+  if (!pub || !priv) { const { data } = await sb.rpc('mail_vapid'); pub = data?.pub; priv = data?.priv; }
   if (!pub || !priv) return false;
-  webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', pub, priv); return true;
+  /* aceita a chave em texto (base64url) ou em JWK */
+  const jp = asJwk(pub), jk = asJwk(priv);
+  const P = jp && jp.x ? b64u(new Uint8Array([4, ...unb64u(jp.x), ...unb64u(jp.y)])) : jk && jk.x ? b64u(new Uint8Array([4, ...unb64u(jk.x), ...unb64u(jk.y)])) : String(pub);
+  const K = jk && jk.d ? jk.d : String(priv);
+  webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', P, K); return true;
 }
 /* manda pra todos os aparelhos dela; apaga inscrições que não existem mais */
 async function pushTo(uid: string, msg: Record<string, string>) {
@@ -78,7 +87,7 @@ async function pushTo(uid: string, msg: Record<string, string>) {
 
 const LABEL: Record<string, string> = { proposta: '💼 Proposta', mei: '🧾 MEI e impostos', pagamento: '💸 Pagamento', outro: '📩 E-mail importante' };
 async function lembrar() {
-  if (!vapid()) return Response.json({ ok: false, why: 'faltam as chaves VAPID nos Secrets das Edge Functions' });
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
   const { data: due, error } = await sb.from('mail_msgs').select('id,user_id,kind,subject,from_name,from_addr')
     .is('seen_at', null).is('reminded_at', null).neq('kind', 'confirma')
     .lt('received_at', new Date(Date.now() - 24 * 3600e3).toISOString()).limit(1000);
@@ -103,7 +112,7 @@ const BD_MSG = [
   'Parabéns pela pessoa e pela creator que você é. Que o seu novo ano tenha tempo pra descansar, sonhar grande e realizar. 🎉',
 ];
 async function aniver() {
-  if (!vapid()) return Response.json({ ok: false, why: 'faltam as chaves VAPID nos Secrets das Edge Functions' });
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
   const br = new Date(Date.now() - 3 * 3600e3), y = br.getUTCFullYear(), md = br.toISOString().slice(5, 10);
   const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0, days = md === '02-28' && !leap ? [md, '02-29'] : [md];
   const { data: who, error } = await sb.from('profiles').select('user_id,data->>name').in('data->>bday', days);
