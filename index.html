@@ -748,6 +748,24 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.helpq{margin-left:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:700 13px/1 var(--body);vertical-align:middle;cursor:pointer;display:inline-grid;place-items:center;padding:0}
+.gl summary{cursor:pointer;font-weight:700}.gl dl{margin:10px 0 0;display:grid;gap:8px}.gl dt{font-weight:800}.gl dd{margin:0;color:var(--muted);font-size:14px}
+.tl-g{display:flex;flex-direction:column;gap:6px}.chip.tl[aria-pressed=true]{background:var(--accent-btn);color:#fff;border-color:transparent}.chip.tl[disabled]{opacity:.7}
+.fs{border:1.5px solid color-mix(in oklab, var(--accent) 35%, var(--line))}.fs-l{display:flex;flex-direction:column;gap:6px}
+.fs-it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:0;border-radius:12px;padding:10px 12px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer}
+.fs-it.done{background:none;color:var(--muted);text-decoration:line-through;cursor:default}.fs-n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent-btn);color:#fff;font-weight:800;font-size:13px}.fs-it.done .fs-n{background:var(--ok)}.fs-n svg{width:14px;height:14px}.fs-go{margin-left:auto;color:var(--muted);font-size:20px}
+.ob{position:fixed;inset:0;z-index:95;background:#420725;color:#fff;overflow:auto;display:flex;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.ob-box{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;margin:auto 0}.ob h2{font-size:26px;color:#fff}.ob p{margin:0;color:rgb(255 255 255 / .8)}
+.ob-top{display:flex;justify-content:space-between;align-items:center}.logo-w{font-family:var(--display);font-weight:800;font-size:26px;color:#F4C9D8;letter-spacing:-.03em}.logo-w em{font-style:normal;color:#fff}.logo-w .ii{position:relative}.logo-w .ii b{position:absolute;left:50%;top:.02em;width:.26em;height:.26em;margin-left:-.13em;border-radius:50%;background:#FF5C8A}
+.ob-dots{display:flex;gap:6px}.ob-dots i{width:22px;height:5px;border-radius:5px;background:rgb(255 255 255 / .25)}.ob-dots i.on{background:#F4C9D8}
+.ob-f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}.ob-f input{border:0;border-radius:12px;padding:12px;font:inherit;font-size:16px;color:#22141A;background:#fff;min-height:46px}
+.ob-q{font-weight:800;font-size:15px}.ob-q small{font-weight:600;color:rgb(255 255 255 / .7)}
+.ob-opts{display:flex;flex-direction:column;gap:8px}.ob-opts.two{flex-direction:row}.ob-opts.two .ob-opt{flex:1}
+.ob-opt{display:flex;flex-direction:column;gap:2px;text-align:left;background:rgb(255 255 255 / .1);border:2px solid transparent;border-radius:14px;padding:12px 14px;color:#fff;font:inherit;cursor:pointer}.ob-opt span{font-size:13px;color:rgb(255 255 255 / .75)}
+.ob-opt[aria-pressed=true]{border-color:#FF5C8A;background:rgb(255 92 138 / .18)}
+.ob-days{display:flex;gap:6px;flex-wrap:wrap}.ob-days .chip{background:rgb(255 255 255 / .1);color:#fff;border-color:transparent}.ob-days .chip[aria-pressed=true]{background:#FF5C8A}
+.ob-acts{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}.ob-go{border:0;border-radius:12px;background:#FF5C8A;color:#fff;font:inherit;font-weight:800;font-size:16px;padding:13px 22px;cursor:pointer}.ob-go[disabled]{opacity:.45}
+.ob-link{background:none;border:0;color:#F4C9D8;font:inherit;font-weight:700;cursor:pointer;padding:8px}
 .bstep{padding:0;gap:0;overflow:hidden}.bs-h{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:14px 16px;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .bs-n{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--accent-soft);color:var(--accent-ink)}.bs-n.ok{background:var(--ok);color:#fff}.bs-n svg{width:16px;height:16px}
 .bstep.open .bs-n:not(.ok){background:var(--accent-btn);color:#fff}
@@ -1215,10 +1233,14 @@ function render() {
   renderShell();
   const v = $('#view');
   if (S.loading && isEmpty()) { v.innerHTML = `<div class="loading"><span class="dot"></span>Abrindo o seu CriaHub…</div>`; return; }
+  toolsFix();
   v.innerHTML = ({ inicio: vHome, radar: vNews, rotina: vRoutine, marcas: vBrands, agenda: vAgenda, estudio: vStudio, financeiro: vFinance })[S.tab]();
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); }
+  Object.entries(TOOLS).forEach(([tab, T]) => v.querySelectorAll(`.seg [data-${T.attr}]`).forEach(b => { if (!toolOn(tab, b.dataset[T.attr])) b.hidden = true; }));
+  if (armKey && armSel && Date.now() - armAt < 5000) { const ab = v.querySelector(armSel); if (ab) { ab.classList.add('armed'); ab.textContent = armMsg; } }
+  { const h1 = v.querySelector('.head h1'); if (h1 && !h1.querySelector('.helpq')) h1.insertAdjacentHTML('beforeend', `<button class="helpq" data-help="${helpKey()}" aria-label="O que é essa tela?">?</button>`); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -1266,6 +1288,7 @@ function vHome() {
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
   ${homeRetro()}
+  ${homeSteps()}
   ${!name ? `<div class="card section"><div><b>Como você quer ser chamada?</b><div class="sub">Seu nome aparece na saudação.</div></div>
     <form class="namecard" data-form="name"><input type="text" id="nm" name="name" placeholder="Seu nome" autocomplete="given-name" required><button class="btn">Salvar</button></form></div>` : ''}
   ${isEmpty() ? `<div class="welcome">
@@ -2259,6 +2282,142 @@ async function setTaskDone(x, done) {
   await put('tasks', upd);
   if (moved) toast(done ? `${moved} entrega${moved === 1 ? (st === 3 ? ' marcada como Enviado' : ' foi pra Edição') : (st === 3 ? 's marcadas como Enviado' : 's foram pra Edição')}` : `${moved} entrega${moved === 1 ? ' voltou' : 's voltaram'} de etapa na Agenda`);
   return moved;
+}
+/* ================= fácil pra quem está começando: ferramentas que eu uso, boas-vindas, primeiros passos e "o que é isso?" ================= */
+/* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
+const TOOLS = {
+  rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
+  marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio]] },
+  agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
+};
+const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} return !!S.profile.tools[tab + '.' + v]; };
+const allTools = () => Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, toolOn(tab, v)])));
+/* se a tela escolhida está desligada, abre a primeira ligada */
+function toolsFix() { Object.entries(TOOLS).forEach(([tab, T]) => { if (!toolOn(tab, S.f[T.f])) S.f[T.f] = T.list[0][0]; }); }
+function toolsFor(kinds, focus) {
+  const on = ['rotina.metas', 'rotina.habitos', 'rotina.conquistas', 'marcas.prospec', 'marcas.kit', 'agenda.entregas', 'agenda.datas', 'estudio.ideias', 'financeiro.rendas', 'financeiro.preco'];
+  if (kinds.includes('ugc')) on.push('estudio.gravar', 'estudio.revisor', 'estudio.ganchos', 'marcas.contratos');
+  if (kinds.includes('canvas')) on.push('marcas.contas', 'financeiro.dolar', 'estudio.ganchos');
+  if (kinds.includes('rendas')) on.push('financeiro.gastos');
+  if (focus === 'rotina') on.push('rotina.semana');
+  if (focus === 'dinheiro') on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
+  return Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, on.includes(tab + '.' + v)])));
+}
+function toolsSettings() {
+  return `<div class="card section" style="gap:10px"><b>Ferramentas que eu uso</b><span class="sub">Ligue só o que faz sentido pra você agora. Desligar só esconde: nada é apagado, e uma tela com dados continua aparecendo.</span>
+    ${Object.entries(TOOLS).map(([tab, T]) => `<div class="tl-g"><span class="flabel">${T.name}</span><div class="chips">${T.list.map(([v, l, d], i) => `<button type="button" class="chip tl" data-tool="${tab}.${v}" aria-pressed="${toolOn(tab, v)}" ${i === 0 ? 'disabled title="Sempre ligada"' : ''} title="${esc(d)}">${esc(l)}</button>`).join('')}</div></div>`).join('')}
+    <div class="row-btns"><button type="button" class="btn sm ghost" data-act="obredo">Refazer as boas-vindas</button></div></div>`;
+}
+
+/* ---------- boas-vindas: 3 perguntas, só no primeiro acesso ---------- */
+const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e conquistar as primeiras marcas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
+const OB_FOCUS = [['rotina', 'Minha rotina', 'Tarefas, hábitos e semana'], ['marcas', 'Minhas marcas', 'Clientes, entregas e prazos'], ['dinheiro', 'Meu dinheiro', 'Quanto cobrar, receber e gastar']];
+let OB = null;
+function checkOnboard() {
+  if (S.loading || OB || S.profile.onboarded) return;
+  if (!isEmpty()) { saveProfile({ onboarded: 'antes' }); return; } /* quem já usa o app não vê */
+  OB = { i: 0, name: S.profile.name || '', kinds: [], work: '', days: [], label: '', focus: '' }; obRender();
+}
+function obRender() {
+  let el = document.getElementById('ob'); if (!el) { el = document.createElement('div'); el.id = 'ob'; el.className = 'ob'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Boas-vindas'); document.body.appendChild(el); }
+  const o = OB, dots = [0, 1, 2].map(k => `<i class="${k <= o.i ? 'on' : ''}"></i>`).join(''), opt = (attr, k, l, d, on) => `<button type="button" class="ob-opt" ${attr}="${k}" aria-pressed="${on}"><b>${l}</b>${d ? `<span>${d}</span>` : ''}</button>`;
+  let body = '';
+  if (o.i === 0) body = `<h2>Oi! Vamos deixar o CriaHub do seu jeito</h2><p>3 perguntas rápidas. Dá pra mudar tudo depois em Ajustes.</p>
+    <label class="ob-f">Como quer ser chamada?<input type="text" id="ob_name" value="${esc(o.name)}" placeholder="Seu nome" autocomplete="given-name"></label>
+    <div class="ob-q">Como você trabalha hoje? <small>pode marcar mais de um</small></div><div class="ob-opts">${OB_KINDS.map(([k, l, d]) => opt('data-obkind', k, l, d, o.kinds.includes(k))).join('')}</div>`;
+  else if (o.i === 1) body = `<h2>Você tem outro trabalho?</h2><p>Assim eu deixo gravar e editar pros seus dias livres.</p>
+    <div class="ob-opts two">${opt('data-obwork', 'nao', 'Não tenho', '', o.work === 'nao')}${opt('data-obwork', 'sim', 'Tenho sim', 'CLT, clínica, faculdade…', o.work === 'sim')}</div>
+    ${o.work === 'sim' ? `<div class="ob-q">Em quais dias você trabalha nele?</div><div class="ob-days">${[1, 2, 3, 4, 5, 6, 0].map(d => `<button type="button" class="chip" data-obday="${d}" aria-pressed="${o.days.includes(d)}">${WD[d]}</button>`).join('')}</div>
+      <label class="ob-f">Nome desse trabalho<input type="text" id="ob_label" value="${esc(o.label)}" placeholder="Ex.: Clínica"></label>` : ''}`;
+  else body = `<h2>O que você quer organizar primeiro?</h2><p>Eu monto os primeiros passos a partir daqui.</p><div class="ob-opts">${OB_FOCUS.map(([k, l, d]) => opt('data-obfocus', k, l, d, o.focus === k)).join('')}</div>`;
+  const can = o.i === 0 ? o.kinds.length : o.i === 1 ? o.work && (o.work === 'nao' || o.days.length) : o.focus;
+  el.innerHTML = `<div class="ob-box"><div class="ob-top"><span class="logo-w">cr<span class="ii">ı<b></b></span>a<em>hub</em></span><div class="ob-dots" aria-label="Passo ${o.i + 1} de 3">${dots}</div></div>${body}
+    <div class="ob-acts">${o.i ? '<button type="button" class="ob-link" data-ob="back">Voltar</button>' : '<button type="button" class="ob-link" data-ob="skip">Pular</button>'}<button type="button" class="ob-go" data-ob="${o.i === 2 ? 'finish' : 'next'}" ${can ? '' : 'disabled'}>${o.i === 2 ? 'Começar' : 'Continuar'}</button></div></div>`;
+}
+function obRead() { const n = $('#ob_name'), l = $('#ob_label'); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); }
+async function obFinish(skip) {
+  const o = OB; OB = null; document.getElementById('ob')?.remove();
+  if (skip) { await saveProfile({ onboarded: today(), ...(o.name ? { name: o.name } : {}) }); return; }
+  const patch = { onboarded: today(), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] };
+  if (o.name) patch.name = o.name;
+  if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
+  await saveProfile(patch);
+  S.tab = 'inicio'; render(); window.scrollTo(0, 0);
+  toast(`Pronto${o.name ? ', ' + o.name : ''}! Seus primeiros passos estão na Início.`);
+}
+
+/* ---------- primeiros passos (Início) ---------- */
+function firstSteps() {
+  const k = arr(S.profile.obKinds), f = S.profile.obFocus || '', A = [];
+  const st = (key, l, done, attrs, grp) => A.push({ key, l, done: !!done, attrs, grp });
+  if (k.includes('comecando')) { st('kit', 'Monte seu mídia kit', kit().bio, 'data-gomv="kit"', 'marcas'); st('lead', 'Anote uma marca que você quer conquistar', S.data.leads.length, 'data-new="leads"', 'marcas'); st('preco', 'Descubra quanto cobrar por vídeo', S.profile.basePrice, 'data-fview="preco"', 'dinheiro'); }
+  if (k.includes('ugc') || k.includes('canvas')) { st('marca', 'Cadastre sua primeira marca', S.data.brands.length, 'data-new="brands"', 'marcas'); st('entrega', 'Crie uma entrega com prazo', S.data.deliveries.length, 'data-new="deliveries"', 'marcas'); }
+  if (k.includes('canvas')) st('conta', 'Cadastre os perfis da marca (@ e link)', S.data.accounts.length, 'data-tab="marcas"', 'marcas');
+  if (k.includes('rendas')) st('renda', 'Cadastre uma outra renda', S.data.extras.length, 'data-new="extras"', 'dinheiro');
+  st('tarefa', 'Planeje seu dia: escreva 1 tarefa', S.data.tasks.length, 'data-rview="hoje"', 'rotina');
+  st('habito', 'Crie um hábito de cuidado (água, sono…)', S.data.habits.length, 'data-rview="habitos"', 'rotina');
+  if (!k.includes('comecando') && !k.includes('rendas')) st('preco', 'Descubra quanto cobrar por vídeo', S.profile.basePrice, 'data-fview="preco"', 'dinheiro');
+  st('push', 'Ligue as notificações', window.criahubPushOn && window.criahubPushOn(), 'data-act="settings"', 'zz');
+  const seen = new Set(); return A.filter(x => !seen.has(x.key) && seen.add(x.key)).sort((a, b) => (a.grp === f ? 0 : 1) - (b.grp === f ? 0 : 1)).slice(0, 5);
+}
+function homeSteps() {
+  const p = S.profile; if (!p.onboarded || p.onboarded === 'antes' || p.stepsDone || p.stepsHidden) return '';
+  const L = firstSteps(), n = L.filter(x => x.done).length; if (!L.length) return '';
+  return `<section class="card section fs"><div class="row-h"><h2>Primeiros passos</h2><button class="link" data-act="stepshide">Esconder</button></div>
+    <div class="progress-top"><span style="color:var(--fg);font-weight:700">${n} de ${L.length}</span><span class="num">${Math.round(n / L.length * 100)}%</span></div><div class="bar ${n === L.length ? 'ok' : ''}"><span style="width:${Math.round(n / L.length * 100)}%"></span></div>
+    <div class="fs-l">${L.map((x, i) => `<button class="fs-it ${x.done ? 'done' : ''}" ${x.done ? 'disabled' : x.attrs}><span class="fs-n">${x.done ? ic('check') : i + 1}</span><span>${esc(x.l)}</span>${x.done ? '' : '<span class="fs-go" aria-hidden="true">›</span>'}</button>`).join('')}</div></section>`;
+}
+let stepsT = 0;
+function checkSteps() {
+  clearTimeout(stepsT); stepsT = setTimeout(() => { const p = S.profile; if (S.loading || !p.onboarded || p.onboarded === 'antes' || p.stepsDone || p.stepsHidden) return; const L = firstSteps(); if (L.length && L.every(x => x.done)) { saveProfile({ stepsDone: today() }); celebrate('🎉', 'Primeiros passos concluídos!', 'Seu CriaHub está pronto pra rotina de creator. Daqui pra frente é constância, e o app te acompanha.'); } }, 1600);
+}
+
+/* ---------- "o que é isso?" em cada tela ---------- */
+const HELP = {
+  'inicio': ['Início', 'Seu resumo do dia: quanto falta receber, entregas da semana, tarefas e alertas. Toque nos cards pra ir direto ao lugar certo.'],
+  'radar': ['Radar UGC', 'Notícias do mercado de UGC, no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
+  'rotina.hoje': ['Meu dia', 'Suas tarefas do dia: de trabalho e da vida (saúde, casa, estudos…). Marque o que fez. O que ficar pra trás, você traz pra hoje com um toque.'],
+  'rotina.metas': ['Metas', 'Objetivos com número, como "fechar 2 marcas" ou "postar 12 vídeos". Você soma o progresso e vê quanto falta.'],
+  'rotina.habitos': ['Hábitos', 'Pequenos cuidados do dia, como beber água ou dormir bem. Marque todo dia e veja quantos dias seguidos você manteve.'],
+  'rotina.semana': ['Semana', 'O balanço da semana: o que deu certo, o que ficou e dicas pra próxima. Dá pra redistribuir as pendências.'],
+  'rotina.conquistas': ['Conquistas', 'Selos que você desbloqueia usando o app, e suas retrospectivas do mês e do ano, prontas pra postar no story.'],
+  'marcas.clientes': ['Clientes', 'As marcas que você atende. Toque numa marca pra ver tudo dela: contas, ciclo, vídeos e números.'],
+  'marcas.contas': ['Contas', 'Perfis que você administra pra marca (Instagram, TikTok, YouTube) e a grade de quais vídeos foram postados em cada um.'],
+  'marcas.prospec': ['Prospecção', 'Marcas que você quer conquistar. Anote quem contatou e quando chamar de novo (follow-up). Quando fechar, ela vira cliente.'],
+  'marcas.permutas': ['Permutas', 'Quando a marca paga com produto em vez de dinheiro. Aqui você controla o prazo de postar e se precisa devolver.'],
+  'marcas.contratos': ['Contratos', 'Seu modelo de contrato preenchido com os dados da marca, e tradução de contratos e mensagens em outro idioma.'],
+  'marcas.licencas': ['Licenças de uso', 'Por quanto tempo a marca pode usar seu vídeo (em anúncios, por exemplo). Quando vence, dá pra renovar e cobrar de novo.'],
+  'marcas.kit': ['Mídia kit', 'Sua apresentação pras marcas: quem você é, seus números e seus melhores vídeos. Pronto pra copiar ou baixar.'],
+  'agenda.calendario': ['Calendário', 'Seu mês num lugar só: entregas (com o número de vídeos do dia), tarefas, observações e datas comemorativas.'],
+  'agenda.entregas': ['Entregas', 'Cada vídeo que você deve a uma marca, com prazo e etapa: roteiro, gravação, edição, enviado, aprovado e publicado.'],
+  'agenda.datas': ['Datas comerciais', 'Datas que movimentam as marcas (Dia das Mães, Black Friday…) e quando começar a prospectar pra cada uma.'],
+  'estudio.briefing': ['Briefing', 'Cole o pedido da marca. Eu separo as regras, monto os roteiros e mando os vídeos pra sua semana, em 3 passos.'],
+  'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
+  'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
+  'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
+  'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto.'],
+  'estudio.ganchos': ['Ganchos', 'Gancho é a frase dos primeiros segundos que prende a pessoa. Aqui você vê quais tipos deram mais views.'],
+  'estudio.erros': ['Erros', 'Os feedbacks que as marcas te deram viram uma checklist pra você conferir antes de gravar e enviar.'],
+  'financeiro.marcas': ['Pagamentos', 'Quanto cada marca te paga, o que já caiu e o que está atrasado, com botão pra cobrar.'],
+  'financeiro.dolar': ['US$ / €', 'Ganhos em dólar e euro convertidos pra real com a cotação do dia.'],
+  'financeiro.rendas': ['Outras rendas', 'Dinheiro que não vem de marca: TikTok Shop, afiliados, freelas, salário… Pra ver sua renda completa.'],
+  'financeiro.gastos': ['Gastos', 'O que você gasta pra trabalhar (internet, equipamento, impostos) e quanto sobra de lucro.'],
+  'financeiro.ano': ['Ano', 'Seu ano em números, mês a mês, e quanto vale a sua hora de trabalho.'],
+  'financeiro.meta': ['Meta', 'Quanto você quer faturar no mês e quanto já conseguiu.'],
+  'financeiro.preco': ['Preço', 'Calculadora de quanto cobrar por vídeo, pacote ou ciclo, com proposta pronta pra mandar.'],
+  'financeiro.notas': ['Notas fiscais', 'Controle das notas emitidas e do DAS do MEI, o imposto mensal de quem é microempreendedora.'],
+};
+const GLOSS = [['UGC', 'Conteúdo feito por creators pra marca usar, no perfil dela ou em anúncios.'], ['Tech Canvas', 'Quando você posta nos perfis da própria marca, em ciclos com meta de views.'], ['Ciclo', 'Período de trabalho com a marca (ex.: 30 dias) que pode ser renovado.'], ['Entrega', 'Cada vídeo que você deve à marca, com prazo.'], ['Briefing', 'O pedido da marca: o que mostrar, o que evitar e os prazos.'], ['Gancho', 'A frase dos primeiros segundos que faz a pessoa continuar assistindo.'], ['Engajamento', 'Curtidas, comentários, compartilhamentos e salvamentos em relação às views.'], ['Licença de uso', 'Por quanto tempo a marca pode usar seu vídeo.'], ['Permuta', 'Pagamento em produto em vez de dinheiro.'], ['Mídia kit', 'Sua apresentação profissional pras marcas.'], ['Follow-up', 'Chamar a marca de novo depois de um primeiro contato.'], ['MEI e DAS', 'MEI é o CNPJ simples de microempreendedora; DAS é o imposto mensal dele.']];
+const helpKey = () => { const T = TOOLS[S.tab]; return T ? S.tab + '.' + S.f[T.f] : S.tab; };
+function openHelp(key) {
+  const h = HELP[key] || HELP[key.split('.')[0]] || ['CriaHub', 'Toque nas abas de cima pra trocar de tela.'];
+  sheet = { col: 'help' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="O que é ${esc(h[0])}"><div class="sh"><h2>${esc(h[0])}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <p style="margin:0;font-size:16px">${esc(h[1])}</p>
+    <details class="gl"><summary>Palavras do mundo UGC</summary><dl>${GLOSS.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></details>
+    <div class="sub">Quer esconder telas que você não usa? Ajustes › Ferramentas que eu uso.</div></div></div>`;
 }
 /* ================= briefing em 3 passos: regras → roteiros → mandar pra minha semana ================= */
 const briefDels = b => S.data.deliveries.filter(d => d.briefId === b.id).sort((x, y) => (x.bIdx ?? 999) - (y.bIdx ?? 999) || String(x.created || '').localeCompare(String(y.created || '')) || (wpParts(x.title).num || 0) - (wpParts(y.title).num || 0));
@@ -3770,6 +3929,7 @@ function openSettings() {
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
     <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div>
+    ${toolsSettings()}
     <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div><span class="hint">Automático segue o modo do seu celular ou computador.</span></div>
     <div class="field"><label>Cor do app</label><div class="swatches">${COLORS.map(c => `<button type="button" class="sw" style="background:${c}" data-color="${c}" aria-label="Cor ${c}" aria-pressed="${cur === c.toLowerCase()}"></button>`).join('')}
       <input type="color" id="s_color" value="${esc(cur)}" aria-label="Escolher outra cor"></div><span class="hint">O vinho é a cor padrão do CriaHub. Escolha a sua.</span></div>
@@ -3843,6 +4003,15 @@ function toastAct(msg, label, attrs) { toast(msg); const el = $('#toast'); el.in
 function toast(msg) { let el = $('#toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); } el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2600); }
 
 /* ================= events ================= */
+/* confirmação em dois toques que sobrevive a um redesenho da tela no meio */
+let armKey = '', armAt = 0, armSel = '', armMsg = '';
+function confirmTap(t, key, msg, back) {
+  if (armKey === key && Date.now() - armAt < 5000) { armKey = ''; return true; }
+  const at = [...t.attributes].find(a => /^data-(bdiscard|breplan|renew)$/.test(a.name));
+  armKey = key; armAt = Date.now(); armSel = at ? `[${at.name}="${at.value}"]` : ''; armMsg = msg; t.classList.add('armed'); t.textContent = msg;
+  setTimeout(() => { if (armKey === key && Date.now() - armAt >= 4900) armKey = ''; document.querySelectorAll('.armed').forEach(el => { if (el.isConnected && el.textContent === msg) { el.classList.remove('armed'); el.textContent = back; } }); }, 5000);
+  return false;
+}
 let armed = false;
 document.addEventListener('click', e => { if (e.target.closest('[data-logo]')) playLogo(); });
 document.addEventListener('click', async e => {
@@ -3911,6 +4080,15 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.help) { openHelp(d.help); return; }
+  if (d.tool) { const cur = allTools(), on = !cur[d.tool]; await saveProfile({ tools: { ...cur, [d.tool]: on } }); t.setAttribute('aria-pressed', toolOn(...d.tool.split('.'))); if (!on && toolOn(...d.tool.split('.'))) toast('Essa tela tem dados seus, então continua aparecendo.'); return; }
+  if (d.act === 'obredo') { closeForm(); await saveProfile({ onboarded: '' }); OB = { i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '' }; obRender(); return; }
+  if (d.act === 'stepshide') { await saveProfile({ stepsHidden: true }); toast('Escondido. Dá pra ver tudo em Ajustes.'); return; }
+  if (d.ob) { obRead(); if (d.ob === 'next') { OB.i++; obRender(); } else if (d.ob === 'back') { OB.i--; obRender(); } else if (d.ob === 'skip') await obFinish(true); else if (d.ob === 'finish') await obFinish(false); return; }
+  if (d.obkind) { obRead(); const k = d.obkind, a = OB.kinds; OB.kinds = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
+  if (d.obwork) { obRead(); OB.work = d.obwork; obRender(); return; }
+  if (d.obday) { obRead(); const n = +d.obday; OB.days = OB.days.includes(n) ? OB.days.filter(x => x !== n) : [...OB.days, n]; obRender(); return; }
+  if (d.obfocus) { obRead(); OB.focus = d.obfocus; obRender(); return; }
   if (d.ttype) { const f = t.closest('form'); if (!f) return; f.querySelectorAll('[data-ttype]').forEach(b => b.setAttribute('aria-pressed', b === t)); f.elements.ttype.value = d.ttype; const ci = f.elements.cat; if (ci) { ci.value = d.tcat || ''; ci.hidden = !(d.ttype === 'outro' && !d.tcat); if (!ci.hidden) ci.focus(); } if (f.dataset.form === 'quicktask') { S.ct.qtype = d.ttype; S.ct.qcat = d.tcat || ''; } else applyWhen(f); return; }
   if (d.tfilter !== undefined) { S.f.ttype = d.tfilter; render(); return; }
   if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
@@ -3939,10 +4117,10 @@ document.addEventListener('click', async e => {
     else if (cur === 2) { const { recPrev, ...rest } = dl; await put('deliveries', { ...rest, stage: recPrev ?? 0 }); toast('Desmarcado. A entrega voltou de etapa.'); }
     else toast(`Essa entrega já está em ${STAGES[cur]}. Pra voltar, mude a etapa na Agenda.`); return; }
   if (d.bqcopy) { const b = S.data.briefs.find(x => x.id === d.bqcopy); const txt = arr(b?.data?.duvidas).map((q, i) => `${i + 1}. ${q}`).join('\n'); try { await navigator.clipboard.writeText(txt); toast('Perguntas copiadas'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
-  if (d.breplan) { if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'Toque de novo: apago as tarefas não feitas e monto de novo'; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Montar de novo'; }, 4000); return; }
+  if (d.breplan) { if (!confirmTap(t, 'replan' + d.breplan, 'Toque de novo: apago as tarefas não feitas e monto de novo', 'Montar de novo')) return;
     const b = S.data.briefs.find(x => x.id === d.breplan); if (!b) return; for (const x of briefTasks(b).filter(x => !x.done)) await del('tasks', x.id); for (const x of briefTasks(b)) await put('tasks', { ...x, briefId: '', planOf: b.id }); await put('briefs', { ...b, step: 3, planned: '' }); toast('Escolha de novo os vídeos por dia'); return; }
   if (d.bdiscard) { const b = S.data.briefs.find(x => x.id === d.bdiscard); if (!b) return; const ds = briefDels(b), tk = briefTasks(b);
-    if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = `Toque de novo: apaga o briefing, ${ds.length} entrega${ds.length === 1 ? '' : 's'} e ${tk.length} tarefa${tk.length === 1 ? '' : 's'}`; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Descartar briefing'; }, 4500); return; }
+    if (!confirmTap(t, 'discard' + b.id, `Toque de novo: apaga o briefing, ${ds.length} entrega${ds.length === 1 ? '' : 's'} e ${tk.length} tarefa${tk.length === 1 ? '' : 's'}`, 'Descartar briefing')) return;
     for (const x of tk) await del('tasks', x.id); for (const x of ds) await del('deliveries', x.id); await del('briefs', b.id); S.ct.bOpen = ''; render(); toast('Briefing descartado'); return; }
   if (d.act === 'review') { const c = S.ct, dl = S.data.deliveries.find(x => x.id === c.rDeliv); if (!dl) { toast('Escolha a entrega'); return; } if (!c.rImgs.length && !c.rTxt.trim()) { toast('Envie prints ou cole o roteiro'); return; } await gated('studio', () => ask('rvOut', reviewPrompt(dl, briefFor(dl), c.rImgs.length), c.rImgs)); return; }
   if (d.act === 'rvsent') { const dl = S.data.deliveries.find(x => x.id === S.ct.rDeliv); if (dl) { await put('deliveries', { ...dl, stage: 3 }); toast('Marcado como enviado'); } return; }
@@ -3988,7 +4166,7 @@ document.addEventListener('click', async e => {
   if (d.adv) { const x = S.data.deliveries.find(v => v.id === d.adv); if (x) { const st = Math.min(5, (x.stage || 0) + 1); await put('deliveries', { ...x, stage: st }); if (st === 5) toast('Vídeo no ar. Boa!'); } return; }
   if (d.paid) { const p = S.data.payments.find(v => v.id === d.paid); if (p) await put('payments', { ...p, paid: !p.paid, paidAt: !p.paid ? today() : '', rate: !p.paid && isFx(p) ? fxNet(p.currency) : '' }); return; }
   if (d.istat) { const i = S.data.ideas.find(v => v.id === d.istat); if (i) { const ks = Object.keys(IDEA_STATUS); await put('ideas', { ...i, status: ks[(ks.indexOf(i.status || 'nova') + 1) % ks.length] }); } return; }
-  if (d.renew) { if (d.confirm && !t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'O ciclo ainda não acabou. Toque de novo pra renovar'; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Renovar ciclo'; }, 4000); return; } await renew(d.renew); return; }
+  if (d.renew) { if (d.confirm && !confirmTap(t, 'renew' + d.renew, 'O ciclo ainda não acabou. Toque de novo pra renovar', 'Renovar ciclo')) return; await renew(d.renew); return; }
   if (d.front !== undefined) { S.f.front = d.front; try { localStorage.setItem('criahub:front', d.front); } catch (_) {} render(); return; }
   if (d.xpaid) { const x = S.data.extras.find(v => v.id === d.xpaid); if (x) await put('extras', { ...x, paid: !x.paid, rate: !x.paid && isFx(x) ? fxNet(x.currency) : '' }); return; }
   if (d.act === 'recur') { const [y, m] = S.f.month.split('-').map(Number); const pd = new Date(y, m - 2, 1); const pk = `${pd.getFullYear()}-${pad(pd.getMonth() + 1)}`;
