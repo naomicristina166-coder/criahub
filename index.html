@@ -611,6 +611,8 @@ input::placeholder,textarea::placeholder{color:color-mix(in oklab, var(--muted) 
 .sheet .foot .r{display:flex;gap:8px;margin-left:auto}
 @media (min-width:640px){.scrim{align-items:center}.sheet{border-radius:22px}}
 .swatches{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sw-fam{display:flex;flex-direction:column;gap:6px;margin-top:4px}.sw-fam > span{font-size:12px;font-weight:700;color:var(--muted)}
+.sw-name{font-weight:600;color:var(--muted);margin-left:6px}
 .sw{width:38px;height:38px;border-radius:50%;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--line)}
 .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--fg)}
 input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:4px}
@@ -751,6 +753,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .helpq{margin-left:8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:700 13px/1 var(--body);vertical-align:middle;cursor:pointer;display:inline-grid;place-items:center;padding:0}
 .gl summary{cursor:pointer;font-weight:700}.gl dl{margin:10px 0 0;display:grid;gap:8px}.gl dt{font-weight:800}.gl dd{margin:0;color:var(--muted);font-size:14px}
 .tl-g{display:flex;flex-direction:column;gap:6px}.chip.tl[aria-pressed=true]{background:var(--accent-btn);color:#fff;border-color:transparent}.chip.tl[disabled]{opacity:.7}
+.perso{border:1.5px solid color-mix(in oklab, var(--rec) 45%, var(--line))}
 .fs{border:1.5px solid color-mix(in oklab, var(--accent) 35%, var(--line))}.fs-l{display:flex;flex-direction:column;gap:6px}
 .fs-it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:0;border-radius:12px;padding:10px 12px;font:inherit;font-weight:600;color:var(--fg);cursor:pointer}
 .fs-it.done{background:none;color:var(--muted);text-decoration:line-through;cursor:default}.fs-n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent-btn);color:#fff;font-weight:800;font-size:13px}.fs-it.done .fs-n{background:var(--ok)}.fs-n svg{width:14px;height:14px}.fs-go{margin-left:auto;color:var(--muted);font-size:20px}
@@ -1059,7 +1062,16 @@ const STAGES = ['Roteiro', 'Gravação', 'Edição', 'Enviado', 'Aprovado', 'Pub
 const BRAND_STATUS = { ativo: ['Ativo', 'p-ok'], negociando: ['Negociando', 'p-acc'], pausado: ['Pausado', 'p-warn'], encerrado: ['Encerrado', 'p-mute'] };
 const IDEA_TAGS = ['Gancho', 'Roteiro', 'Tendência', 'Referência', 'Trend de áudio'];
 const IDEA_STATUS = { nova: ['Nova', 'p-acc'], separada: ['Separada', 'p-warn'], gravada: ['Gravada', 'p-ok'] };
-const COLORS = ['#420725', '#1F3A5F', '#0F4C3A', '#5B2A86', '#8A3B12', '#222222', '#B0124F'];
+/* cores do app: todas com contraste bom pra texto branco nos botões */
+const COLOR_FAMS = [
+  ['Vinhos e rosas', [['Vinho', '#420725'], ['Bordô', '#6B0F2A'], ['Framboesa', '#A3164D'], ['Pink', '#B0124F'], ['Rosa antigo', '#9A3558']]],
+  ['Terrosos', [['Coral', '#B0362B'], ['Terracota', '#8A3B12'], ['Caramelo', '#8A5512'], ['Café', '#4A2E22']]],
+  ['Verdes', [['Oliva', '#4F5B1E'], ['Floresta', '#0F4C3A'], ['Esmeralda', '#0A6B4C'], ['Petróleo', '#0E5563']]],
+  ['Azuis e roxos', [['Azul noite', '#1F3A5F'], ['Azul royal', '#2847A0'], ['Índigo', '#3B2F8F'], ['Roxo', '#5B2A86'], ['Ameixa', '#6A1E5C'], ['Lavanda', '#6A4C9C']]],
+  ['Neutro', [['Grafite', '#222222']]],
+];
+const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
+const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
 const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15 };
@@ -1289,6 +1301,7 @@ function vHome() {
   </div>
   ${homeRetro()}
   ${homeSteps()}
+  ${homePerso()}
   ${!name ? `<div class="card section"><div><b>Como você quer ser chamada?</b><div class="sub">Seu nome aparece na saudação.</div></div>
     <form class="namecard" data-form="name"><input type="text" id="nm" name="name" placeholder="Seu nome" autocomplete="given-name" required><button class="btn">Salvar</button></form></div>` : ''}
   ${isEmpty() ? `<div class="welcome">
@@ -2339,13 +2352,13 @@ function obRender() {
 function obRead() { const n = $('#ob_name'), l = $('#ob_label'); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); }
 async function obFinish(skip) {
   const o = OB; OB = null; document.getElementById('ob')?.remove();
-  if (skip) { await saveProfile({ onboarded: today(), ...(o.name ? { name: o.name } : {}) }); return; }
-  const patch = { onboarded: today(), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] };
+  if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}) }); return; }
+  const patch = { onboarded: o.keep ? 'antes' : today(), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
   if (o.name) patch.name = o.name;
   if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
   await saveProfile(patch);
   S.tab = 'inicio'; render(); window.scrollTo(0, 0);
-  toast(`Pronto${o.name ? ', ' + o.name : ''}! Seus primeiros passos estão na Início.`);
+  toast(o.keep ? `Pronto${o.name ? ', ' + o.name : ''}! O CriaHub está do seu jeito. Telas com dados seus continuam aparecendo.` : `Pronto${o.name ? ', ' + o.name : ''}! Seus primeiros passos estão na Início.`);
 }
 
 /* ---------- primeiros passos (Início) ---------- */
@@ -2361,6 +2374,12 @@ function firstSteps() {
   if (!k.includes('comecando') && !k.includes('rendas')) st('preco', 'Descubra quanto cobrar por vídeo', S.profile.basePrice, 'data-fview="preco"', 'dinheiro');
   st('push', 'Ligue as notificações', window.criahubPushOn && window.criahubPushOn(), 'data-act="settings"', 'zz');
   const seen = new Set(); return A.filter(x => !seen.has(x.key) && seen.add(x.key)).sort((a, b) => (a.grp === f ? 0 : 1) - (b.grp === f ? 0 : 1)).slice(0, 5);
+}
+/* quem já usava o app ganha um convite (uma vez) pra personalizar */
+function homePerso() {
+  const p = S.profile; if (p.onboarded !== 'antes' || p.persoSeen) return '';
+  return `<section class="card section perso"><div><div class="eyebrow" style="color:var(--rec)">Novo no CriaHub</div><h2 style="font-size:19px;margin-top:4px">Deixe o CriaHub do seu jeito</h2><div class="sub">Responda 3 perguntas e escolha as ferramentas que fazem sentido pra você agora. Dá pra mudar quando quiser, e nada do que você já tem é apagado.</div></div>
+    <div class="row-btns"><button class="btn sm" data-act="persogo">Personalizar</button><button class="btn sm ghost" data-act="persono">Agora não</button></div></section>`;
 }
 function homeSteps() {
   const p = S.profile; if (!p.onboarded || p.onboarded === 'antes' || p.stepsDone || p.stepsHidden) return '';
@@ -3931,8 +3950,10 @@ function openSettings() {
     <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div>
     ${toolsSettings()}
     <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div><span class="hint">Automático segue o modo do seu celular ou computador.</span></div>
-    <div class="field"><label>Cor do app</label><div class="swatches">${COLORS.map(c => `<button type="button" class="sw" style="background:${c}" data-color="${c}" aria-label="Cor ${c}" aria-pressed="${cur === c.toLowerCase()}"></button>`).join('')}
-      <input type="color" id="s_color" value="${esc(cur)}" aria-label="Escolher outra cor"></div><span class="hint">O vinho é a cor padrão do CriaHub. Escolha a sua.</span></div>
+    <div class="field"><label>Cor do app <span class="sw-name" id="sw_name">${esc(colorName(cur))}</span></label>
+      ${COLOR_FAMS.map(([fam, a]) => `<div class="sw-fam"><span>${fam}</span><div class="swatches">${a.map(([n, c]) => `<button type="button" class="sw" style="background:${c}" data-color="${c}" data-cname="${esc(n)}" aria-label="${esc(n)}" title="${esc(n)}" aria-pressed="${cur === c.toLowerCase()}"></button>`).join('')}</div></div>`).join('')}
+      <div class="sw-fam"><span>Qualquer outra</span><div class="swatches"><input type="color" id="s_color" value="${esc(cur)}" aria-label="Escolher outra cor"><span class="hint" style="margin:0">Toque pra escolher no seletor</span></div></div>
+      <span class="hint">O vinho é a cor padrão do CriaHub. A cor muda na hora; toque em Salvar pra guardar.</span></div>
     <div class="card section" style="gap:10px"><b>MEI e cofrinho</b>
       <label class="checkline"><input type="checkbox" name="mei" ${S.profile.mei ? 'checked' : ''}>Sou MEI</label>
       <div class="field"><label for="s_cnpj">Seu CNPJ (aparece no recibo)</label><input type="text" id="s_cnpj" name="meiCnpj" inputmode="numeric" value="${esc(S.profile.meiCnpj || '')}" placeholder="00.000.000/0001-00"></div>
@@ -4082,7 +4103,9 @@ document.addEventListener('click', async e => {
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
   if (d.help) { openHelp(d.help); return; }
   if (d.tool) { const cur = allTools(), on = !cur[d.tool]; await saveProfile({ tools: { ...cur, [d.tool]: on } }); t.setAttribute('aria-pressed', toolOn(...d.tool.split('.'))); if (!on && toolOn(...d.tool.split('.'))) toast('Essa tela tem dados seus, então continua aparecendo.'); return; }
-  if (d.act === 'obredo') { closeForm(); await saveProfile({ onboarded: '' }); OB = { i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '' }; obRender(); return; }
+  if (d.act === 'obredo') { closeForm(); OB = { keep: !isEmpty(), i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '' }; obRender(); return; }
+  if (d.act === 'persono') { await saveProfile({ persoSeen: today() }); toast('Tudo bem! Quando quiser: Ajustes › Ferramentas que eu uso.'); return; }
+  if (d.act === 'persogo') { await saveProfile({ persoSeen: today() }); OB = { i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '', keep: true }; obRender(); return; }
   if (d.act === 'stepshide') { await saveProfile({ stepsHidden: true }); toast('Escondido. Dá pra ver tudo em Ajustes.'); return; }
   if (d.ob) { obRead(); if (d.ob === 'next') { OB.i++; obRender(); } else if (d.ob === 'back') { OB.i--; obRender(); } else if (d.ob === 'skip') await obFinish(true); else if (d.ob === 'finish') await obFinish(false); return; }
   if (d.obkind) { obRead(); const k = d.obkind, a = OB.kinds; OB.kinds = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
@@ -4205,7 +4228,7 @@ document.addEventListener('click', async e => {
   if (d.fbrand) { S.f.brand = d.fbrand; render(); return; }
   if (d.fidea) { S.f.idea = d.fidea; render(); return; }
   if (d.month) { const [y, m] = S.f.month.split('-').map(Number); const nd = new Date(y, m - 1 + Number(d.month), 1); S.f.month = `${nd.getFullYear()}-${pad(nd.getMonth() + 1)}`; render(); return; }
-  if (d.color) { document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', s === t)); $('#s_color').value = d.color; document.documentElement.style.setProperty('--accent', d.color); return; }
+  if (d.color) { document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', s === t)); $('#s_color').value = d.color; const nm = $('#sw_name'); if (nm) nm.textContent = d.cname || colorName(d.color); document.documentElement.style.setProperty('--accent', d.color); return; }
   if (d.act === 'settings') { openSettings(); return; }
   if (d.act === 'toggletheme') { await setTheme(isDark() ? 'light' : 'dark'); return; }
   if (d.themeset) { document.querySelectorAll('[data-themeset]').forEach(b => b.setAttribute('aria-pressed', b === t)); await setTheme(d.themeset); return; }
@@ -4226,7 +4249,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'fx_fee') { S.profile.fxFee = e.target.value; const o = $('#fx_out'); if (o) o.innerHTML = fxOutHtml(); clearTimeout(S.feeT); S.feeT = setTimeout(() => saveProfile({ fxFee: e.target.value }), 900); return; }
   if (e.target.id === 'rn_res') { TS.res = e.target.value.trim(); tsRefresh(); return; }
   const map = { tpl: 'tpl', o_draft: 'draft', ct_adj: 'adj', ct_in: 'cIn', m_in: 'mIn', b_in: 'bIn', r_txt: 'rTxt', r_dur: 'rDur', sc_in: 'scIn' };
-  if (map[e.target.id]) { S.ct[map[e.target.id]] = e.target.value; if (e.target.id === 'tpl') { const sb = $('[data-act=savetpl]'); if (sb) { sb.disabled = false; sb.style.opacity = ''; sb.textContent = 'Salvar modelo'; } } return; } if (e.target.id === 's_color') { document.documentElement.style.setProperty('--accent', e.target.value); document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', 'false')); } });
+  if (map[e.target.id]) { S.ct[map[e.target.id]] = e.target.value; if (e.target.id === 'tpl') { const sb = $('[data-act=savetpl]'); if (sb) { sb.disabled = false; sb.style.opacity = ''; sb.textContent = 'Salvar modelo'; } } return; } if (e.target.id === 's_color') { document.documentElement.style.setProperty('--accent', e.target.value); document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', 'false')); const nm = $('#sw_name'); if (nm) nm.textContent = colorName(e.target.value); } });
 document.addEventListener('change', async e => {
   if (e.target.id === 'imp_file' && e.target.files[0]) { try { const j = JSON.parse(await e.target.files[0].text()); if (j.app !== 'criahub' || !j.data) throw 0; closeForm(); toast('Importando…');
       if (window.criahubImport) { await window.criahubImport(j); return; }
