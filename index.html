@@ -308,7 +308,7 @@ window.CRIAHUB_CONFIG = {
       return box('<span class="sub">Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o app pelo ícone da Tela de Início (iPhone).</span>');
     }
     if (Notification.permission === 'denied') return box('<span class="sub">As notificações estão bloqueadas para o CriaHub. Libere nos ajustes do celular (Notificações › CriaHub) e volte aqui.</span>');
-    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
+    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
     return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar UGC todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
@@ -337,7 +337,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -1136,6 +1136,8 @@ let newsSeen = ''; try { newsSeen = localStorage.getItem('criahub:newsSeen') || 
 try { S.f.front = localStorage.getItem('criahub:front') || ''; } catch (e) {}
 try { let t = sessionStorage.getItem('criahub:tab'); if (TAB_ALIAS[t]) { S.f[TAB_ALIAS[t][1]] = TAB_ALIAS[t][2]; t = TAB_ALIAS[t][0]; } if (t && TABS.some(x => x[0] === t)) S.tab = t; } catch (e) {}
 if (TABS.some(x => x[0] === location.hash.slice(1))) S.tab = location.hash.slice(1);
+/* aviso do Em alta abre direto na aba */
+if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
 function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? j.data[c] : []); S.profile = j.profile || {}; } } catch (e) {} }
@@ -2311,6 +2313,7 @@ async function setTaskDone(x, done) {
 const NICHES = [['beleza', 'Beleza e skincare'], ['moda', 'Moda'], ['fitness', 'Fitness e saúde'], ['alimentacao', 'Alimentação'], ['maternidade', 'Maternidade'], ['casa', 'Casa e decoração'], ['pets', 'Pets'], ['tech', 'Tecnologia e apps'], ['financas', 'Finanças'], ['games', 'Games'], ['viagem', 'Viagem'], ['lifestyle', 'Lifestyle e humor']];
 const myNiches = () => arr(S.profile.niches).filter(k => NICHES.some(n => n[0] === k));
 const nicheName = k => (NICHES.find(n => n[0] === k) || [k, k])[1];
+window.criahubOpenAlta = () => { if (sheet) closeForm(); S.tab = 'estudio'; S.f.sview = 'alta'; render(); window.scrollTo(0, 0); };
 window.criahubSetTrends = list => { S.trends = list; S.trendsReady = true; render(); };
 function trItem(x, kind, key) {
   const u = safeUrl(x.url);
