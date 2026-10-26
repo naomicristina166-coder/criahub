@@ -219,6 +219,14 @@ window.CRIAHUB_CONFIG = {
     load(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
     return () => {};
   } };
+  /* E-mails importantes (tabelas mail_*, função caixa): endereço de encaminhamento, lista e "já vi" */
+  window.criahubMail = {
+    me: async () => { await ready; const { data, error } = await sb.rpc('mail_me'); if (error) throw error; return data; },
+    list: async () => { await ready; const { data, error } = await sb.from('mail_msgs').select('id,kind,from_name,from_addr,subject,snippet,code,link,received_at,seen_at').order('received_at', { ascending: false }).limit(60); if (error) throw error; return data || []; },
+    seen: async id => { const { error } = await sb.rpc('mail_seen', { p_id: id }); if (error) throw error; },
+    setEmail: async e => { const { error } = await sb.rpc('mail_set_email', { p_email: e }); if (error) throw error; },
+    del: async id => { const { error } = await sb.from('mail_msgs').delete().eq('id', id); if (error) throw error; },
+  };
   /* cotações (comerciais, AwesomeAPI) */
   let fxP = null;
   const fxLoad = () => (fxP = fxP || fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL').then(r => r.json()).catch(() => ({})));
@@ -337,7 +345,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -757,6 +765,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.ml-it{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.ml-it.seen{opacity:.72}.ml-it .row-btns{margin-top:4px;align-items:center}.ml-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.ml-k{font-size:12.5px;font-weight:700;color:var(--accent-ink)}.ml-sn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ml-code{border-color:var(--accent)}.ml-addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.ml-addr code{flex:1 1 200px;min-width:0;overflow-wrap:anywhere;padding:8px 10px;border-radius:10px;background:var(--accent-soft);font-size:13.5px}.ml-addr input{flex:1 1 200px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit}.ml-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.ml-steps li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}.ml-priv{padding-top:4px}
 .tr-it{display:flex;flex-direction:column;gap:6px}.tr-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.tr-how{font-size:14px}
 .tr-f{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px}.tr-top h2{font-size:19px;margin-top:4px}
 .tr-warn{display:flex;flex-direction:column;gap:4px;border-color:color-mix(in oklab, var(--warn) 45%, var(--line));font-size:14px}.tr-warn span{color:var(--muted)}
@@ -1137,6 +1146,7 @@ try { S.f.front = localStorage.getItem('criahub:front') || ''; } catch (e) {}
 try { let t = sessionStorage.getItem('criahub:tab'); if (TAB_ALIAS[t]) { S.f[TAB_ALIAS[t][1]] = TAB_ALIAS[t][2]; t = TAB_ALIAS[t][0]; } if (t && TABS.some(x => x[0] === t)) S.tab = t; } catch (e) {}
 if (TABS.some(x => x[0] === location.hash.slice(1))) S.tab = location.hash.slice(1);
 /* aviso do Em alta abre direto na aba */
+let mailHash = location.hash === '#emails'; if (mailHash) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
@@ -1159,6 +1169,7 @@ async function connect() {
     const base = db.doc(`data/users/${uid}/profile`);
     remote = { base };
     S.mode = 'remote';
+    setTimeout(() => { mailLoad(); if (mailHash) { mailHash = false; openMail(); } }, 0);
     COLS.forEach(k => S.data[k] = []); S.profile = {};
     const seen = new Set(); const need = COLS.length + 1;
     const arrive = key => { seen.add(key); if (seen.size >= need) S.loading = false; render(); };
@@ -1313,6 +1324,7 @@ function vHome() {
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
   ${homeRetro()}
+  ${homeMail()}
   ${homeSteps()}
   ${homePerso()}
   ${!name ? `<div class="card section"><div><b>Como você quer ser chamada?</b><div class="sub">Seu nome aparece na saudação.</div></div>
@@ -3545,6 +3557,91 @@ function openLatestRetro(kind) {
   const r = [...S.data.retros].filter(x => kind === 'ano' ? x.kind === 'ano' : true).sort((a, b) => retroSortKey(b).localeCompare(retroSortKey(a)))[0]; if (r) openRetro(r.stats);
 }
 window.criahubOpenRetro = openLatestRetro;
+/* ================= E-mails importantes: encaminhamento + aviso se ficar sem ver ================= */
+/* ela encaminha (filtro do Gmail/Outlook) só os e-mails importantes; o app mostra na Início e, se ficar 24h sem
+   "Abrir" nem "Já vi", a função caixa manda 1 lembrete no celular. Guardamos só remetente, assunto, data e um trechinho. */
+const MAILK = { proposta: ['💼', 'Proposta ou parceria'], mei: ['🧾', 'MEI e impostos'], pagamento: ['💸', 'Pagamento'], outro: ['📩', 'E-mail importante'], confirma: ['🔑', 'Código do Gmail'] };
+const MAIL_Q = '{proposta parceria publi collab campanha briefing contrato orçamento DAS MEI "Receita Federal" "nota fiscal" boleto cobrança pagamento pix fatura}';
+const MAIL_OUT = 'proposta, parceria, publi, collab, campanha, briefing, contrato, orçamento, DAS, MEI, Receita Federal, nota fiscal, boleto, cobrança, pagamento, pix, fatura';
+let mailT = 0;
+async function mailLoad(withMe) {
+  const M = window.criahubMail; if (!M || S.mode !== 'remote') return;
+  const m = S.mail || (S.mail = { list: [], me: null, ok: false });
+  try { m.list = await M.list(); m.ok = true; if (withMe || m.me || m.list.length) m.me = await M.me(); } catch (e) { m.err = 1; }
+  if (sheet && sheet.col === 'mail') openMail(true); else if (!sheet && S.tab === 'inicio') render();
+}
+window.criahubSetMail = (list, me) => { S.mail = { list, me: me || null, ok: true }; if (sheet && sheet.col === 'mail') openMail(true); else render(); };
+window.criahubOpenMail = () => { if (S.mail === undefined && !window.criahubMail) return; S.tab = 'inicio'; render(); openMail(); };
+const mailNew = () => ((S.mail && S.mail.list) || []).filter(x => !x.seen_at);
+const mailAgo = iso => { const h = Math.floor((Date.now() - new Date(iso)) / 3600e3); return h < 1 ? 'agora há pouco' : h < 24 ? `há ${h} h` : h < 48 ? 'ontem' : `há ${Math.floor(h / 24)} dias`; };
+const mailWork = () => ((S.mail && S.mail.me && S.mail.me.work_email) || '').trim();
+function mailOpenUrl(x) {
+  const w = mailWork();
+  if (/@(outlook|hotmail|live|msn)\./i.test(w)) return 'https://outlook.live.com/mail/0/';
+  const subj = String(x.subject || '').replace(/["(){}]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 70);
+  return `https://mail.google.com/mail/u/${w ? encodeURIComponent(w) : 0}/#search/${encodeURIComponent(`from:(${x.from_addr || ''})${subj ? ` "${subj}"` : ''}`)}`;
+}
+function mailItem(x, home) {
+  const [e, l] = MAILK[x.kind] || MAILK.outro, late = !x.seen_at && Date.now() - new Date(x.received_at) > 24 * 3600e3, w = mailWork();
+  if (x.kind === 'confirma') return `<div class="ml-it ml-code"><span class="ml-k">${e} ${l}</span><b>Seu código de confirmação: <span class="num" style="font-size:20px;letter-spacing:.06em">${esc(x.code || 'veja no e-mail')}</span></b>
+    <span class="sub">Cole esse código no Gmail, na tela de encaminhamento, e toque em Verificar.${x.link ? ' Ou toque em "Confirmar agora".' : ''}</span>
+    <div class="row-btns">${x.code ? `<button class="btn sm" data-mcopy="${esc(x.code)}">Copiar código</button>` : ''}${x.link && safeUrl(x.link) ? `<button class="btn sm ghost" data-mlink="${esc(x.link)}" data-mid="${x.id}">Confirmar agora</button>` : ''}<button class="btn sm ghost" data-mseen="${x.id}">Pronto</button></div></div>`;
+  return `<div class="ml-it ${x.seen_at ? 'seen' : ''}"><div class="ml-top"><span class="ml-k">${e} ${l}</span>${late ? '<span class="pill p-bad" style="font-size:11px">Sem abrir há 1 dia</span>' : `<span class="sub">${mailAgo(x.received_at)}</span>`}</div>
+    <b>${esc(x.subject || '(sem assunto)')}</b><span class="sub">${esc(x.from_name || x.from_addr || '')}${x.from_name && x.from_addr ? ` · ${esc(x.from_addr)}` : ''}</span>
+    ${x.snippet && !home ? `<span class="sub ml-sn">${esc(x.snippet)}</span>` : ''}
+    <div class="row-btns"><button class="btn sm" data-mopen="${x.id}">${/@(outlook|hotmail|live|msn)\./i.test(w) ? 'Abrir no Outlook' : 'Abrir no Gmail'}</button>${x.seen_at ? (home ? '' : `<span class="sub">✓ Visto</span><button class="link" data-mdel="${x.id}">Apagar</button>`) : `<button class="btn sm ghost" data-mseen="${x.id}">Já vi</button>`}</div></div>`;
+}
+function homeMail() {
+  const m = S.mail; if (!m || !m.ok) return '';
+  const nw = mailNew();
+  if (!nw.length) {
+    if (m.list.length || S.profile.mailInvite || !S.profile.onboarded) return '';
+    return `<section class="card section perso"><div><div class="eyebrow" style="color:var(--rec)">Novo no CriaHub</div><h2 style="font-size:19px;margin-top:4px">Não deixe e-mail importante passar</h2><div class="sub">Proposta de marca, cobrança do MEI, aviso de pagamento: o CriaHub mostra aqui e te lembra se ficar sem abrir. Sem pedir sua senha.</div></div>
+      <div class="row-btns"><button class="btn sm" data-act="mail">Configurar</button><button class="btn sm ghost" data-act="mailno">Agora não</button></div></section>`;
+  }
+  const code = nw.filter(x => x.kind === 'confirma'), rest = nw.filter(x => x.kind !== 'confirma');
+  return `<section class="card section ml-home"><div class="row-h"><h2>${rest.length ? `${rest.length === 1 ? 'Um e-mail importante' : rest.length + ' e-mails importantes'} pra ver` : 'Encaminhamento do Gmail'}</h2><button class="link" data-act="mail">Ver todos</button></div>
+    ${[...code.slice(0, 1), ...rest.slice(0, 3)].map(x => mailItem(x, true)).join('')}${rest.length > 3 ? `<button class="link" data-act="mail">e mais ${rest.length - 3}</button>` : ''}</section>`;
+}
+function openMail(keep) {
+  const m = S.mail || {}, me = m.me, tab = (sheet && sheet.mtab) || 'gmail', box = $('#layer .sheet'), top = keep && box ? box.scrollTop : 0;
+  if (keep && !(sheet && sheet.col === 'mail')) return;
+  sheet = { col: 'mail', mtab: tab };
+  if (!me && !m.err) mailLoad(true);
+  clearInterval(mailT); mailT = setInterval(() => { if (!sheet || sheet.col !== 'mail') { clearInterval(mailT); return; } if (document.visibilityState === 'visible') mailLoad(); }, 15000);
+  const addr = me && me.address, list = (m.list || []);
+  const step = (n, html) => `<li><span class="fs-n">${n}</span><div>${html}</div></li>`;
+  const how = tab === 'gmail' ? `<ol class="ml-steps">
+      ${step(1, 'No <b>computador</b>, abra o Gmail › ⚙️ › <b>Ver todas as configurações</b> › aba <b>Encaminhamento e POP/IMAP</b> › <b>Adicionar um endereço de encaminhamento</b>. Cole o seu endereço do CriaHub › Próximo › Continuar.')}
+      ${step(2, 'O Google manda um código de confirmação. Ele aparece <b>aqui no CriaHub</b> em instantes. Cole no Gmail e toque em <b>Verificar</b>. Deixe marcado “Desativar encaminhamento”: assim só vai o que o filtro escolher.')}
+      ${step(3, `Ainda no Gmail, na barra de busca toque em <b>Mostrar opções de pesquisa</b>. Em <b>Contém as palavras</b>, cole:<div class="ml-addr"><code id="ml_q">${esc(MAIL_Q)}</code><button type="button" class="btn sm ghost" data-mcopy="${esc(MAIL_Q)}">Copiar</button></div>Toque em <b>Criar filtro</b> › marque <b>Encaminhar para</b> e escolha o endereço do CriaHub › <b>Criar filtro</b>.`)}
+      ${step(4, 'Pronto! Se uma marca escreve de um jeito diferente, crie outro filtro com o e-mail dela em “De”.')}</ol>`
+    : `<ol class="ml-steps">
+      ${step(1, 'No Outlook (no computador ou em outlook.com) › ⚙️ Configurações › <b>Email</b> › <b>Regras</b> › <b>Adicionar nova regra</b>.')}
+      ${step(2, `Condição: <b>O assunto ou o corpo inclui</b>, e escreva as palavras:<div class="ml-addr"><code>${esc(MAIL_OUT)}</code><button type="button" class="btn sm ghost" data-mcopy="${esc(MAIL_OUT)}">Copiar</button></div>`)}
+      ${step(3, 'Ação: <b>Encaminhar para</b> › cole o seu endereço do CriaHub › Salvar. O Outlook não pede código.')}</ol>`;
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="E-mails importantes"><div class="sh"><h2>E-mails importantes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <p class="sub" style="margin:0">Você encaminha pro CriaHub só os e-mails que importam: propostas, MEI e pagamentos. Eles aparecem na Início e, se ficarem <b>24 horas</b> sem você tocar em “Abrir” ou “Já vi”, chega um lembrete no celular.</p>
+    ${S.mode !== 'remote' ? '<div class="empty"><strong>Entre na sua conta pra usar</strong>Os e-mails chegam pela sua conta do CriaHub.</div>' : !me ? `<div class="empty"><strong>${m.err ? 'Ainda não está disponível' : 'Preparando seu endereço…'}</strong>${m.err ? 'Essa função está sendo ligada. Tente de novo mais tarde.' : ''}</div>` : `
+    <div class="card section" style="gap:8px"><b>1. Seu endereço do CriaHub</b>${me.ready && addr ? `<div class="ml-addr"><code id="ml_addr">${esc(addr)}</code><button type="button" class="btn sm" data-mcopy="${esc(addr)}">Copiar</button></div><span class="hint">É só seu. Use ele como destino do encaminhamento.</span>` : '<span class="sub">Seu endereço fica pronto em breve. Volte aqui mais tarde.</span>'}</div>
+    <div class="card section" style="gap:8px"><b>2. Seu e-mail de trabalho</b><span class="sub">Pra o botão “Abrir” cair direto na conta certa.</span>
+      <div class="ml-addr"><input type="email" id="ml_email" value="${esc(me.work_email || '')}" placeholder="voce@gmail.com" autocomplete="email" aria-label="Seu e-mail de trabalho"><button type="button" class="btn sm ghost" data-act="mailsave">Salvar</button></div></div>
+    <div class="card section" style="gap:8px"><b>3. Crie o encaminhamento</b><div class="chips">${[['gmail', 'Gmail'], ['outlook', 'Outlook / Hotmail']].map(([k, l]) => `<button type="button" class="chip" data-mtab="${k}" aria-pressed="${tab === k}">${l}</button>`).join('')}</div>${how}</div>
+    ${window.criahubPushOn && !window.criahubPushOn() && window.criahubPushUI ? `<div class="sub">Pra receber o lembrete no celular, ligue as notificações:</div>${window.criahubPushUI('mail')}` : ''}
+    <div class="row-h"><b>Últimos 30 dias</b><span class="sub">${list.length ? list.length + ' e-mail' + (list.length > 1 ? 's' : '') : ''}</span></div>
+    ${list.length ? list.map(x => mailItem(x)).join('') : '<div class="sub">Nenhum e-mail encaminhado ainda. Assim que chegar o primeiro, ele aparece aqui.</div>'}
+    <div class="sub ml-priv">🔒 O CriaHub nunca pede a senha do seu e-mail e não lê sua caixa. Guarda só remetente, assunto, data e um trechinho do que você encaminhou, e apaga sozinho depois de 30 dias.</div>`}
+  </div></div>`;
+  if (top) { const b = $('#layer .sheet'); if (b) b.scrollTop = top; }
+}
+async function mailSeen(id) {
+  const x = ((S.mail && S.mail.list) || []).find(v => v.id === id); if (!x) return;
+  x.seen_at = new Date().toISOString(); if (window.criahubMail) window.criahubMail.seen(id).catch(() => {});
+  if (sheet && sheet.col === 'mail') openMail(true); else render();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') mailLoad(); });
+setInterval(() => { if (document.visibilityState === 'visible') mailLoad(); }, 10 * 60 * 1000);
+
 function homeRetro() {
   const t = today(), pm = prevMonth(t), cy = t.slice(0, 4);
   if (!retroFresh(t)) return '';
@@ -3931,7 +4028,7 @@ function openContract(id) {
     <div class="foot"><button type="button" class="btn danger" data-act="delete">Excluir</button><div class="r"><button type="button" class="btn" data-copy="view">Copiar</button></div></div>
   </div></div>`;
 }
-function closeForm() { sheet = null; $('#layer').innerHTML = ''; }
+function closeForm() { const was = sheet && sheet.col; sheet = null; $('#layer').innerHTML = ''; if (was === 'mail') { clearInterval(mailT); render(); } }
 
 function readForm(form, col) {
   const out = {};
@@ -4037,6 +4134,7 @@ function openSettings() {
       ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
     </div>
     ${window.criahubPushUI ? window.criahubPushUI('ajustes') : ''}
+    <div class="card section" style="gap:8px"><b>E-mails importantes</b><span class="sub">Propostas, cobranças do MEI e pagamentos aparecem na Início, com lembrete se ficarem sem abrir.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-act="mail">Configurar</button></div></div>
     <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Dados de exemplo</b><span class="sub">Itens marcados como “exemplo” servem pra você ver o app funcionando.</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
     <div class="sub">${S.mode === 'remote' ? 'Seus dados ficam salvos na sua conta e aparecem igual no celular e no computador. Só você vê os seus dados.' : 'Neste modo, os dados ficam salvos só neste navegador.'}</div>
@@ -4166,6 +4264,15 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.act === 'mail') { openMail(); return; }
+  if (d.act === 'mailno') { await saveProfile({ mailInvite: 'no' }); toast('Tudo bem! Quando quiser: Ajustes › E-mails importantes.'); return; }
+  if (d.mtab) { sheet.mtab = d.mtab; openMail(true); return; }
+  if (d.mcopy) { try { await navigator.clipboard.writeText(d.mcopy); toast('Copiado'); } catch (_) { toast('Toque e segure no texto pra copiar'); } return; }
+  if (d.mopen) { const x = ((S.mail && S.mail.list) || []).find(v => v.id === d.mopen); if (x) { window.open(mailOpenUrl(x), '_blank', 'noopener'); await mailSeen(x.id); } return; }
+  if (d.mlink) { const u = safeUrl(d.mlink); if (u) window.open(u, '_blank', 'noopener'); await mailSeen(d.mid); return; }
+  if (d.mseen) { await mailSeen(d.mseen); return; }
+  if (d.mdel) { if (S.mail) S.mail.list = S.mail.list.filter(v => v.id !== d.mdel); if (window.criahubMail) window.criahubMail.del(d.mdel).catch(() => {}); openMail(true); return; }
+  if (d.act === 'mailsave') { const v = ($('#ml_email')?.value || '').trim(); if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { toast('Confira o e-mail'); return; } try { await window.criahubMail.setEmail(v); if (S.mail.me) S.mail.me.work_email = v.toLowerCase(); toast('E-mail salvo'); openMail(true); } catch (_) { toast('Não consegui salvar. Tente de novo.'); } return; }
   if (d.niche) { const a = myNiches(), k = d.niche; await saveProfile({ niches: a.includes(k) ? a.filter(x => x !== k) : [...a, k] }); return; }
   if (d.tsave) { const T = (S.trends || [])[0]; if (!T) return; const [kd, a, b] = d.tsave.split(':'); const x = kd === 's' ? T.sounds[+a] : kd === 'g' ? T.general[+a] : (T.niches[a] || [])[+b]; if (!x) return;
     await put('ideas', { id: newId(), title: kd === 's' ? `Áudio em alta: ${x.title}${x.artist ? ' — ' + x.artist : ''}` : x.title, tag: kd === 's' ? 'Trend de áudio' : 'Tendência', status: 'nova', notes: [x.what || x.why || '', x.how ? 'Como usar: ' + x.how : '', x.url ? 'Fonte: ' + x.url : ''].filter(Boolean).join('\n'), created: new Date().toISOString() }); toast('Salvo nas Ideias'); return; }
