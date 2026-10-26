@@ -1,6 +1,7 @@
 /* CriaHub · função "caixa": e-mails importantes encaminhados pela creator
    • POST do Postmark (webhook de entrada, ?t=<segredo>) → guarda remetente, assunto, data e um trechinho
    • POST {action:'lembrar', key} do agendador → 1 lembrete no celular para e-mail sem "Abrir"/"Já vi" há 24h
+   • POST {action:'aniver', key} do agendador (9h) → parabéns no celular de quem faz aniversário hoje
    Não guarda o e-mail inteiro, não lê a caixa de ninguém e não usa IA: a classificação é por palavras.
 
    Como ligar (uma vez só), no painel do Supabase:
@@ -59,32 +60,60 @@ async function inbound(req: Request, url: URL) {
   return Response.json({ ok: true, kind: row.kind });
 }
 
+function vapid() {
+  const pub = env('VAPID_PUBLIC_KEY', 'VAPID_PUBLIC', 'VAPID_PUB'), priv = env('VAPID_PRIVATE_KEY', 'VAPID_PRIVATE', 'VAPID_PRIV');
+  if (!pub || !priv) return false;
+  webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', pub, priv); return true;
+}
+/* manda pra todos os aparelhos dela; apaga inscrições que não existem mais */
+async function pushTo(uid: string, msg: Record<string, string>) {
+  const { data: subs } = await sb.from('push_subs').select('endpoint,sub').eq('user_id', uid); let n = 0; const gone: string[] = [];
+  for (const s of subs || []) {
+    try { await webpush.sendNotification(s.sub, JSON.stringify(msg), { TTL: 6 * 3600 }); n++; }
+    catch (e) { const c = (e as { statusCode?: number }).statusCode; if (c === 404 || c === 410) gone.push(s.endpoint); }
+  }
+  if (gone.length) await sb.from('push_subs').delete().in('endpoint', gone);
+  return n;
+}
+
 const LABEL: Record<string, string> = { proposta: '💼 Proposta', mei: '🧾 MEI e impostos', pagamento: '💸 Pagamento', outro: '📩 E-mail importante' };
 async function lembrar() {
-  const pub = env('VAPID_PUBLIC_KEY', 'VAPID_PUBLIC', 'VAPID_PUB'), priv = env('VAPID_PRIVATE_KEY', 'VAPID_PRIVATE', 'VAPID_PRIV');
-  if (!pub || !priv) return Response.json({ ok: false, why: 'faltam as chaves VAPID nos Secrets das Edge Functions' });
-  webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', pub, priv);
+  if (!vapid()) return Response.json({ ok: false, why: 'faltam as chaves VAPID nos Secrets das Edge Functions' });
   const { data: due, error } = await sb.from('mail_msgs').select('id,user_id,kind,subject,from_name,from_addr')
     .is('seen_at', null).is('reminded_at', null).neq('kind', 'confirma')
     .lt('received_at', new Date(Date.now() - 24 * 3600e3).toISOString()).limit(1000);
   if (error) return new Response(error.message, { status: 500 });
   const byUser = new Map<string, any[]>(); (due || []).forEach(r => byUser.set(r.user_id, [...(byUser.get(r.user_id) || []), r]));
-  let sent = 0; const gone: string[] = [];
+  let sent = 0;
   for (const [uid, list] of byUser) {
     const f = list[0], n = list.length;
-    const payload = JSON.stringify({
+    sent += await pushTo(uid, {
       title: n === 1 ? `${LABEL[f.kind] || LABEL.outro}: você ainda não viu` : `${n} e-mails importantes que você ainda não viu`,
       body: n === 1 ? `${f.from_name || f.from_addr}: ${f.subject}` : list.slice(0, 3).map(r => r.subject).join(' · '),
       tag: 'emails', url: '/#emails' });
-    const { data: subs } = await sb.from('push_subs').select('endpoint,sub').eq('user_id', uid);
-    for (const s of subs || []) {
-      try { await webpush.sendNotification(s.sub, payload, { TTL: 6 * 3600 }); sent++; }
-      catch (e) { const c = (e as { statusCode?: number }).statusCode; if (c === 404 || c === 410) gone.push(s.endpoint); }
-    }
     await sb.from('mail_msgs').update({ reminded_at: new Date().toISOString() }).in('id', list.map(r => r.id));
   }
-  if (gone.length) await sb.from('push_subs').delete().in('endpoint', gone);
-  return Response.json({ ok: true, users: byUser.size, sent, removed: gone.length });
+  return Response.json({ ok: true, users: byUser.size, sent });
+}
+
+/* aniversário: às 9h, quem faz aniversário hoje (dia e mês guardados no perfil) recebe os parabéns no celular */
+const BD_MSG = [
+  'Hoje o dia é todo seu. Que esse novo ciclo venha com marcas incríveis, saúde, leveza e muitas conquistas. A gente torce por você! 💖',
+  'Mais um ano de você criando, aprendendo e crescendo. Celebre cada passo, porque ele é seu. Que venham parcerias lindas e dias leves! ✨',
+  'Parabéns pela pessoa e pela creator que você é. Que o seu novo ano tenha tempo pra descansar, sonhar grande e realizar. 🎉',
+];
+async function aniver() {
+  if (!vapid()) return Response.json({ ok: false, why: 'faltam as chaves VAPID nos Secrets das Edge Functions' });
+  const br = new Date(Date.now() - 3 * 3600e3), y = br.getUTCFullYear(), md = br.toISOString().slice(5, 10);
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0, days = md === '02-28' && !leap ? [md, '02-29'] : [md];
+  const { data: who, error } = await sb.from('profiles').select('user_id,data->>name').in('data->>bday', days);
+  if (error) return new Response(error.message, { status: 500 });
+  let sent = 0;
+  for (const p of who || []) {
+    const name = String((p as any).name || '').trim().split(/\s+/)[0];
+    sent += await pushTo((p as any).user_id, { title: `Feliz aniversário${name ? ', ' + name : ''}! 🎂`, body: BD_MSG[y % BD_MSG.length], tag: 'aniver', url: '/#inicio' });
+  }
+  return Response.json({ ok: true, people: (who || []).length, sent });
 }
 
 Deno.serve(async req => {
@@ -93,5 +122,6 @@ Deno.serve(async req => {
   if (url.searchParams.has('t')) return inbound(req, url);
   let b: Record<string, any> = {}; try { b = await req.json(); } catch { /* vazio */ }
   if (b.action === 'lembrar' && await keyOk('cron', b.key)) return lembrar();
+  if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
   return new Response('forbidden', { status: 403 });
 });

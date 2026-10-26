@@ -5,6 +5,7 @@
 --   • guardamos só remetente, assunto, data e um trechinho. Some sozinho depois de 30 dias
 --   • se ela não tocar em "Abrir" nem em "Já vi" em 24h, a função manda UM lembrete no celular
 --   • nunca pedimos senha de e-mail
+--   • de quebra: todo dia às 9h, quem faz aniversário recebe os parabéns no celular
 -- Antes de rodar: troque COLE_O_ENDERECO_DO_POSTMARK (linha marcada com 👉) pelo endereço de
 -- entrada do Postmark (Servers › seu servidor › Default Inbound Stream › Settings, termina em
 -- @inbound.postmarkapp.com). No fim aparece o endereço do webhook pra colar no Postmark.
@@ -115,6 +116,15 @@ select cron.schedule('emails-criahub', '17 11-23 * * *', $cron$
     url := 'https://dvzfllqcgozecvhodygz.supabase.co/functions/v1/caixa',
     headers := jsonb_build_object('Content-Type', 'application/json'),
     body := jsonb_build_object('action', 'lembrar', 'key', (select cron from private.mail_key where id = 1)));
+$cron$);
+
+-- ANIVERSÁRIO: todo dia às 9h03 de Brasília, parabéns no celular de quem faz aniversário (dia e mês do perfil)
+select cron.unschedule('aniversario-criahub') where exists (select 1 from cron.job where jobname = 'aniversario-criahub');
+select cron.schedule('aniversario-criahub', '3 12 * * *', $cron$
+  select net.http_post(
+    url := 'https://dvzfllqcgozecvhodygz.supabase.co/functions/v1/caixa',
+    headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := jsonb_build_object('action', 'aniver', 'key', (select cron from private.mail_key where id = 1)));
 $cron$);
 
 -- cole este endereço no Postmark (Default Inbound Stream › Settings › Webhook). Não mande pra ninguém.

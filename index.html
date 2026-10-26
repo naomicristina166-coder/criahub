@@ -765,6 +765,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.bd-sel{display:flex;gap:8px;flex-wrap:wrap}.bd-sel select{flex:1 1 120px}.bd-home{flex-direction:row;align-items:center;gap:14px;background:linear-gradient(135deg,var(--accent-soft),var(--surface))}.bd-e{font-size:44px;line-height:1}
 .ml-it{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.ml-it.seen{opacity:.72}.ml-it .row-btns{margin-top:4px;align-items:center}.ml-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.ml-k{font-size:12.5px;font-weight:700;color:var(--accent-ink)}.ml-sn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ml-code{border-color:var(--accent)}.ml-addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.ml-addr code{flex:1 1 200px;min-width:0;overflow-wrap:anywhere;padding:8px 10px;border-radius:10px;background:var(--accent-soft);font-size:13.5px}.ml-addr input{flex:1 1 200px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit}.ml-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.ml-steps li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}.ml-priv{padding-top:4px}
 .tr-it{display:flex;flex-direction:column;gap:6px}.tr-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.tr-how{font-size:14px}
 .tr-f{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px}.tr-top h2{font-size:19px;margin-top:4px}
@@ -1276,7 +1277,7 @@ function render() {
   Object.entries(TOOLS).forEach(([tab, T]) => v.querySelectorAll(`.seg [data-${T.attr}]`).forEach(b => { if (!toolOn(tab, b.dataset[T.attr])) b.hidden = true; }));
   if (armKey && armSel && Date.now() - armAt < 5000) { const ab = v.querySelector(armSel); if (ab) { ab.classList.add('armed'); ab.textContent = armMsg; } }
   { const h1 = v.querySelector('.head h1'); if (h1 && !h1.querySelector('.helpq')) h1.insertAdjacentHTML('beforeend', `<button class="helpq" data-help="${helpKey()}" aria-label="O que é essa tela?">?</button>`); }
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); checkBday(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -1323,6 +1324,7 @@ function vHome() {
     <div class="eyebrow">${esc(dateTxt)}</div>
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
+  ${homeBday()}
   ${homeRetro()}
   ${homeMail()}
   ${homeSteps()}
@@ -3595,7 +3597,7 @@ function homeMail() {
   const m = S.mail; if (!m || !m.ok) return '';
   const nw = mailNew();
   if (!nw.length) {
-    if (m.list.length || S.profile.mailInvite || !S.profile.onboarded) return '';
+    if (m.list.length || S.profile.mailInvite || !inviteOk() || !(S.profile.bday || S.profile.bdayAsk)) return '';
     return `<section class="card section perso"><div><div class="eyebrow" style="color:var(--rec)">Novo no CriaHub</div><h2 style="font-size:19px;margin-top:4px">Não deixe e-mail importante passar</h2><div class="sub">Proposta de marca, cobrança do MEI, aviso de pagamento: o CriaHub mostra aqui e te lembra se ficar sem abrir. Sem pedir sua senha.</div></div>
       <div class="row-btns"><button class="btn sm" data-act="mail">Configurar</button><button class="btn sm ghost" data-act="mailno">Agora não</button></div></section>`;
   }
@@ -3641,6 +3643,39 @@ async function mailSeen(id) {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') mailLoad(); });
 setInterval(() => { if (document.visibilityState === 'visible') mailLoad(); }, 10 * 60 * 1000);
+
+/* ================= aniversário: o CriaHub comemora com ela (sem IA; a notificação das 9h sai pela função caixa) ================= */
+const BD_MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const BD_MSG = [
+  'Hoje o dia é todo seu. Que esse novo ciclo venha com marcas incríveis, saúde, leveza e muitas conquistas. A gente torce por você! 💖',
+  'Mais um ano de você criando, aprendendo e crescendo. Celebre cada passo, porque ele é seu. Que venham parcerias lindas e dias leves! ✨',
+  'Parabéns pela pessoa e pela creator que você é. Que o seu novo ano tenha tempo pra descansar, sonhar grande e realizar. 🎉',
+];
+const bdMsg = y => BD_MSG[(+y) % BD_MSG.length];
+/* quem faz aniversário em 29/02 comemora no dia 28 nos anos que não são bissextos */
+function isBday(t) {
+  const b = S.profile.bday; if (!b) return false; const md = t.slice(5), y = +t.slice(0, 4), leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  return b === md || (b === '02-29' && !leap && md === '02-28');
+}
+const bdSelects = (pre, v) => { const [m, d] = (v || '').split('-'); return `<select id="${pre}_d" aria-label="Dia"><option value="">Dia</option>${Array.from({ length: 31 }, (_, i) => `<option ${+d === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select><select id="${pre}_m" aria-label="Mês"><option value="">Mês</option>${BD_MONTHS.map((n, i) => `<option value="${i + 1}" ${+m === i + 1 ? 'selected' : ''}>${n}</option>`).join('')}</select>`; };
+function bdRead(pre) {
+  const d = +($('#' + pre + '_d')?.value || 0), m = +($('#' + pre + '_m')?.value || 0);
+  if (!d && !m) return ''; if (!d || !m || d > [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]) return null;
+  return String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+/* convites da Início: um de cada vez, depois das boas-vindas e dos primeiros passos */
+const inviteOk = () => { const p = S.profile; return !!p.onboarded && (p.onboarded === 'antes' ? !!p.persoSeen : !!(p.stepsDone || p.stepsHidden)); };
+function homeBday() {
+  const p = S.profile, t = today();
+  if (isBday(t)) return `<section class="card section bd-home"><div class="bd-e" aria-hidden="true">🎂</div><div><h2>Feliz aniversário${p.name ? ', ' + esc(p.name) : ''}!</h2><div class="sub">${esc(bdMsg(t.slice(0, 4)))}</div></div></section>`;
+  if (p.bday || p.bdayAsk || S.loading || !inviteOk()) return '';
+  return `<section class="card section perso"><div><div class="eyebrow" style="color:var(--rec)">Novo no CriaHub</div><h2 style="font-size:19px;margin-top:4px">Quando é o seu aniversário? 🎂</h2><div class="sub">O CriaHub quer comemorar com você. Só dia e mês, sem o ano.</div></div>
+    <div class="bd-sel">${bdSelects('hb', '')}</div><div class="row-btns"><button class="btn sm" data-act="bdsave">Salvar</button><button class="btn sm ghost" data-act="bdno">Prefiro não</button></div></section>`;
+}
+function checkBday() {
+  const t = today(), y = t.slice(0, 4); if (S.loading || !isBday(t) || S.profile.bdayShown === y) return;
+  saveProfile({ bdayShown: y }); celebrate('🎂', `Feliz aniversário${S.profile.name ? ', ' + S.profile.name : ''}!`, bdMsg(y));
+}
 
 function homeRetro() {
   const t = today(), pm = prevMonth(t), cy = t.slice(0, 4);
@@ -4110,6 +4145,7 @@ function openSettings() {
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
     <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div>
+    <div class="field"><label>Seu aniversário <span class="hint" style="display:inline;margin:0">(opcional)</span></label><div class="bd-sel">${bdSelects('s_bd', S.profile.bday)}</div><span class="hint">Só dia e mês. No dia, o CriaHub comemora com você 🎂</span></div>
     ${toolsSettings()}
     <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div><span class="hint">Automático segue o modo do seu celular ou computador.</span></div>
     <div class="field"><label>Cor do app <span class="sw-name" id="sw_name">${esc(colorName(cur))}</span></label>
@@ -4265,6 +4301,8 @@ document.addEventListener('click', async e => {
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
   if (d.act === 'mail') { openMail(); return; }
+  if (d.act === 'bdsave') { const v = bdRead('hb'); if (!v) { toast('Escolha o dia e o mês'); return; } await saveProfile({ bday: v }); toast(isBday(today()) ? 'Salvo!' : `Anotado: ${+v.slice(3)} de ${BD_MONTHS[+v.slice(0, 2) - 1]} 🎂`); return; }
+  if (d.act === 'bdno') { await saveProfile({ bdayAsk: 'no' }); toast('Tudo bem! Se mudar de ideia: Ajustes › Seu aniversário.'); return; }
   if (d.act === 'mailno') { await saveProfile({ mailInvite: 'no' }); toast('Tudo bem! Quando quiser: Ajustes › E-mails importantes.'); return; }
   if (d.mtab) { sheet.mtab = d.mtab; openMail(true); return; }
   if (d.mcopy) { try { await navigator.clipboard.writeText(d.mcopy); toast('Copiado'); } catch (_) { toast('Toque e segure no texto pra copiar'); } return; }
@@ -4470,8 +4508,8 @@ document.addEventListener('submit', async e => {
     if (cat && !taskCats().includes(cat)) await saveProfile({ taskCats: [...taskCats(), cat].slice(-12) });
     await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, type: ty, ...(cat ? { cat } : {}), created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
   if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : 'Gancho', status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
-  if (kind === 'settings') { const n = f.elements.name.value.trim(); const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
-    closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value }); toast('Ajustes salvos'); }
+  if (kind === 'settings') { const n = f.elements.name.value.trim(); const bd = bdRead('s_bd'); if (bd === null) { toast('Confira o dia do seu aniversário'); return; } const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
+    closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value, bday: bd }); toast('Ajustes salvos'); }
 });
 
 /* ================= abertura + boas-vindas ================= */
