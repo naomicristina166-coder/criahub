@@ -108,6 +108,14 @@ $$;
 revoke all on function public.mail_key_ok(text, text) from public, anon, authenticated;
 grant execute on function public.mail_key_ok(text, text) to service_role;
 
+-- as notificações usam as mesmas chaves da função "push" (private.push_vapid); só a função caixa lê
+create or replace function public.mail_vapid() returns jsonb
+  language sql security definer set search_path = private as $$
+  select jsonb_build_object('pub', to_jsonb(pub), 'priv', to_jsonb(priv)) from private.push_vapid order by id desc limit 1
+$$;
+revoke all on function public.mail_vapid() from public, anon, authenticated;
+grant execute on function public.mail_vapid() to service_role;
+
 -- AGENDAMENTO: de hora em hora, das 8h às 20h de Brasília, manda os lembretes e apaga o que tem mais de 30 dias
 select cron.unschedule('emails-criahub') where exists (select 1 from cron.job where jobname = 'emails-criahub');
 select cron.schedule('emails-criahub', '17 11-23 * * *', $cron$
