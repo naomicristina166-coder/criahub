@@ -748,6 +748,33 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.bstep{padding:0;gap:0;overflow:hidden}.bs-h{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:14px 16px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.bs-n{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--accent-soft);color:var(--accent-ink)}.bs-n.ok{background:var(--ok);color:#fff}.bs-n svg{width:16px;height:16px}
+.bstep.open .bs-n:not(.ok){background:var(--accent-btn);color:#fff}
+.bs-t{display:flex;flex-direction:column;flex:1;min-width:0}.bs-t b{font-family:var(--display);font-size:17px}
+.bs-c{color:var(--muted);font-size:22px;transition:transform .2s}.bstep.open .bs-c{transform:rotate(90deg)}
+.bs-b{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px}
+.rules summary,.rc-r summary{cursor:pointer;font-weight:700}.rules[open] summary{margin-bottom:10px}
+.rcard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}.rcard.done{border-color:color-mix(in oklab, var(--ok) 50%, var(--line))}
+.rcard h3{font-size:16px}.rc-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rc-chk{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font:inherit;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}.rc-chk.on{color:var(--ok);border-color:var(--ok)}.rc-chk .tk-check{width:24px;height:24px}
+.rc-g{font-size:14px}.rc-txt{white-space:pre-wrap;font-size:14px;margin-top:6px;color:var(--fg)}
+.bplan{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}@media (max-width:520px){.bplan{grid-template-columns:1fr 1fr}.bplan .btn{grid-column:1 / -1}}
+.bq-l{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.btn.danger.armed{white-space:normal}
+.tt-chips{display:flex;gap:6px;flex-wrap:wrap}.chip.tt{display:inline-flex;align-items:center;gap:5px;padding:5px 11px}
+.tt-i{width:13px;height:13px;flex:none}
+.chip.tt[aria-pressed=true]{color:#fff;border-color:transparent;background:var(--tc)}
+.tt-trabalho{--tc:#420725}.tt-pessoal{--tc:#C9467A}.tt-saude{--tc:#2B7F55}.tt-estudos{--tc:#3D5A99}.tt-casa{--tc:#A86A12}.tt-outro{--tc:#76626C}
+:root[data-theme=dark] .tt-trabalho,:root[data-theme=dark] .tk-trabalho{--tc:#C98AA8}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .tt-trabalho,:root:not([data-theme=light]) .tk-trabalho{--tc:#C98AA8}}
+.tk-trabalho{--tc:#420725}.tk-pessoal{--tc:#C9467A}.tk-saude{--tc:#2B7F55}.tk-estudos{--tc:#3D5A99}.tk-casa{--tc:#A86A12}.tk-outro{--tc:#76626C}
+.tk{border-left:4px solid var(--tc,var(--line))}
+.tt-tag{display:inline-flex;align-items:center;gap:4px;color:var(--tc);font-weight:700}
+.quick-t{display:flex;flex-direction:column;gap:8px}.quick-t .tt-chips .chip{font-size:12px;padding:4px 10px}
+.tt-cat{border:1px solid var(--line);border-radius:11px;padding:8px 12px;background:var(--surface);font:inherit}
+.tt-filter .chip{display:inline-flex;align-items:center;gap:5px}
+.flabel{font-size:13px;font-weight:700;color:var(--muted)}
 .bc-open{display:block;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;min-width:0}.bc-open .bc-go{color:var(--muted);font-weight:500}
 .bp-back{align-self:flex-start;margin-bottom:-10px}
 .bp-cyc{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}@media (max-width:520px){.bp-cyc{grid-template-columns:1fr 1fr}.bp-cyc .btn{grid-column:1 / -1}}
@@ -990,6 +1017,10 @@ const ICON = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   rotina: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  leaf: '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19l7-7"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5"/><path d="M8 7h7"/>',
+  tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/>',
   minus: '<path d="M5 12h14"/>',
   estudio: '<path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10l-.6-3.4a1 1 0 0 1 .8-1.2l13.8-2.4a1 1 0 0 1 1.2.8L19.6 7z"/><path d="M8.5 5.2l2 3.9M13.5 4.3l2 3.9"/>',
@@ -1095,12 +1126,20 @@ async function connect() {
   } catch (e) { S.loading = false; render(); }
 }
 
+/* a tarefa "Gravar …" fica feita quando todas as entregas dela estão gravadas (Edição ou além) */
+async function recSync(did) {
+  for (const t of S.data.tasks.filter(x => x.step === 'gravar' && Array.isArray(x.delIds) && x.delIds.includes(did))) {
+    const dls = t.delIds.map(id => S.data.deliveries.find(d => d.id === id)).filter(Boolean), all = !!dls.length && dls.every(d => (d.stage || 0) >= 2);
+    if (!!t.done !== all) await put('tasks', { ...t, done: all, doneAt: all ? today() : '' });
+  }
+}
 async function put(col, obj) {
   if (col === 'deliveries') { if ((obj.stage || 0) >= 3) { if (!obj.sentAt) obj = { ...obj, sentAt: today() }; } else if (obj.sentAt) { const { sentAt, ...rest } = obj; obj = rest; } }
   const arr = S.data[col]; const i = arr.findIndex(x => x.id === obj.id);
   if (i >= 0) arr[i] = obj; else arr.push(obj);
   render(); saveLocal();
   if (remote) { const { id, ...body } = obj; try { await remote.base.collection(col).doc(id).set(body); } catch (e) { saveFail(e); } }
+  if (col === 'deliveries') await recSync(obj.id);
 }
 async function del(col, id) {
   S.data[col] = S.data[col].filter(x => x.id !== id); render(); saveLocal();
@@ -1179,7 +1218,7 @@ function render() {
   v.innerHTML = ({ inicio: vHome, radar: vNews, rotina: vRoutine, marcas: vBrands, agenda: vAgenda, estudio: vStudio, financeiro: vFinance })[S.tab]();
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -1303,7 +1342,7 @@ function homeDay() {
     <div class="card section" style="gap:12px">
       ${list.length ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Tarefas de hoje</span><span class="num">${done} de ${list.length}</span></div><div class="bar ${done === list.length ? 'ok' : ''}"><span style="width:${Math.round(done / list.length * 100)}%"></span></div>
         ${open.length ? `<div class="list">${open.map(x => tkRow(x)).join('')}</div>` : '<div class="sub" style="color:var(--ok);font-weight:700">Tudo feito por hoje!</div>'}`
-        : `<form class="quick" data-form="quicktask"><input type="text" name="title" id="qt" placeholder="Qual a prioridade de hoje?" autocomplete="off" required><input type="hidden" name="time" value=""><button class="btn">Salvar</button></form>`}
+        : `<form class="quick-t" data-form="quicktask"><div class="quick"><input type="text" name="title" id="qt" placeholder="Qual a prioridade de hoje?" autocomplete="off" required><input type="hidden" name="time" value=""><button class="btn">Salvar</button></div>${ttChips(S.ct.qtype || 'pessoal', S.ct.qcat, true)}</form>`}
       ${late ? `<button class="link" data-rview="hoje" style="text-align:left;color:var(--warn)">${late} tarefa${late > 1 ? 's' : ''} de outros dias pendente${late > 1 ? 's' : ''}</button>` : ''}
       ${hs.length ? `<div class="progress-top" style="border-top:1px solid var(--line);padding-top:12px"><span style="color:var(--fg);font-weight:700">Hábitos</span><span class="num">${hDoneN} de ${hs.length}</span></div><div class="habits">${hs.slice(0, 3).map(h => hbRow(h, true)).join('')}</div>` : `<button class="link" data-rview="habitos" style="text-align:left">+ Adicionar um hábito de saúde, como beber água</button>`}
     </div></section>`;
@@ -1680,12 +1719,38 @@ function gcalUrl(t) {
   return 'https://calendar.google.com/calendar/render?' + p.toString();
 }
 
+/* ================= tipos de tarefa: rotina da vida toda, não só das marcas ================= */
+const TTYPES = [['trabalho', 'Trabalho', 'marcas'], ['pessoal', 'Pessoal', 'heart'], ['saude', 'Saúde', 'leaf'], ['estudos', 'Estudos', 'book'], ['casa', 'Casa', 'inicio'], ['outro', 'Outro', 'tag']];
+const taskType = t => TTYPES.some(x => x[0] === t.type) ? t.type : (t.brandId || t.briefId ? 'trabalho' : 'pessoal');
+const ttLabel = t => taskType(t) === 'outro' && t.cat ? t.cat : (TTYPES.find(x => x[0] === taskType(t)) || TTYPES[1])[1];
+const taskCats = () => arr(S.profile.taskCats);
+const ttIc = k => ic((TTYPES.find(x => x[0] === k) || TTYPES[5])[2]).replace('class="i"', 'class="i tt-i"');
+/* chips de tipo: os 6 fixos e as categorias que a pessoa criou em Outro */
+function ttChips(sel, cat, quick) {
+  const cur = sel || 'pessoal';
+  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
+    <input type="hidden" name="ttype" value="${esc(cur)}"><input type="text" name="cat" class="tt-cat" placeholder="Nome da categoria (ex.: Faculdade)" value="${esc(cur === 'outro' ? cat || '' : '')}" ${cur === 'outro' && !taskCats().includes(cat || '') ? '' : 'hidden'} aria-label="Nome da categoria" autocomplete="off" ${quick ? 'style="min-height:40px"' : ''}>`;
+}
+/* filtro por tipo (Meu dia e Semana) */
+const ttMatch = t => !S.f.ttype || (S.f.ttype.startsWith('cat:') ? taskType(t) === 'outro' && t.cat === S.f.ttype.slice(4) : taskType(t) === S.f.ttype);
+function ttFilter(tasks) {
+  const has = new Set(S.data.tasks.map(taskType)), cats = [...new Set(S.data.tasks.filter(t => taskType(t) === 'outro' && t.cat).map(t => t.cat))];
+  const opts = [['', 'Todas'], ...TTYPES.filter(([k]) => has.has(k) && k !== 'outro').map(([k, l]) => [k, l]), ...cats.map(c => ['cat:' + c, c]), ...(S.data.tasks.some(t => taskType(t) === 'outro' && !t.cat) ? [['outro', 'Outro']] : [])];
+  if (opts.length <= 2 && !S.f.ttype) return '';
+  return `<div class="chips tt-filter" role="group" aria-label="Filtrar por tipo">${opts.map(([k, l]) => `<button class="chip" data-tfilter="${esc(k)}" aria-pressed="${(S.f.ttype || '') === k}">${k && !k.startsWith('cat:') ? ttIc(k) : k ? ttIc('outro') : ''}${esc(l)}</button>`).join('')}</div>`;
+}
+/* uma vez por conta: tarefas antigas ganham tipo (com marca → Trabalho, sem marca → Pessoal) */
+let ttMigrating = false;
+async function migrateTaskTypes() {
+  if (ttMigrating || S.loading || S.profile.tasksTyped) return; ttMigrating = true;
+  try { for (const t of S.data.tasks.filter(x => !x.type)) await put('tasks', { ...t, type: t.brandId || t.briefId ? 'trabalho' : 'pessoal' }); await saveProfile({ tasksTyped: true }); } finally { ttMigrating = false; }
+}
 function tkRow(t, showDate) {
   const late = !t.done && t.date < today();
-  return `<div class="tk ${t.done ? 'done' : ''}">
+  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}">
     <button class="tk-check ${t.done ? 'on' : ''}" data-tdone="${t.id}" aria-label="${t.done ? 'Desmarcar' : 'Concluir'} ${esc(t.title)}">${ic('check')}</button>
     <button class="open" data-edit="tasks:${t.id}"><span class="t">${esc(t.title)}</span>
-      <span class="m">${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
+      <span class="m"><span class="tt-tag">${ttIc(taskType(t))}${esc(ttLabel(t))}</span>${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
     ${!t.done ? `<a class="gcal" href="${esc(gcalUrl(t))}" target="_blank" rel="noopener" title="Criar lembrete no Google Agenda">${ic('bell').replace('class="i"', 'class="i" style="width:13px;height:13px;vertical-align:-2px"')} Agenda</a>` : '<span></span>'}
   </div>`;
 }
@@ -1713,19 +1778,20 @@ function vRoutine() {
 }
 
 function vDay() {
-  const d = S.f.day, t = today(), list = tasksOn(d), done = list.filter(x => x.done).length, pct = list.length ? Math.round(done / list.length * 100) : 0;
-  const late = d === t ? lateTasks() : [];
+  const d = S.f.day, t = today(), list = tasksOn(d).filter(ttMatch), done = list.filter(x => x.done).length, pct = list.length ? Math.round(done / list.length * 100) : 0;
+  const late = d === t ? lateTasks().filter(ttMatch) : [];
   const dels = sortBy(S.data.deliveries.filter(x => x.due === d && (x.stage || 0) < 5), 'due');
   const hab = d === t ? activeHabits() : [];
   return `
   <div class="day-nav"><button class="iconbtn" data-day="-1" aria-label="Dia anterior">${ic('left')}</button><b>${esc(dayLabel(d))}</b><button class="iconbtn" data-day="1" aria-label="Próximo dia">${ic('right')}</button>${d !== t ? `<button class="link" data-day="0">voltar pra hoje</button>` : ''}</div>
   ${workBanner(d)}
-  <form class="quick" data-form="quicktask"><input type="text" name="title" id="qt" placeholder="Nova tarefa" autocomplete="off" required><input type="time" name="time" aria-label="Horário (opcional)" style="width:108px;flex:none;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:0 8px;background:var(--surface)"><button class="btn">Salvar</button></form>
+  <form class="quick-t" data-form="quicktask"><div class="quick"><input type="text" name="title" id="qt" placeholder="Nova tarefa" autocomplete="off" required><input type="time" name="time" aria-label="Horário (opcional)" style="width:108px;flex:none;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:0 8px;background:var(--surface)"><button class="btn">Salvar</button></div>${ttChips(S.ct.qtype || 'pessoal', S.ct.qcat, true)}</form>
   ${late.length ? `<div class="card carry section"><div class="row-h"><h2 style="font-size:16px">${late.length} tarefa${late.length > 1 ? 's ficaram' : ' ficou'} pra trás</h2><button class="btn sm soft" data-act="carry">Trazer pra hoje</button></div><div class="list">${late.slice(0, 5).map(x => tkRow(x, true)).join('')}</div>${late.length > 5 ? `<div class="sub">e mais ${late.length - 5}</div>` : ''}</div>` : ''}
   <section class="section">
     <div class="row-h"><h2>Tarefas</h2>${list.length ? `<span class="sub num">${done} de ${list.length} feitas</span>` : ''}</div>
+    ${ttFilter()}
     ${list.length ? `<div class="bar ${pct === 100 ? 'ok' : ''}"><span style="width:${pct}%"></span></div><div class="list">${list.map(x => tkRow(x)).join('')}</div>${pct === 100 ? '<div class="sub" style="color:var(--ok);font-weight:700">Dia fechado. Tudo feito!</div>' : ''}`
-      : `<div class="empty"><strong>Nada planejado ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>Escreva até 3 prioridades. Lista curta é lista que fecha.</div>`}
+      : `<div class="empty"><strong>${S.f.ttype ? 'Nenhuma tarefa desse tipo' : 'Nada planejado'} ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>${S.f.ttype ? '<button class="link" data-tfilter="">Ver todas</button>' : 'Escreva até 3 prioridades. Lista curta é lista que fecha.'}</div>`}
   </section>
   ${dels.length ? `<section class="section"><div class="row-h"><h2>Entregas com prazo ${d === t ? 'hoje' : 'nesse dia'}</h2><button class="link" data-tab="agenda">Ver agenda</button></div><div class="list">${dels.map(dvRow).join('')}</div></section>` : ''}
   ${hab.length ? `<section class="section"><div class="row-h"><h2>Hábitos de hoje</h2><button class="link" data-rview="habitos">Ver hábitos</button></div><div class="habits">${hab.map(h => hbRow(h, true)).join('')}</div></section>` : ''}
@@ -1770,7 +1836,7 @@ function vHabits() {
 function weekData(off) {
   const t = today(), ws = addDays(weekStart(t), off * 7), days = Array.from({ length: 7 }, (_, i) => addDays(ws, i)), we = days[6];
   const upto = days.filter(d => d <= t);
-  const tasks = S.data.tasks.filter(x => x.date >= ws && x.date <= we);
+  const tasks = S.data.tasks.filter(x => x.date >= ws && x.date <= we && ttMatch(x));
   const tDone = tasks.filter(x => x.done), tOpen = tasks.filter(x => !x.done && x.date < t);
   const dels = S.data.deliveries.filter(x => x.due >= ws && x.due <= we);
   const dOk = dels.filter(x => (x.stage || 0) >= 3), dMiss = dels.filter(x => (x.stage || 0) < 3 && x.due < t);
@@ -1808,6 +1874,7 @@ function vWeek() {
   const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
   return `
   <div class="day-nav"><button class="iconbtn" data-wk="-1" aria-label="Semana anterior">${ic('left')}</button><b>${S.f.wk === 0 ? 'Esta semana' : S.f.wk === -1 ? 'Semana passada' : esc(label)}</b><button class="iconbtn" data-wk="1" aria-label="Próxima semana" ${S.f.wk >= 0 ? 'disabled style="opacity:.4"' : ''}>${ic('right')}</button><span class="sub">${esc(label)}</span></div>
+  ${ttFilter()}
   <div class="stats">
     <div class="stat"><div class="l">Tarefas feitas</div><div class="v">${w.tDone.length}/${w.tasks.length}</div></div>
     <div class="stat"><div class="l">Entregas no prazo</div><div class="v">${w.dOk.length}/${w.dels.length}</div></div>
@@ -2004,12 +2071,14 @@ function briefView(r) {
     ${listBlock('Perguntar para a marca', arr(r.duvidas), 'ask')}`;
 }
 function vBriefing() {
-  const c = S.ct, r = c.bRes, ents = r && Array.isArray(r.entregas) ? r.entregas : [];
+  const c = S.ct, r = null, ents = [];
+  const ob = c.bOpen && S.data.briefs.find(x => x.id === c.bOpen);
+  if (ob) return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Do briefing ao vídeo pronto pra enviar.</div></div></div>${studioSeg()}${briefPage(ob)}`;
   const saved = [...S.data.briefs].sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
   return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Do briefing ao vídeo pronto pra enviar.</div></div></div>${studioSeg()}
   ${studioUsage()}
   <section class="card section"><h2>Briefing vira plano</h2>
-    <div class="sub">Cole o briefing da marca ou envie prints, em qualquer idioma. Eu separo o que é obrigatório, o que é proibido e os prazos, e monto as entregas com a lista de cenas.</div>
+    <div class="sub">Cole o briefing da marca ou envie prints, em qualquer idioma. Eu separo as regras, monto os roteiros e já crio as entregas na Agenda. Depois é seguir os 3 passos: regras, roteiros e mandar pra sua semana.</div>
     <div class="field"><label for="b_brand">Marca</label>${brandSelect('b_brand', c.bBrand, true)}</div>
     <textarea id="b_in" class="big" style="min-height:160px" placeholder="Cole aqui o briefing">${esc(c.bIn)}</textarea>
     ${filesHtml('bImgs')}
@@ -2022,7 +2091,7 @@ function vBriefing() {
     ${ents.length ? `<div class="list">${ents.map(e => `<div class="ent"><div class="row-h" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(e.titulo || 'Entrega')}</b><span class="sub">${esc(e.formato || '')}${e.prazo ? ' · ' + esc(fmtD(e.prazo)) : ''}${e.duracao ? ' · ' + esc(e.duracao) : ''}</span></div>${e.gancho ? `<div class="sub" style="color:var(--fg)"><b>Gancho:</b> ${esc(e.gancho)}</div>` : ''}${arr(e.cenas).length ? `<ol class="scenes-mini">${arr(e.cenas).map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : ''}</div>`).join('')}</div>` : ''}
     <div class="row-btns">${ents.length ? `<button class="btn" data-act="briefcreate">${ic('plus')}Criar ${ents.length} entrega${ents.length === 1 ? '' : 's'} na Agenda</button>` : `<button class="btn" data-act="briefcreate">Salvar briefing</button>`}<button class="btn ghost" data-act="briefclear">Descartar</button></div>
     <div class="sub">Gancho, roteiro e cenas são sugestões. As exigências vêm do briefing.</div></section>` : ''}
-  ${saved.length ? `<section class="section"><div class="row-h"><h2>Briefings salvos</h2></div><div class="list">${saved.map(x => `<div class="lead"><button class="open" data-openbrief="${x.id}"><span class="t">${esc(x.title || 'Briefing')}</span><span class="m">${esc(x.brandId ? brandName(x.brandId) : 'Sem marca')} · ${fmtD(String(x.created || '').slice(0, 10))}</span></button></div>`).join('')}</div></section>` : ''}`;
+  ${saved.length ? `<section class="section"><div class="row-h"><h2>Briefings salvos</h2></div><div class="list">${saved.map(x => `<div class="lead"><button class="open" data-openbrief="${x.id}"><span class="t">${esc(x.title || 'Briefing')}</span><span class="m">${esc(x.brandId ? brandName(x.brandId) : 'Sem marca')} · ${fmtD(String(x.created || '').slice(0, 10))} · ${esc(briefStatus(x))}</span></button></div>`).join('')}</div></section>` : ''}`;
 }
 function briefPrompt(text, n) {
   return `Você ajuda uma creator de UGC brasileira a transformar o briefing de uma marca num plano de gravação.${n ? ` As ${n} imagem(ns) anexada(s) são prints do briefing; leia o texto delas com atenção.` : ''}
@@ -2048,16 +2117,15 @@ async function createFromBrief() {
   const bid = c.bBrand || '', ents = Array.isArray(r.entregas) ? r.entregas : [];
   const clean = { titulo: String(r.titulo || ''), resumo: String(r.resumo || ''), obrigatorio: arr(r.obrigatorio), proibido: arr(r.proibido), cta: String(r.cta || ''), tom: String(r.tom || ''), publico: String(r.publico || ''), duvidas: arr(r.duvidas), entregas: ents.map(e => ({ titulo: String(e.titulo || ''), formato: String(e.formato || ''), prazo: String(e.prazo || ''), duracao: String(e.duracao || ''), gancho: String(e.gancho || ''), roteiro: String(e.roteiro || ''), cenas: arr(e.cenas) })) };
   const briefId = newId();
-  await put('briefs', { id: briefId, brandId: bid, title: clean.titulo || 'Briefing', data: clean, raw: c.bIn.slice(0, 20000), created: new Date().toISOString() });
+  await put('briefs', { id: briefId, brandId: bid, title: clean.titulo || 'Briefing', data: clean, raw: c.bIn.slice(0, 20000), step: 1, created: new Date().toISOString() });
   const made = [];
   for (const e of clean.entregas) {
     const due = /^\d{4}-\d{2}-\d{2}$/.test(e.prazo) ? e.prazo : addDays(today(), 3);
-    const dl = { id: newId(), title: e.titulo || clean.titulo || 'Entrega', brandId: bid, format: FORMATS.includes(e.formato) ? e.formato : 'Reels', due, stage: 0, script: (e.gancho ? 'GANCHO: ' + e.gancho + '\n\n' : '') + e.roteiro, scenes: e.cenas.map(t => ({ t, done: false })), briefId, notes: [e.duracao ? 'Duração: ' + e.duracao : '', clean.cta ? 'CTA: ' + clean.cta : ''].filter(Boolean).join('\n'), created: new Date().toISOString() };
+    const dl = { id: newId(), bIdx: made.length, title: e.titulo || clean.titulo || 'Entrega', brandId: bid, format: FORMATS.includes(e.formato) ? e.formato : 'Reels', due, stage: 0, script: (e.gancho ? 'GANCHO: ' + e.gancho + '\n\n' : '') + e.roteiro, scenes: e.cenas.map(t => ({ t, done: false })), briefId, notes: [e.duracao ? 'Duração: ' + e.duracao : '', clean.cta ? 'CTA: ' + clean.cta : ''].filter(Boolean).join('\n'), created: new Date().toISOString() };
     made.push(dl); await put('deliveries', dl);
   }
-  c.bRes = null; c.bIn = ''; c.bImgs = []; render();
-  if (made.length) { const lbl = bid ? brandName(bid) : clean.titulo; S.wp = { tasks: wpPlan(made, lbl), brandId: bid, briefId, nDel: made.length, label: lbl, adjust: false }; openWeekPlan(); return; }
-  toast(clean.entregas.length ? `${clean.entregas.length} entrega${clean.entregas.length === 1 ? '' : 's'} criada${clean.entregas.length === 1 ? '' : 's'} na Agenda` : 'Briefing salvo');
+  c.bRes = null; c.bIn = ''; c.bImgs = []; c.bOpen = briefId; render(); window.scrollTo(0, 0);
+  toast(made.length ? `Briefing salvo e ${made.length} entrega${made.length === 1 ? ' criada' : 's criadas'} na Agenda` : 'Briefing salvo');
 }
 /* ================= briefing → semana montada (sem IA: tudo calculado aqui) ================= */
 const WP_CAP = 3; /* itens do briefing por dia, quando der */
@@ -2094,36 +2162,59 @@ function wpGroups(dels) {
 function wpRecTitle(g, sfx) {
   const n = g.items.length, nums = g.items.map(d => wpParts(d.title).num), oneWord = !/\s/.test(g.base);
   if (n === 1) return `Gravar ${g.items[0].title}${sfx}`;
+  if (g.partial && nums.every(x => x != null)) { const a = Math.min(...nums), b = Math.max(...nums); if (b - a + 1 === n) return `Gravar ${g.byFormat ? g.base : oneWord ? ptPlural(lcFirst(g.base)) : lcFirst(g.base)} ${pad(a)}–${pad(b)}${sfx}`; }
   if (g.byFormat) return oneWord ? `Gravar ${n} ${ptPlural(g.base)}${sfx}` : `Gravar ${n} vídeos · ${g.base}${sfx}`;
   if (oneWord) return `Gravar ${n} ${ptPlural(lcFirst(g.base))}${sfx}`;
   if (nums.every(x => x != null)) { const a = Math.min(...nums), b = Math.max(...nums); if (b - a + 1 === n) return `Gravar ${lcFirst(g.base)} ${pad(a)}–${pad(b)}${sfx}`; }
   return `Gravar ${lcFirst(g.base)} (${n} vídeos)${sfx}`;
 }
-/* distribui gravar → editar → enviar do dia seguinte até o prazo de cada lote */
-function wpPlan(dels, lbl) {
-  const t = today(), start = addDays(t, 1), load = {}, out = [], sfx = lbl ? ` (${lbl})` : '';
-  S.data.tasks.filter(x => x.briefId && !x.done && x.date >= t).forEach(x => { load[x.date] = (load[x.date] || 0) + 1; });
+/* distribui gravar → editar → enviar até o prazo de cada lote.
+   Gravação: até `perDay` vídeos por dia, a partir de `start`, primeiro nos dias livres (clínica);
+   dentro do dia, os vídeos ficam agrupados por tipo. Editar/revisar depois da última gravação; enviar no prazo. */
+function wpPlan(dels, lbl, opts = {}) {
+  const t = today(), per = Math.max(1, Math.min(12, +opts.perDay || WP_CAP)), start = opts.start && opts.start >= t ? opts.start : addDays(t, 1), load = {}, rec = {}, out = [], warn = [], sfx = lbl ? ` (${lbl})` : '';
+  const mine = new Set(dels.map(d => d.id));
+  S.data.tasks.filter(x => x.briefId && !x.done && x.date >= t && !(x.delIds || []).some(id => mine.has(id))).forEach(x => { if (x.step === 'gravar') rec[x.date] = (rec[x.date] || 0) + (x.delIds || []).length; else load[x.date] = (load[x.date] || 0) + 1; });
   const add = (d, k) => { load[d] = (load[d] || 0) + k; };
   const fits = k => d => (load[d] || 0) + k <= WP_CAP;
   const free = r => r.filter(d => !isWorkDay(d)), work = r => r.filter(d => isWorkDay(d));
-  /* tenta cada lista na ordem de prioridade; se todas estão cheias, vai no dia mais leve (de preferência livre) */
   const pick = (lists, k) => { for (const l of lists) { const d = l.find(fits(k)); if (d) return d; } const all = [...new Set(lists.flat())], fr = free(all); return [...(fr.length ? fr : all)].sort((a, b) => (load[a] || 0) - (load[b] || 0) || a.localeCompare(b))[0]; };
-  const lots = {}; dels.forEach(d => (lots[d.due] = lots[d.due] || []).push(d));
+  const order = d => (d.bIdx ?? 999) * 1e4 + (wpParts(d.title).num || 0);
+  const lots = {}; dels.filter(d => (d.stage || 0) < 3).forEach(d => (lots[d.due || addDays(t, 3)] = lots[d.due || addDays(t, 3)] || []).push(d));
   Object.keys(lots).sort().forEach(due => {
-    const items = lots[due], N = items.length, last = due < start ? (due < t ? t : due) : due, days = [];
-    for (let d = due < start ? last : start; d <= last; d = addDays(d, 1)) days.push(d);
-    /* gravar: de preferência até 2 dias antes do prazo; se lá não tem dia livre, a véspera livre também serve */
-    const n = days.length, ideal = n >= 3 ? days.slice(0, n - 2) : days.slice(0, 1), ext = n >= 3 ? [days[n - 2]] : [];
-    const recLists = [free(ideal), free(ext), work(ideal), work(ext)];
+    const items = lots[due].sort((a, b) => order(a) - order(b)), N = items.length, last = due < start ? start : due, days = [];
+    if (due < start) warn.push(`O prazo de ${fmtD(due)} é antes do dia de início. Coloquei tudo em ${fmtD(start)}.`);
+    for (let d = start; d <= last; d = addDays(d, 1)) days.push(d);
     const mk = (step, title, date, ids) => ({ key: newId(), step, title, date, delIds: ids, max: last });
-    let lastRec = days[0];
-    wpGroups(items).forEach(g => { const d = pick(recLists, 1); add(d, 1); if (d > lastRec) lastRec = d; out.push(mk('gravar', wpRecTitle(g, sfx), d, g.items.map(x => x.id))); });
-    const edR = days.filter(d => d > lastRec && d < last), edRange = edR.length ? edR : [last], ed = pick([free(edRange), work(edRange)], 2); add(ed, 2);
+    /* gravar */
+    const recItems = items.filter(d => (d.stage || 0) < 2), groups = wpGroups(recItems), gOf = new Map();
+    groups.forEach(g => g.items.forEach(d => gOf.set(d.id, g)));
+    const queue = groups.flatMap(g => g.items);
+    let lastRec = addDays(start, -1);
+    if (queue.length) {
+      const cand = days.length >= 3 ? days.slice(0, -1) : days.length === 2 ? [days[0]] : [last];
+      const prio = [...free(cand), ...work(cand)], cap = d => Math.max(0, per - (rec[d] || 0));
+      const chosen = []; let room = 0; for (const d of prio) { if (room >= queue.length) break; if (cap(d) > 0) { chosen.push(d); room += cap(d); } }
+      if (!chosen.length) chosen.push(prio[0] || last);
+      chosen.sort();
+      if (room < queue.length) { const need = Math.ceil(queue.length / Math.max(1, cand.length)); warn.push(`Não cabe até ${fmtD(due)} com ${per} por dia: aumente pra ${need} por dia ou comece antes.`); }
+      const plan = new Map(chosen.map(d => [d, []])); let qi = 0;
+      chosen.forEach(d => { for (let k = 0; k < cap(d) && qi < queue.length; k++) plan.get(d).push(queue[qi++]); });
+      while (qi < queue.length) { const d = chosen[(qi) % chosen.length]; plan.get(d).push(queue[qi++]); }
+      chosen.forEach(d => {
+        const vids = plan.get(d); if (!vids.length) return; rec[d] = (rec[d] || 0) + vids.length; if (d > lastRec) lastRec = d;
+        const byG = new Map(); vids.forEach(v => { const g = gOf.get(v.id); if (!byG.has(g)) byG.set(g, []); byG.get(g).push(v); });
+        byG.forEach((vs, g) => out.push(mk('gravar', wpRecTitle({ base: g.base, byFormat: g.byFormat, items: vs, partial: vs.length < g.items.length }, sfx), d, vs.map(x => x.id))));
+      });
+    }
+    /* editar + revisar legendas, depois enviar no prazo */
     const all = items.map(x => x.id), one = N === 1 ? items[0].title : '';
+    const edR = days.filter(d => d > lastRec && d < last), edRange = edR.length ? edR : [lastRec > last ? lastRec : last], ed = pick([free(edRange), work(edRange)], 2); add(ed, 2);
     out.push(mk('editar', one ? `Editar ${one}${sfx}` : `Editar as ${N}${sfx}`, ed, all));
     out.push(mk('revisar', 'Revisar legendas', ed, all));
-    add(last, 1); out.push(mk('enviar', one ? `Enviar ${one}${lbl ? ' pra ' + lbl : ''}` : `Enviar as ${N}${lbl ? ' pra ' + lbl : ' entregas'}`, last, all));
+    const sd = lastRec > last ? lastRec : last; add(sd, 1); out.push(mk('enviar', one ? `Enviar ${one}${lbl ? ' pra ' + lbl : ''}` : `Enviar as ${N}${lbl ? ' pra ' + lbl : ' entregas'}`, sd, all));
   });
+  out.warn = warn;
   return out;
 }
 const wpSort = a => [...a].sort((x, y) => x.date.localeCompare(y.date) || WP_ORDER[x.step] - WP_ORDER[y.step]);
@@ -2135,7 +2226,8 @@ function openWeekPlan() {
   sheet = { col: 'weekplan' };
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Sua semana montada">
     <div class="sh"><h2>Sua semana montada</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
-    <div class="sub">${p.nDel} entrega${p.nDel === 1 ? '' : 's'} criada${p.nDel === 1 ? '' : 's'} na Agenda. Separei o trabalho por etapa, na ordem gravar → editar → enviar${S.profile.workMode ? `, com a gravação nos seus dias livres de ${esc(workLabel())} sempre que der` : ''}.</div>
+    ${(p.tasks.warn || []).map(w => `<div class="err">${esc(w)}</div>`).join('')}
+    <div class="sub">${p.intro ? esc(p.intro) + ' ' : `${p.nDel} entrega${p.nDel === 1 ? '' : 's'} criada${p.nDel === 1 ? '' : 's'} na Agenda. `}Separei o trabalho por etapa, na ordem gravar → editar → enviar${S.profile.workMode ? `, com a gravação nos seus dias livres de ${esc(workLabel())} sempre que der` : ''}.</div>
     <div class="wp">${days.map(d => `<div class="wp-day"><div class="wp-dh"><b>${esc(dayLabel(d))}</b><span class="sub">${esc(fmtD(d))}${S.profile.workMode ? ` · ${isWorkDay(d) ? 'dia de ' + esc(workLabel()) : 'dia livre'}` : ''}</span></div>
       ${list.filter(x => x.date === d).map(x => `<div class="wp-it"><span class="pill ${WP_PILL[x.step][1]}">${WP_PILL[x.step][0]}</span><span class="t">${esc(x.title)}</span>${p.adjust ? `<select data-wpday="${x.key}" aria-label="Dia de: ${esc(x.title)}">${dayOpts(x)}</select>` : ''}</div>`).join('')}</div>`).join('')}</div>
     ${order ? '<div class="err">Atenção: alguma etapa ficou antes da anterior (ex.: editar antes de gravar).</div>' : ''}
@@ -2147,9 +2239,10 @@ function openWeekPlan() {
 async function saveWeekPlan() {
   const p = S.wp; if (!p) return; S.wp = null; closeForm();
   const names = id => S.data.deliveries.find(v => v.id === id)?.title || '';
-  for (const x of wpSort(p.tasks)) await put('tasks', { id: newId(), title: x.title, date: x.date, time: '', done: false, brandId: p.brandId || '', notes: 'Entregas: ' + x.delIds.map(names).filter(Boolean).join(', '), briefId: p.briefId, step: x.step, delIds: x.delIds, created: new Date().toISOString() });
+  for (const x of wpSort(p.tasks)) await put('tasks', { id: newId(), title: x.title, date: x.date, time: '', done: false, type: 'trabalho', brandId: p.brandId || '', notes: 'Entregas: ' + x.delIds.map(names).filter(Boolean).join(', '), briefId: p.briefId, step: x.step, delIds: x.delIds, created: new Date().toISOString() });
   const first = wpSort(p.tasks)[0]?.date || today();
-  toastAct(`${p.nDel} entrega${p.nDel === 1 ? ' criada' : 's criadas'} e sua semana está montada`, 'ver no Meu dia', `data-gomyday="${first}"`);
+  if (p.briefId) { const br = S.data.briefs.find(x => x.id === p.briefId); if (br) await put('briefs', { ...br, step: 3, planned: today() }); if (p.perDay) await saveProfile({ recPerDay: p.perDay }); }
+  toastAct(p.intro ? `Pronto: ${p.tasks.length} tarefas na sua semana` : `${p.nDel} entrega${p.nDel === 1 ? ' criada' : 's criadas'} e sua semana está montada`, 'ver no Meu dia', `data-gomyday="${first}"`);
 }
 /* marcar/desmarcar tarefa do briefing faz as entregas dela andarem (ou voltarem) na Agenda */
 async function setTaskDone(x, done) {
@@ -2158,14 +2251,62 @@ async function setTaskDone(x, done) {
     const prev = { ...(x.prev || {}) };
     for (const id of x.delIds) {
       const dl = S.data.deliveries.find(v => v.id === id); if (!dl) continue; const cur = dl.stage || 0;
-      if (done && cur < st) { prev[id] = cur; moved++; await put('deliveries', { ...dl, stage: st }); }
-      else if (!done && cur === st && prev[id] != null) { const back = prev[id]; delete prev[id]; moved++; await put('deliveries', { ...dl, stage: back }); }
+      if (done && cur < st) { prev[id] = cur; moved++; await put('deliveries', { ...dl, stage: st, ...(st === 2 ? { recPrev: cur } : {}) }); }
+      else if (!done && cur === st && (prev[id] != null || (st === 2 && dl.recPrev != null))) { const back = prev[id] ?? dl.recPrev; delete prev[id]; moved++; const { recPrev, ...rest } = dl; await put('deliveries', { ...rest, stage: back }); }
     }
     upd.prev = prev;
   }
   await put('tasks', upd);
   if (moved) toast(done ? `${moved} entrega${moved === 1 ? (st === 3 ? ' marcada como Enviado' : ' foi pra Edição') : (st === 3 ? 's marcadas como Enviado' : 's foram pra Edição')}` : `${moved} entrega${moved === 1 ? ' voltou' : 's voltaram'} de etapa na Agenda`);
   return moved;
+}
+/* ================= briefing em 3 passos: regras → roteiros → mandar pra minha semana ================= */
+const briefDels = b => S.data.deliveries.filter(d => d.briefId === b.id).sort((x, y) => (x.bIdx ?? 999) - (y.bIdx ?? 999) || String(x.created || '').localeCompare(String(y.created || '')) || (wpParts(x.title).num || 0) - (wpParts(y.title).num || 0));
+const briefTasks = b => S.data.tasks.filter(t => t.briefId === b.id);
+function briefStatus(b) {
+  const ds = briefDels(b), rec = ds.filter(d => (d.stage || 0) >= 2).length;
+  if (!ds.length) return 'sem roteiros';
+  return `${rec} de ${ds.length} gravados${briefTasks(b).length ? ' · na sua semana' : ''}`;
+}
+function briefStep(b, n, title, summary, body, done) {
+  const open = (b.step || 1) === n;
+  return `<section class="card bstep ${open ? 'open' : ''}"><button class="bs-h" data-bstep="${n}" aria-expanded="${open}"><span class="bs-n ${done ? 'ok' : ''}">${done ? ic('check') : n}</span><span class="bs-t"><b>${title}</b><span class="sub">${summary}</span></span><span class="bs-c" aria-hidden="true">›</span></button>${open ? `<div class="bs-b">${body}</div>` : ''}</section>`;
+}
+function briefPage(b) {
+  const r = b.data || {}, ds = briefDels(b), N = ds.length, rec = ds.filter(d => (d.stage || 0) >= 2).length, tks = briefTasks(b), lbl = b.brandId ? brandName(b.brandId) : (b.title || '');
+  const ob = arr(r.obrigatorio), pr = arr(r.proibido), dv = arr(r.duvidas);
+  const ents = Array.isArray(r.entregas) ? r.entregas : [];
+  /* 1. regras */
+  const s1 = `${r.resumo ? `<p style="margin:0">${esc(r.resumo)}</p>` : ''}
+    <details class="rules" open><summary>Obrigatório e proibido <span class="sub">${ob.length} · ${pr.length}</span></summary><div class="bl-grid">${listBlock('Obrigatório', ob, 'ok') || '<div class="sub">Nada obrigatório no briefing.</div>'}${listBlock('Proibido', pr, 'bad') || '<div class="sub">Nada proibido no briefing.</div>'}</div></details>
+    ${r.cta || r.tom || r.publico ? `<div class="kv" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${r.cta ? `<div><span>CTA</span><b style="white-space:normal;font-size:14px">${esc(r.cta)}</b></div>` : ''}${r.tom ? `<div><span>Tom</span><b style="white-space:normal;font-size:14px">${esc(r.tom)}</b></div>` : ''}${r.publico ? `<div><span>Público</span><b style="white-space:normal;font-size:14px">${esc(r.publico)}</b></div>` : ''}</div>` : ''}
+    <div class="row-btns"><button class="btn" data-bstep="2">Próximo: roteiros →</button></div>`;
+  /* 2. roteiros */
+  const s2 = N ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">${rec} de ${N} gravados</span><span class="num">${Math.round(rec / N * 100)}%</span></div><div class="bar ${rec === N ? 'ok' : ''}"><span style="width:${Math.round(rec / N * 100)}%"></span></div>
+    <div class="list">${ds.map((d, i) => { const e = ents[d.bIdx ?? i] || {}, g = (d.stage || 0) >= 2; return `<article class="rcard ${g ? 'done' : ''}">
+      <div class="rc-h"><span class="eyebrow">Vídeo ${i + 1} de ${N}</span><button class="rc-chk ${g ? 'on' : ''}" data-recd="${d.id}" aria-pressed="${g}"><span class="tk-check ${g ? 'on' : ''}" aria-hidden="true">${ic('check')}</span>Gravado</button></div>
+      <h3>${esc(d.title)}</h3><div class="sub">${esc(d.format || '')}${d.due ? ' · prazo ' + fmtD(d.due) : ''}${e.duracao ? ' · ' + esc(e.duracao) : ''} · ${STAGES[d.stage || 0]}</div>
+      ${e.gancho ? `<div class="rc-g"><b>Gancho</b> ${esc(e.gancho)}</div>` : ''}
+      ${(e.roteiro || d.script) ? `<details class="rc-r"><summary>Roteiro</summary><div class="rc-txt">${esc(e.roteiro || d.script)}</div></details>` : ''}
+      ${arr((d.scenes || []).map(x => x.t)).length ? `<ol class="scenes-mini">${d.scenes.map(x => `<li>${esc(x.t)}</li>`).join('')}</ol>` : ''}
+      <button class="link" data-edit="deliveries:${d.id}" style="align-self:flex-start">Abrir na Agenda</button></article>`; }).join('')}</div>
+    <div class="row-btns"><button class="btn" data-bstep="3">Próximo: mandar pra minha semana →</button></div>` : '<div class="sub">Esse briefing não tem roteiros. Se faltou algo, crie as entregas pela Agenda.</div>';
+  /* 3. mandar pra minha semana (planejador da PARTE 1) */
+  const pend = ds.filter(d => (d.stage || 0) < 3), perDef = +S.profile.recPerDay || 3;
+  const byDay = {}; tks.forEach(t => (byDay[t.date] = byDay[t.date] || []).push(t));
+  const s3 = tks.length ? `<div class="sub" style="color:var(--fg)">${tks.length} tarefas na sua semana, ligadas às entregas: marcou a tarefa ou a caixinha Gravado, a Agenda acompanha.</div>
+      ${Object.keys(byDay).sort().map(d => `<div class="wp-day"><div class="wp-dh"><b>${esc(dayLabel(d))}</b><span class="sub">${esc(fmtD(d))}</span></div><div class="list">${byDay[d].map(t => tkRow(t)).join('')}</div></div>`).join('')}
+      <div class="row-btns"><button class="btn sm ghost" data-gomyday="${Object.keys(byDay).sort().find(d => d >= today()) || today()}">Ver no Meu dia</button><button class="btn sm ghost" data-breplan="${b.id}">Montar de novo</button></div>`
+    : pend.length ? `<div class="sub">O app distribui os roteiros nos dias, na ordem gravar → editar → enviar, até o prazo${S.profile.workMode ? `, gravando primeiro nos seus dias livres de ${esc(workLabel())}` : ''}.</div>
+      <form class="bplan" data-form="bplan" data-id="${b.id}"><div class="field"><label for="bp_per">Vídeos por dia</label><select id="bp_per" name="per">${[1, 2, 3, 4, 5, 6, 8, 10].map(n => `<option value="${n}" ${n === perDef ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div class="field"><label for="bp_start">A partir de</label><input type="date" id="bp_start" name="start" value="${addDays(today(), 1)}" min="${today()}"></div><button class="btn">Ver prévia</button></form>`
+    : '<div class="sub">Tudo já foi enviado. Nada pra planejar.</div>';
+  return `<button class="link bp-back" data-bclose>‹ Briefings</button>
+  <div class="head"><div style="min-width:0"><div class="eyebrow">${esc(lbl)} · ${fmtD(String(b.created || '').slice(0, 10))}</div><h1 style="font-size:26px">${esc(b.title || 'Briefing')}</h1></div></div>
+  ${briefStep(b, 1, 'Regras', `${ob.length} obrigatório${ob.length === 1 ? '' : 's'} · ${pr.length} proibido${pr.length === 1 ? '' : 's'}`, s1, (b.step || 1) > 1)}
+  ${briefStep(b, 2, 'Roteiros', N ? `${rec} de ${N} gravados` : 'sem roteiros', s2, N && rec === N)}
+  ${briefStep(b, 3, 'Mandar pra minha semana', tks.length ? `${tks.length} tarefas na sua semana` : pend.length ? `${pend.length} entrega${pend.length === 1 ? '' : 's'} pra planejar` : 'nada pendente', s3, !!tks.length)}
+  ${dv.length ? `<section class="card section bq"><div class="row-h"><h2>Perguntas para a marca</h2><button class="btn sm ghost" data-bqcopy="${b.id}">Copiar todas</button></div><ol class="bq-l">${dv.map(q => `<li>${esc(q)}</li>`).join('')}</ol></section>` : ''}
+  <div class="row-btns" style="justify-content:space-between"><span class="sub">Gancho, roteiro e cenas são sugestões. As exigências vêm do briefing.</span><button class="btn sm danger" data-bdiscard="${b.id}">Descartar briefing</button></div>`;
 }
 function openBrief(id) {
   const x = S.data.briefs.find(v => v.id === id); if (!x) return;
@@ -3448,10 +3589,11 @@ const FORMS = {
     { k: 'notes', l: 'Observações', t: 'textarea', ph: 'Plataforma, cliente, forma de pagamento…' },
   ] },
   tasks: { title: 'tarefa', fields: [
-    { k: 'title', l: 'Tarefa', t: 'text', req: 1, ph: 'Ex.: Gravar os 2 vídeos da Notely' },
+    { k: 'title', l: 'Tarefa', t: 'text', req: 1, ph: 'Ex.: Consulta no dentista, gravar os 2 vídeos da Notely…' },
+    { k: 'ttype', l: 'Tipo', t: 'ttype' },
     { row: [{ k: 'date', l: 'Dia', t: 'date', d: () => S.f.day || today() }, { k: 'time', l: 'Horário (opcional)', t: 'time' }] },
-    { k: 'brandId', l: 'Marca (opcional)', t: 'select', o: brandOpts },
-    { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Detalhes, links, o que precisa levar…' },
+    { k: 'brandId', l: 'Marca (opcional)', t: 'select', o: brandOpts, when: 'trabalho' },
+    { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Ex.: levar exames, endereço da clínica, link…' },
   ] },
   accounts: { title: 'conta', fields: [
     { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: PLATFORMS.map(x => [x, x]), d: 'TikTok' }, { k: 'handle', l: '@ da conta', t: 'text', req: 1, ph: '@perfil' }] },
@@ -3513,6 +3655,7 @@ function fieldHtml(f, obj) {
   const v = obj[f.k] ?? (typeof f.d === 'function' ? f.d() : f.d) ?? '';
   const id = `f_${f.k}`;
   const w = f.when ? ` data-when="${f.when}"` : '';
+  if (f.t === 'ttype') return `<div class="field"><span class="flabel">${f.l}</span>${ttChips(obj.type ? taskType(obj) : (obj.brandId ? 'trabalho' : obj.ttype || 'pessoal'), obj.cat)}</div>`;
   if (f.t === 'check') return `<label class="checkline"${w}><input type="checkbox" id="${id}" name="${f.k}" ${v ? 'checked' : ''}>${f.l}</label>`;
   let inp;
   if (f.t === 'select') { const o = typeof f.o === 'function' ? f.o() : f.o; inp = `<select id="${id}" name="${f.k}">${o.map(([a, b]) => `<option value="${esc(a)}" ${String(v) === String(a) ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>`; }
@@ -3534,7 +3677,7 @@ function openForm(col, id, preset = {}) {
   applyWhen($('#layer form'));
   setTimeout(() => $('#layer input[type=text]')?.focus(), 30);
 }
-function applyWhen(form) { if (!form) return; const v = form.elements.ctype?.value || form.elements.kind?.value || form.elements.currency?.value; form.querySelectorAll('[data-when]').forEach(el => { el.hidden = !!v && !el.dataset.when.split(' ').includes(v); }); }
+function applyWhen(form) { if (!form) return; const v = form.elements.ctype?.value || form.elements.kind?.value || form.elements.currency?.value || form.elements.ttype?.value; form.querySelectorAll('[data-when]').forEach(el => { el.hidden = !!v && !el.dataset.when.split(' ').includes(v); }); }
 function openContract(id) {
   const x = S.data.contracts.find(v => v.id === id); if (!x) return;
   sheet = { col: 'contracts', id }; S.ct.view = x.text || '';
@@ -3549,7 +3692,7 @@ function closeForm() { sheet = null; $('#layer').innerHTML = ''; }
 
 function readForm(form, col) {
   const out = {};
-  const walk = fs => fs.forEach(f => { if (f.row) return walk(f.row); const el = form.elements[f.k]; if (!el) return;
+  const walk = fs => fs.forEach(f => { if (f.row) return walk(f.row); if (f.t === 'ttype') { out.ttype = form.elements.ttype.value || 'pessoal'; out.cat = (form.elements.cat?.value || '').trim(); return; } const el = form.elements[f.k]; if (!el) return;
     if (f.t === 'check') out[f.k] = el.checked; else if (f.t === 'number') out[f.k] = el.value === '' ? '' : Number(el.value); else out[f.k] = el.value.trim(); });
   walk(FORMS[col].fields); return out;
 }
@@ -3589,6 +3732,7 @@ async function submitEntity(form) {
     if (dl) { const up = { ...dl, stage: Math.max(5, dl.stage || 0) }; if (acc) up.posts = { ...postsOf(dl), [acc.id]: { date: obj.date || today(), views: obj.views === '' ? '' : +obj.views, url: obj.url || '' } }; await put('deliveries', up); }
     toast(dl && (dl.stage || 0) < 5 ? 'Vídeo salvo e entrega marcada como Publicado' : 'Vídeo salvo'); return;
   }
+  if (col === 'tasks') { obj.type = obj.ttype || 'pessoal'; delete obj.ttype; if (obj.type !== 'trabalho') obj.brandId = ''; if (obj.type === 'outro' && obj.cat) { if (!taskCats().includes(obj.cat)) await saveProfile({ taskCats: [...taskCats(), obj.cat].slice(-12) }); } else delete obj.cat; }
   if (col === 'tasks' && prev && prev.date !== obj.date && !obj.done && obj.date > prev.date) obj.moved = (prev.moved || 0) + 1;
   closeForm(); await put(col, obj); toast('Salvo');
 }
@@ -3748,7 +3892,7 @@ document.addEventListener('click', async e => {
     toast('Gastos mensais lançados'); return; }
   if (d.padv) { const x = S.data.perms.find(v => v.id === d.padv); if (x) { const i = PERM_ST.findIndex(s2 => s2[0] === (x.status || 'recebido')); const nx = PERM_ST[Math.min(2, i + 1)][0]; await put('perms', { ...x, status: nx, ...(nx === 'recebido' ? { received: today() } : { postedAt: today() }) }); toast(nx === 'postado' ? (x.returnNeeded ? 'Postado! Falta devolver o produto.' : 'Permuta concluída') : 'Produto recebido'); } return; }
   if (d.pret) { const x = S.data.perms.find(v => v.id === d.pret); if (x) { await put('perms', { ...x, status: 'devolvido', returnedAt: today() }); toast('Devolução registrada'); } return; }
-  if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
+  if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), type: 'trabalho', title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
   if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
   if (d.act === 'kitcopy') { try { await navigator.clipboard.writeText(kitText()); toast('Texto do mídia kit copiado'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
   if (d.act === 'kitdl') { const html = kitHtml(), fn = `midia-kit-${(S.profile.name || 'creator').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'creator'}.html`; if (S.downloads) { try { await S.downloads.save({ filename: fn, data: html }); toast('Mídia kit salvo'); } catch (e) { if (!['declined', 'cancelled'].includes(e?.code)) toast('Não consegui salvar o arquivo.'); } } else { try { await navigator.clipboard.writeText(kitText()); toast('Download indisponível aqui. Copiei o texto.'); } catch (_) {} } return; }
@@ -3765,8 +3909,10 @@ document.addEventListener('click', async e => {
   if (d.act === 'tscopy') { const v = $('#o_tsOut')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Copiado'); } catch (_) { $('#o_tsOut')?.select(); toast('Texto selecionado. Use o copiar do seu aparelho.'); } return; }
   if (d.act === 'tsai') { const cur = $('#o_tsOut')?.value || ''; await gated('msg', async () => { await ask('tsOut', `Reescreva a mensagem abaixo, de uma creator de UGC para uma marca, deixando mais persuasiva e profissional, sem exagero e sem inventar números ou fatos. Mantenha o idioma original, o tamanho parecido e um tom simpático. Responda só com a mensagem pronta, sem aspas e sem comentários.\n\nMensagem (entre as linhas ${Q}):\n${Q}\n${cur}\n${Q}`); const ta = $('#o_tsOut'); if (ta && S.ct.tsOut) ta.value = S.ct.tsOut; }); return; }
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
-  if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
+  if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.ttype) { const f = t.closest('form'); if (!f) return; f.querySelectorAll('[data-ttype]').forEach(b => b.setAttribute('aria-pressed', b === t)); f.elements.ttype.value = d.ttype; const ci = f.elements.cat; if (ci) { ci.value = d.tcat || ''; ci.hidden = !(d.ttype === 'outro' && !d.tcat); if (!ci.hidden) ci.focus(); } if (f.dataset.form === 'quicktask') { S.ct.qtype = d.ttype; S.ct.qcat = d.tcat || ''; } else applyWhen(f); return; }
+  if (d.tfilter !== undefined) { S.f.ttype = d.tfilter; render(); return; }
   if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
   if (t.hasAttribute('data-bback')) { S.f.bpage = ''; render(); window.scrollTo(0, 0); return; }
   if (d.btab) { S.f.btab = d.btab; render(); return; }
@@ -3785,7 +3931,19 @@ document.addEventListener('click', async e => {
   if (d.act === 'wpsave') { await saveWeekPlan(); return; }
   if (d.gomyday) { $('#toast').hidden = true; closeForm(); S.tab = 'rotina'; S.f.rview = 'hoje'; S.f.day = d.gomyday; try { sessionStorage.setItem('criahub:tab', 'rotina'); } catch (_) {} render(); window.scrollTo(0, 0); return; }
   if (d.act === 'briefclear') { S.ct.bRes = null; render(); return; }
-  if (d.openbrief) { openBrief(d.openbrief); return; }
+  if (d.openbrief) { S.ct.bOpen = d.openbrief; S.f.sview = 'briefing'; S.tab = 'estudio'; render(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-bclose')) { S.ct.bOpen = ''; render(); window.scrollTo(0, 0); return; }
+  if (d.bstep) { const b = S.data.briefs.find(x => x.id === S.ct.bOpen); if (b) { const n = +d.bstep; if ((b.step || 1) !== n) await put('briefs', { ...b, step: n }); const el = document.querySelector('.bstep.open'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } return; }
+  if (d.recd) { const dl = S.data.deliveries.find(x => x.id === d.recd); if (!dl) return; const cur = dl.stage || 0;
+    if (cur < 2) { await put('deliveries', { ...dl, stage: 2, recPrev: cur }); toast('Gravado ✓ A entrega foi pra Edição'); }
+    else if (cur === 2) { const { recPrev, ...rest } = dl; await put('deliveries', { ...rest, stage: recPrev ?? 0 }); toast('Desmarcado. A entrega voltou de etapa.'); }
+    else toast(`Essa entrega já está em ${STAGES[cur]}. Pra voltar, mude a etapa na Agenda.`); return; }
+  if (d.bqcopy) { const b = S.data.briefs.find(x => x.id === d.bqcopy); const txt = arr(b?.data?.duvidas).map((q, i) => `${i + 1}. ${q}`).join('\n'); try { await navigator.clipboard.writeText(txt); toast('Perguntas copiadas'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
+  if (d.breplan) { if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = 'Toque de novo: apago as tarefas não feitas e monto de novo'; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Montar de novo'; }, 4000); return; }
+    const b = S.data.briefs.find(x => x.id === d.breplan); if (!b) return; for (const x of briefTasks(b).filter(x => !x.done)) await del('tasks', x.id); for (const x of briefTasks(b)) await put('tasks', { ...x, briefId: '', planOf: b.id }); await put('briefs', { ...b, step: 3, planned: '' }); toast('Escolha de novo os vídeos por dia'); return; }
+  if (d.bdiscard) { const b = S.data.briefs.find(x => x.id === d.bdiscard); if (!b) return; const ds = briefDels(b), tk = briefTasks(b);
+    if (!t.classList.contains('armed')) { t.classList.add('armed'); t.textContent = `Toque de novo: apaga o briefing, ${ds.length} entrega${ds.length === 1 ? '' : 's'} e ${tk.length} tarefa${tk.length === 1 ? '' : 's'}`; clearTimeout(armed); armed = setTimeout(() => { t.classList.remove('armed'); t.textContent = 'Descartar briefing'; }, 4500); return; }
+    for (const x of tk) await del('tasks', x.id); for (const x of ds) await del('deliveries', x.id); await del('briefs', b.id); S.ct.bOpen = ''; render(); toast('Briefing descartado'); return; }
   if (d.act === 'review') { const c = S.ct, dl = S.data.deliveries.find(x => x.id === c.rDeliv); if (!dl) { toast('Escolha a entrega'); return; } if (!c.rImgs.length && !c.rTxt.trim()) { toast('Envie prints ou cole o roteiro'); return; } await gated('studio', () => ask('rvOut', reviewPrompt(dl, briefFor(dl), c.rImgs.length), c.rImgs)); return; }
   if (d.act === 'rvsent') { const dl = S.data.deliveries.find(x => x.id === S.ct.rDeliv); if (dl) { await put('deliveries', { ...dl, stage: 3 }); toast('Marcado como enviado'); } return; }
   if (d.act === 'gsave') { const dl = S.data.deliveries.find(x => x.id === S.ct.gDeliv); if (dl) { await put('deliveries', { ...dl, script: $('#g_script')?.value || '' }); toast('Roteiro salvo'); } return; }
@@ -3917,6 +4075,9 @@ document.addEventListener('submit', async e => {
   if (kind === 'nf') { const p = S.data.payments.find(x => x.id === f.dataset.id); if (!p) return; const num = f.elements.num.value.trim(), dt = f.elements.date.value || today(), desc = f.elements.desc.value.trim(); const cn = f.elements.cnpj ? f.elements.cnpj.value.trim() : null; const b = S.data.brands.find(x => x.id === p.brandId); if (b && cn !== null && cn !== (b.cnpj || '')) await put('brands', { ...b, cnpj: cn }); if (!num) { toast('Coloque o número da nota depois de emitir'); return; } closeForm(); await put('payments', { ...p, nf: { num, date: dt, desc } }); toast('Nota guardada'); return; }
   if (kind === 'acc') { const b = S.data.brands.find(x => x.id === f.dataset.brand), pl = f.dataset.plat; if (!b) return; let h = f.elements.handle.value.trim(); const u = f.elements.url.value.trim(); if (!h && !u) { toast('Coloque o @ ou o link do perfil'); return; } if (h && !h.startsWith('@')) h = '@' + h; const ex = accOf(b.id, pl); await put('accounts', { ...(ex || { id: newId(), created: new Date().toISOString(), goalWeek: 7 }), platform: pl, handle: h || (ex && ex.handle) || '', url: u, brandId: b.id }); toast('Conta salva'); return; }
   if (kind === 'bcycle') { const b = S.data.brands.find(x => x.id === f.dataset.brand); if (!b) return; const st = f.elements.start.value || b.start || today(), days = +b.cycle || 30, g = f.elements.goal.value; await put('brands', { ...b, ctype: 'ciclo', start: st, end: addDays(st, days - 1), goalViews: g === '' ? '' : +g }); toast('Ciclo atualizado'); return; }
+  if (kind === 'bplan') { const b = S.data.briefs.find(x => x.id === f.dataset.id); if (!b) return; const per = +f.elements.per.value || 3, st = f.elements.start.value || addDays(today(), 1), ds = briefDels(b).filter(d => (d.stage || 0) < 3), lbl = b.brandId ? brandName(b.brandId) : b.title;
+    if (!ds.length) { toast('Nada pra planejar'); return; }
+    S.wp = { tasks: wpPlan(ds, lbl, { perDay: per, start: st }), brandId: b.brandId || '', briefId: b.id, nDel: ds.length, label: lbl, adjust: false, perDay: per, intro: `${ds.length} roteiro${ds.length === 1 ? '' : 's'} de ${lbl}, ${per} por dia a partir de ${fmtD(st)}.` }; openWeekPlan(); return; }
   if (kind === 'name') { const n = f.elements.name.value.trim(); if (n) await saveProfile({ name: n }); return; }
   if (kind === 'licrenew') return saveLicRenew(f);
   if (kind === 'qexp') { const ds = f.elements.desc.value.trim(), am = +f.elements.amount.value || 0; if (!ds || !am) return; f.reset(); await put('expenses', { id: newId(), desc: ds, amount: am, cat: 'Outro', currency: 'BRL', date: S.f.month === monthKey(today()) ? today() : S.f.month + '-01', created: new Date().toISOString() }); toast('Gasto anotado. Toque nele para escolher a categoria.'); return; }
@@ -3927,7 +4088,9 @@ document.addEventListener('submit', async e => {
   if (kind === 'fb') { const tx = f.elements.text.value.trim(); if (!tx) return; await put('feedbacks', { id: newId(), text: tx, cat: f.elements.cat.value, brandId: f.elements.brandId.value, from: f.elements.from.value.trim(), date: today(), created: new Date().toISOString() }); f.reset(); toast('Feedback anotado'); return; }
   if (kind === 'addrule') { const r = f.elements.r.value.trim(); if (!r) return; await saveProfile({ rules: [...arr(S.profile.rules), r].slice(0, 20) }); return; }
   if (kind === 'addscene') { const t = f.elements.t.value.trim(), d = S.data.deliveries.find(x => x.id === S.ct.gDeliv); if (!t || !d) return; await put('deliveries', { ...d, scenes: [...(Array.isArray(d.scenes) ? d.scenes : []), { t, done: false }] }); return; }
-  if (kind === 'quicktask') { const v = f.elements.title.value.trim(), tm = f.elements.time.value; if (!v) return; f.reset(); await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
+  if (kind === 'quicktask') { const v = f.elements.title.value.trim(), tm = f.elements.time.value, ty = f.elements.ttype?.value || 'pessoal', cat = ty === 'outro' ? (f.elements.cat?.value || '').trim() : ''; if (!v) return; f.reset(); S.ct.qtype = 'pessoal'; S.ct.qcat = '';
+    if (cat && !taskCats().includes(cat)) await saveProfile({ taskCats: [...taskCats(), cat].slice(-12) });
+    await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, type: ty, ...(cat ? { cat } : {}), created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
   if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : 'Gancho', status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
   if (kind === 'settings') { const n = f.elements.name.value.trim(); const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
     closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value }); toast('Ajustes salvos'); }
