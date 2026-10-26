@@ -748,6 +748,19 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .wp-it{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.wp-it .t{font-weight:600;flex:1;min-width:140px}
 .wp-it select{flex:1 1 100%;min-height:40px}
+.tt-chips{display:flex;gap:6px;flex-wrap:wrap}.chip.tt{display:inline-flex;align-items:center;gap:5px;padding:5px 11px}
+.tt-i{width:13px;height:13px;flex:none}
+.chip.tt[aria-pressed=true]{color:#fff;border-color:transparent;background:var(--tc)}
+.tt-trabalho{--tc:#420725}.tt-pessoal{--tc:#C9467A}.tt-saude{--tc:#2B7F55}.tt-estudos{--tc:#3D5A99}.tt-casa{--tc:#A86A12}.tt-outro{--tc:#76626C}
+:root[data-theme=dark] .tt-trabalho,:root[data-theme=dark] .tk-trabalho{--tc:#C98AA8}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .tt-trabalho,:root:not([data-theme=light]) .tk-trabalho{--tc:#C98AA8}}
+.tk-trabalho{--tc:#420725}.tk-pessoal{--tc:#C9467A}.tk-saude{--tc:#2B7F55}.tk-estudos{--tc:#3D5A99}.tk-casa{--tc:#A86A12}.tk-outro{--tc:#76626C}
+.tk{border-left:4px solid var(--tc,var(--line))}
+.tt-tag{display:inline-flex;align-items:center;gap:4px;color:var(--tc);font-weight:700}
+.quick-t{display:flex;flex-direction:column;gap:8px}.quick-t .tt-chips .chip{font-size:12px;padding:4px 10px}
+.tt-cat{border:1px solid var(--line);border-radius:11px;padding:8px 12px;background:var(--surface);font:inherit}
+.tt-filter .chip{display:inline-flex;align-items:center;gap:5px}
+.flabel{font-size:13px;font-weight:700;color:var(--muted)}
 .bc-open{display:block;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;min-width:0}.bc-open .bc-go{color:var(--muted);font-weight:500}
 .bp-back{align-self:flex-start;margin-bottom:-10px}
 .bp-cyc{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}@media (max-width:520px){.bp-cyc{grid-template-columns:1fr 1fr}.bp-cyc .btn{grid-column:1 / -1}}
@@ -990,6 +1003,10 @@ const ICON = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   rotina: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  leaf: '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19l7-7"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5"/><path d="M8 7h7"/>',
+  tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/>',
   minus: '<path d="M5 12h14"/>',
   estudio: '<path d="M4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10l-.6-3.4a1 1 0 0 1 .8-1.2l13.8-2.4a1 1 0 0 1 1.2.8L19.6 7z"/><path d="M8.5 5.2l2 3.9M13.5 4.3l2 3.9"/>',
@@ -1179,7 +1196,7 @@ function render() {
   v.innerHTML = ({ inicio: vHome, radar: vNews, rotina: vRoutine, marcas: vBrands, agenda: vAgenda, estudio: vStudio, financeiro: vFinance })[S.tab]();
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -1303,7 +1320,7 @@ function homeDay() {
     <div class="card section" style="gap:12px">
       ${list.length ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Tarefas de hoje</span><span class="num">${done} de ${list.length}</span></div><div class="bar ${done === list.length ? 'ok' : ''}"><span style="width:${Math.round(done / list.length * 100)}%"></span></div>
         ${open.length ? `<div class="list">${open.map(x => tkRow(x)).join('')}</div>` : '<div class="sub" style="color:var(--ok);font-weight:700">Tudo feito por hoje!</div>'}`
-        : `<form class="quick" data-form="quicktask"><input type="text" name="title" id="qt" placeholder="Qual a prioridade de hoje?" autocomplete="off" required><input type="hidden" name="time" value=""><button class="btn">Salvar</button></form>`}
+        : `<form class="quick-t" data-form="quicktask"><div class="quick"><input type="text" name="title" id="qt" placeholder="Qual a prioridade de hoje?" autocomplete="off" required><input type="hidden" name="time" value=""><button class="btn">Salvar</button></div>${ttChips(S.ct.qtype || 'pessoal', S.ct.qcat, true)}</form>`}
       ${late ? `<button class="link" data-rview="hoje" style="text-align:left;color:var(--warn)">${late} tarefa${late > 1 ? 's' : ''} de outros dias pendente${late > 1 ? 's' : ''}</button>` : ''}
       ${hs.length ? `<div class="progress-top" style="border-top:1px solid var(--line);padding-top:12px"><span style="color:var(--fg);font-weight:700">Hábitos</span><span class="num">${hDoneN} de ${hs.length}</span></div><div class="habits">${hs.slice(0, 3).map(h => hbRow(h, true)).join('')}</div>` : `<button class="link" data-rview="habitos" style="text-align:left">+ Adicionar um hábito de saúde, como beber água</button>`}
     </div></section>`;
@@ -1680,12 +1697,38 @@ function gcalUrl(t) {
   return 'https://calendar.google.com/calendar/render?' + p.toString();
 }
 
+/* ================= tipos de tarefa: rotina da vida toda, não só das marcas ================= */
+const TTYPES = [['trabalho', 'Trabalho', 'marcas'], ['pessoal', 'Pessoal', 'heart'], ['saude', 'Saúde', 'leaf'], ['estudos', 'Estudos', 'book'], ['casa', 'Casa', 'inicio'], ['outro', 'Outro', 'tag']];
+const taskType = t => TTYPES.some(x => x[0] === t.type) ? t.type : (t.brandId || t.briefId ? 'trabalho' : 'pessoal');
+const ttLabel = t => taskType(t) === 'outro' && t.cat ? t.cat : (TTYPES.find(x => x[0] === taskType(t)) || TTYPES[1])[1];
+const taskCats = () => arr(S.profile.taskCats);
+const ttIc = k => ic((TTYPES.find(x => x[0] === k) || TTYPES[5])[2]).replace('class="i"', 'class="i tt-i"');
+/* chips de tipo: os 6 fixos e as categorias que a pessoa criou em Outro */
+function ttChips(sel, cat, quick) {
+  const cur = sel || 'pessoal';
+  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
+    <input type="hidden" name="ttype" value="${esc(cur)}"><input type="text" name="cat" class="tt-cat" placeholder="Nome da categoria (ex.: Faculdade)" value="${esc(cur === 'outro' ? cat || '' : '')}" ${cur === 'outro' && !taskCats().includes(cat || '') ? '' : 'hidden'} aria-label="Nome da categoria" autocomplete="off" ${quick ? 'style="min-height:40px"' : ''}>`;
+}
+/* filtro por tipo (Meu dia e Semana) */
+const ttMatch = t => !S.f.ttype || (S.f.ttype.startsWith('cat:') ? taskType(t) === 'outro' && t.cat === S.f.ttype.slice(4) : taskType(t) === S.f.ttype);
+function ttFilter(tasks) {
+  const has = new Set(S.data.tasks.map(taskType)), cats = [...new Set(S.data.tasks.filter(t => taskType(t) === 'outro' && t.cat).map(t => t.cat))];
+  const opts = [['', 'Todas'], ...TTYPES.filter(([k]) => has.has(k) && k !== 'outro').map(([k, l]) => [k, l]), ...cats.map(c => ['cat:' + c, c]), ...(S.data.tasks.some(t => taskType(t) === 'outro' && !t.cat) ? [['outro', 'Outro']] : [])];
+  if (opts.length <= 2 && !S.f.ttype) return '';
+  return `<div class="chips tt-filter" role="group" aria-label="Filtrar por tipo">${opts.map(([k, l]) => `<button class="chip" data-tfilter="${esc(k)}" aria-pressed="${(S.f.ttype || '') === k}">${k && !k.startsWith('cat:') ? ttIc(k) : k ? ttIc('outro') : ''}${esc(l)}</button>`).join('')}</div>`;
+}
+/* uma vez por conta: tarefas antigas ganham tipo (com marca → Trabalho, sem marca → Pessoal) */
+let ttMigrating = false;
+async function migrateTaskTypes() {
+  if (ttMigrating || S.loading || S.profile.tasksTyped) return; ttMigrating = true;
+  try { for (const t of S.data.tasks.filter(x => !x.type)) await put('tasks', { ...t, type: t.brandId || t.briefId ? 'trabalho' : 'pessoal' }); await saveProfile({ tasksTyped: true }); } finally { ttMigrating = false; }
+}
 function tkRow(t, showDate) {
   const late = !t.done && t.date < today();
-  return `<div class="tk ${t.done ? 'done' : ''}">
+  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}">
     <button class="tk-check ${t.done ? 'on' : ''}" data-tdone="${t.id}" aria-label="${t.done ? 'Desmarcar' : 'Concluir'} ${esc(t.title)}">${ic('check')}</button>
     <button class="open" data-edit="tasks:${t.id}"><span class="t">${esc(t.title)}</span>
-      <span class="m">${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
+      <span class="m"><span class="tt-tag">${ttIc(taskType(t))}${esc(ttLabel(t))}</span>${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
     ${!t.done ? `<a class="gcal" href="${esc(gcalUrl(t))}" target="_blank" rel="noopener" title="Criar lembrete no Google Agenda">${ic('bell').replace('class="i"', 'class="i" style="width:13px;height:13px;vertical-align:-2px"')} Agenda</a>` : '<span></span>'}
   </div>`;
 }
@@ -1713,19 +1756,20 @@ function vRoutine() {
 }
 
 function vDay() {
-  const d = S.f.day, t = today(), list = tasksOn(d), done = list.filter(x => x.done).length, pct = list.length ? Math.round(done / list.length * 100) : 0;
-  const late = d === t ? lateTasks() : [];
+  const d = S.f.day, t = today(), list = tasksOn(d).filter(ttMatch), done = list.filter(x => x.done).length, pct = list.length ? Math.round(done / list.length * 100) : 0;
+  const late = d === t ? lateTasks().filter(ttMatch) : [];
   const dels = sortBy(S.data.deliveries.filter(x => x.due === d && (x.stage || 0) < 5), 'due');
   const hab = d === t ? activeHabits() : [];
   return `
   <div class="day-nav"><button class="iconbtn" data-day="-1" aria-label="Dia anterior">${ic('left')}</button><b>${esc(dayLabel(d))}</b><button class="iconbtn" data-day="1" aria-label="Próximo dia">${ic('right')}</button>${d !== t ? `<button class="link" data-day="0">voltar pra hoje</button>` : ''}</div>
   ${workBanner(d)}
-  <form class="quick" data-form="quicktask"><input type="text" name="title" id="qt" placeholder="Nova tarefa" autocomplete="off" required><input type="time" name="time" aria-label="Horário (opcional)" style="width:108px;flex:none;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:0 8px;background:var(--surface)"><button class="btn">Salvar</button></form>
+  <form class="quick-t" data-form="quicktask"><div class="quick"><input type="text" name="title" id="qt" placeholder="Nova tarefa" autocomplete="off" required><input type="time" name="time" aria-label="Horário (opcional)" style="width:108px;flex:none;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:0 8px;background:var(--surface)"><button class="btn">Salvar</button></div>${ttChips(S.ct.qtype || 'pessoal', S.ct.qcat, true)}</form>
   ${late.length ? `<div class="card carry section"><div class="row-h"><h2 style="font-size:16px">${late.length} tarefa${late.length > 1 ? 's ficaram' : ' ficou'} pra trás</h2><button class="btn sm soft" data-act="carry">Trazer pra hoje</button></div><div class="list">${late.slice(0, 5).map(x => tkRow(x, true)).join('')}</div>${late.length > 5 ? `<div class="sub">e mais ${late.length - 5}</div>` : ''}</div>` : ''}
   <section class="section">
     <div class="row-h"><h2>Tarefas</h2>${list.length ? `<span class="sub num">${done} de ${list.length} feitas</span>` : ''}</div>
+    ${ttFilter()}
     ${list.length ? `<div class="bar ${pct === 100 ? 'ok' : ''}"><span style="width:${pct}%"></span></div><div class="list">${list.map(x => tkRow(x)).join('')}</div>${pct === 100 ? '<div class="sub" style="color:var(--ok);font-weight:700">Dia fechado. Tudo feito!</div>' : ''}`
-      : `<div class="empty"><strong>Nada planejado ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>Escreva até 3 prioridades. Lista curta é lista que fecha.</div>`}
+      : `<div class="empty"><strong>${S.f.ttype ? 'Nenhuma tarefa desse tipo' : 'Nada planejado'} ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>${S.f.ttype ? '<button class="link" data-tfilter="">Ver todas</button>' : 'Escreva até 3 prioridades. Lista curta é lista que fecha.'}</div>`}
   </section>
   ${dels.length ? `<section class="section"><div class="row-h"><h2>Entregas com prazo ${d === t ? 'hoje' : 'nesse dia'}</h2><button class="link" data-tab="agenda">Ver agenda</button></div><div class="list">${dels.map(dvRow).join('')}</div></section>` : ''}
   ${hab.length ? `<section class="section"><div class="row-h"><h2>Hábitos de hoje</h2><button class="link" data-rview="habitos">Ver hábitos</button></div><div class="habits">${hab.map(h => hbRow(h, true)).join('')}</div></section>` : ''}
@@ -1770,7 +1814,7 @@ function vHabits() {
 function weekData(off) {
   const t = today(), ws = addDays(weekStart(t), off * 7), days = Array.from({ length: 7 }, (_, i) => addDays(ws, i)), we = days[6];
   const upto = days.filter(d => d <= t);
-  const tasks = S.data.tasks.filter(x => x.date >= ws && x.date <= we);
+  const tasks = S.data.tasks.filter(x => x.date >= ws && x.date <= we && ttMatch(x));
   const tDone = tasks.filter(x => x.done), tOpen = tasks.filter(x => !x.done && x.date < t);
   const dels = S.data.deliveries.filter(x => x.due >= ws && x.due <= we);
   const dOk = dels.filter(x => (x.stage || 0) >= 3), dMiss = dels.filter(x => (x.stage || 0) < 3 && x.due < t);
@@ -1808,6 +1852,7 @@ function vWeek() {
   const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
   return `
   <div class="day-nav"><button class="iconbtn" data-wk="-1" aria-label="Semana anterior">${ic('left')}</button><b>${S.f.wk === 0 ? 'Esta semana' : S.f.wk === -1 ? 'Semana passada' : esc(label)}</b><button class="iconbtn" data-wk="1" aria-label="Próxima semana" ${S.f.wk >= 0 ? 'disabled style="opacity:.4"' : ''}>${ic('right')}</button><span class="sub">${esc(label)}</span></div>
+  ${ttFilter()}
   <div class="stats">
     <div class="stat"><div class="l">Tarefas feitas</div><div class="v">${w.tDone.length}/${w.tasks.length}</div></div>
     <div class="stat"><div class="l">Entregas no prazo</div><div class="v">${w.dOk.length}/${w.dels.length}</div></div>
@@ -2147,7 +2192,7 @@ function openWeekPlan() {
 async function saveWeekPlan() {
   const p = S.wp; if (!p) return; S.wp = null; closeForm();
   const names = id => S.data.deliveries.find(v => v.id === id)?.title || '';
-  for (const x of wpSort(p.tasks)) await put('tasks', { id: newId(), title: x.title, date: x.date, time: '', done: false, brandId: p.brandId || '', notes: 'Entregas: ' + x.delIds.map(names).filter(Boolean).join(', '), briefId: p.briefId, step: x.step, delIds: x.delIds, created: new Date().toISOString() });
+  for (const x of wpSort(p.tasks)) await put('tasks', { id: newId(), title: x.title, date: x.date, time: '', done: false, type: 'trabalho', brandId: p.brandId || '', notes: 'Entregas: ' + x.delIds.map(names).filter(Boolean).join(', '), briefId: p.briefId, step: x.step, delIds: x.delIds, created: new Date().toISOString() });
   const first = wpSort(p.tasks)[0]?.date || today();
   toastAct(`${p.nDel} entrega${p.nDel === 1 ? ' criada' : 's criadas'} e sua semana está montada`, 'ver no Meu dia', `data-gomyday="${first}"`);
 }
@@ -3448,10 +3493,11 @@ const FORMS = {
     { k: 'notes', l: 'Observações', t: 'textarea', ph: 'Plataforma, cliente, forma de pagamento…' },
   ] },
   tasks: { title: 'tarefa', fields: [
-    { k: 'title', l: 'Tarefa', t: 'text', req: 1, ph: 'Ex.: Gravar os 2 vídeos da Notely' },
+    { k: 'title', l: 'Tarefa', t: 'text', req: 1, ph: 'Ex.: Consulta no dentista, gravar os 2 vídeos da Notely…' },
+    { k: 'ttype', l: 'Tipo', t: 'ttype' },
     { row: [{ k: 'date', l: 'Dia', t: 'date', d: () => S.f.day || today() }, { k: 'time', l: 'Horário (opcional)', t: 'time' }] },
-    { k: 'brandId', l: 'Marca (opcional)', t: 'select', o: brandOpts },
-    { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Detalhes, links, o que precisa levar…' },
+    { k: 'brandId', l: 'Marca (opcional)', t: 'select', o: brandOpts, when: 'trabalho' },
+    { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Ex.: levar exames, endereço da clínica, link…' },
   ] },
   accounts: { title: 'conta', fields: [
     { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: PLATFORMS.map(x => [x, x]), d: 'TikTok' }, { k: 'handle', l: '@ da conta', t: 'text', req: 1, ph: '@perfil' }] },
@@ -3513,6 +3559,7 @@ function fieldHtml(f, obj) {
   const v = obj[f.k] ?? (typeof f.d === 'function' ? f.d() : f.d) ?? '';
   const id = `f_${f.k}`;
   const w = f.when ? ` data-when="${f.when}"` : '';
+  if (f.t === 'ttype') return `<div class="field"><span class="flabel">${f.l}</span>${ttChips(obj.type ? taskType(obj) : (obj.brandId ? 'trabalho' : obj.ttype || 'pessoal'), obj.cat)}</div>`;
   if (f.t === 'check') return `<label class="checkline"${w}><input type="checkbox" id="${id}" name="${f.k}" ${v ? 'checked' : ''}>${f.l}</label>`;
   let inp;
   if (f.t === 'select') { const o = typeof f.o === 'function' ? f.o() : f.o; inp = `<select id="${id}" name="${f.k}">${o.map(([a, b]) => `<option value="${esc(a)}" ${String(v) === String(a) ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select>`; }
@@ -3534,7 +3581,7 @@ function openForm(col, id, preset = {}) {
   applyWhen($('#layer form'));
   setTimeout(() => $('#layer input[type=text]')?.focus(), 30);
 }
-function applyWhen(form) { if (!form) return; const v = form.elements.ctype?.value || form.elements.kind?.value || form.elements.currency?.value; form.querySelectorAll('[data-when]').forEach(el => { el.hidden = !!v && !el.dataset.when.split(' ').includes(v); }); }
+function applyWhen(form) { if (!form) return; const v = form.elements.ctype?.value || form.elements.kind?.value || form.elements.currency?.value || form.elements.ttype?.value; form.querySelectorAll('[data-when]').forEach(el => { el.hidden = !!v && !el.dataset.when.split(' ').includes(v); }); }
 function openContract(id) {
   const x = S.data.contracts.find(v => v.id === id); if (!x) return;
   sheet = { col: 'contracts', id }; S.ct.view = x.text || '';
@@ -3549,7 +3596,7 @@ function closeForm() { sheet = null; $('#layer').innerHTML = ''; }
 
 function readForm(form, col) {
   const out = {};
-  const walk = fs => fs.forEach(f => { if (f.row) return walk(f.row); const el = form.elements[f.k]; if (!el) return;
+  const walk = fs => fs.forEach(f => { if (f.row) return walk(f.row); if (f.t === 'ttype') { out.ttype = form.elements.ttype.value || 'pessoal'; out.cat = (form.elements.cat?.value || '').trim(); return; } const el = form.elements[f.k]; if (!el) return;
     if (f.t === 'check') out[f.k] = el.checked; else if (f.t === 'number') out[f.k] = el.value === '' ? '' : Number(el.value); else out[f.k] = el.value.trim(); });
   walk(FORMS[col].fields); return out;
 }
@@ -3589,6 +3636,7 @@ async function submitEntity(form) {
     if (dl) { const up = { ...dl, stage: Math.max(5, dl.stage || 0) }; if (acc) up.posts = { ...postsOf(dl), [acc.id]: { date: obj.date || today(), views: obj.views === '' ? '' : +obj.views, url: obj.url || '' } }; await put('deliveries', up); }
     toast(dl && (dl.stage || 0) < 5 ? 'Vídeo salvo e entrega marcada como Publicado' : 'Vídeo salvo'); return;
   }
+  if (col === 'tasks') { obj.type = obj.ttype || 'pessoal'; delete obj.ttype; if (obj.type !== 'trabalho') obj.brandId = ''; if (obj.type === 'outro' && obj.cat) { if (!taskCats().includes(obj.cat)) await saveProfile({ taskCats: [...taskCats(), obj.cat].slice(-12) }); } else delete obj.cat; }
   if (col === 'tasks' && prev && prev.date !== obj.date && !obj.done && obj.date > prev.date) obj.moved = (prev.moved || 0) + 1;
   closeForm(); await put(col, obj); toast('Salvo');
 }
@@ -3748,7 +3796,7 @@ document.addEventListener('click', async e => {
     toast('Gastos mensais lançados'); return; }
   if (d.padv) { const x = S.data.perms.find(v => v.id === d.padv); if (x) { const i = PERM_ST.findIndex(s2 => s2[0] === (x.status || 'recebido')); const nx = PERM_ST[Math.min(2, i + 1)][0]; await put('perms', { ...x, status: nx, ...(nx === 'recebido' ? { received: today() } : { postedAt: today() }) }); toast(nx === 'postado' ? (x.returnNeeded ? 'Postado! Falta devolver o produto.' : 'Permuta concluída') : 'Produto recebido'); } return; }
   if (d.pret) { const x = S.data.perms.find(v => v.id === d.pret); if (x) { await put('perms', { ...x, status: 'devolvido', returnedAt: today() }); toast('Devolução registrada'); } return; }
-  if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
+  if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), type: 'trabalho', title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
   if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
   if (d.act === 'kitcopy') { try { await navigator.clipboard.writeText(kitText()); toast('Texto do mídia kit copiado'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
   if (d.act === 'kitdl') { const html = kitHtml(), fn = `midia-kit-${(S.profile.name || 'creator').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'creator'}.html`; if (S.downloads) { try { await S.downloads.save({ filename: fn, data: html }); toast('Mídia kit salvo'); } catch (e) { if (!['declined', 'cancelled'].includes(e?.code)) toast('Não consegui salvar o arquivo.'); } } else { try { await navigator.clipboard.writeText(kitText()); toast('Download indisponível aqui. Copiei o texto.'); } catch (_) {} } return; }
@@ -3767,6 +3815,8 @@ document.addEventListener('click', async e => {
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; render(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
+  if (d.ttype) { const f = t.closest('form'); if (!f) return; f.querySelectorAll('[data-ttype]').forEach(b => b.setAttribute('aria-pressed', b === t)); f.elements.ttype.value = d.ttype; const ci = f.elements.cat; if (ci) { ci.value = d.tcat || ''; ci.hidden = !(d.ttype === 'outro' && !d.tcat); if (!ci.hidden) ci.focus(); } if (f.dataset.form === 'quicktask') { S.ct.qtype = d.ttype; S.ct.qcat = d.tcat || ''; } else applyWhen(f); return; }
+  if (d.tfilter !== undefined) { S.f.ttype = d.tfilter; render(); return; }
   if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
   if (t.hasAttribute('data-bback')) { S.f.bpage = ''; render(); window.scrollTo(0, 0); return; }
   if (d.btab) { S.f.btab = d.btab; render(); return; }
@@ -3927,7 +3977,9 @@ document.addEventListener('submit', async e => {
   if (kind === 'fb') { const tx = f.elements.text.value.trim(); if (!tx) return; await put('feedbacks', { id: newId(), text: tx, cat: f.elements.cat.value, brandId: f.elements.brandId.value, from: f.elements.from.value.trim(), date: today(), created: new Date().toISOString() }); f.reset(); toast('Feedback anotado'); return; }
   if (kind === 'addrule') { const r = f.elements.r.value.trim(); if (!r) return; await saveProfile({ rules: [...arr(S.profile.rules), r].slice(0, 20) }); return; }
   if (kind === 'addscene') { const t = f.elements.t.value.trim(), d = S.data.deliveries.find(x => x.id === S.ct.gDeliv); if (!t || !d) return; await put('deliveries', { ...d, scenes: [...(Array.isArray(d.scenes) ? d.scenes : []), { t, done: false }] }); return; }
-  if (kind === 'quicktask') { const v = f.elements.title.value.trim(), tm = f.elements.time.value; if (!v) return; f.reset(); await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
+  if (kind === 'quicktask') { const v = f.elements.title.value.trim(), tm = f.elements.time.value, ty = f.elements.ttype?.value || 'pessoal', cat = ty === 'outro' ? (f.elements.cat?.value || '').trim() : ''; if (!v) return; f.reset(); S.ct.qtype = 'pessoal'; S.ct.qcat = '';
+    if (cat && !taskCats().includes(cat)) await saveProfile({ taskCats: [...taskCats(), cat].slice(-12) });
+    await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, type: ty, ...(cat ? { cat } : {}), created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
   if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : 'Gancho', status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
   if (kind === 'settings') { const n = f.elements.name.value.trim(); const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
     closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value }); toast('Ajustes salvos'); }
