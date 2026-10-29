@@ -1153,7 +1153,7 @@ let mailHash = location.hash === '#emails'; if (mailHash) { try { history.replac
 if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
-function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? j.data[c] : []); S.profile = j.profile || {}; } } catch (e) {} }
+function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? rollEx(j.data[c]) : []); S.profile = j.profile || {}; } } catch (e) {} }
 function saveLocal() { if (S.mode !== 'local') return; try { localStorage.setItem(LS, JSON.stringify({ data: S.data, profile: S.profile })); } catch (e) {} }
 
 let remote = null;
@@ -1178,7 +1178,7 @@ async function connect() {
     const arrive = key => { seen.add(key); if (seen.size >= need) S.loading = false; render(); };
     const onErr = () => { S.loading = false; toast('A sincronização caiu. Recarregue a página para reconectar.'); render(); };
     base.onSnapshot(s => { S.profile = s.exists ? { ...s.data() } : {}; applyAccent(); arrive('profile'); }, onErr);
-    COLS.forEach(k => base.collection(k).onSnapshot(s => { S.data[k] = s.docs.map(d => ({ ...d.data(), id: d.id })); arrive(k); }, onErr));
+    COLS.forEach(k => base.collection(k).onSnapshot(s => { S.data[k] = rollEx(s.docs.map(d => ({ ...d.data(), id: d.id }))); arrive(k); }, onErr));
     setTimeout(() => { if (S.loading) { S.loading = false; render(); } }, 8000);
   } catch (e) { S.loading = false; render(); }
 }
@@ -1191,6 +1191,7 @@ async function recSync(did) {
   }
 }
 async function put(col, obj) {
+  if (obj && obj.example) obj = { ...obj, created: new Date().toISOString() };
   if (col === 'deliveries') { if ((obj.stage || 0) >= 3) { if (!obj.sentAt) obj = { ...obj, sentAt: today() }; } else if (obj.sentAt) { const { sentAt, ...rest } = obj; obj = rest; } }
   const arr = S.data[col]; const i = arr.findIndex(x => x.id === obj.id);
   if (i >= 0) arr[i] = obj; else arr.push(obj);
@@ -1253,6 +1254,12 @@ function deliveredInCycle(b) {
 const isEmpty = () => COLS.every(c => S.data[c].length === 0);
 const hasExamples = () => COLS.some(c => S.data[c].some(x => x.example));
 const exTag = x => x.example ? ' <span class="ex">exemplo</span>' : '';
+/* ideia ligada a uma data comemorativa que já passou não aparece como Ideia do dia */
+const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function ideaPast(i) { let d = i.eventDate || ''; if (!d) { const m = /^Data: (\d{1,2}) de ([a-zç]{3})/i.exec(String(i.notes || '')); const mi = m ? MES3.indexOf(m[2].toLowerCase()) : -1; if (mi < 0) return false; const c = String(i.created || today()).slice(0, 10); d = `${c.slice(0, 4)}-${pad(mi + 1)}-${pad(+m[1])}`; if (d < addDays(c, -1)) d = `${+c.slice(0, 4) + 1}-${d.slice(5)}`; } return d < today(); }
+/* os exemplos andam junto com o calendário: as datas deles avançam os dias que passaram desde que foram carregados, pra nunca virarem uma pilha de atrasados */
+const EX_DATES = ['due', 'next', 'date', 'postBy', 'start', 'end', 'last', 'paidAt'];
+function rollEx(list) { const t = today(); return list.map(x => { if (!x || !x.example || !x.created) return x; const n = diff(String(x.created).slice(0, 10), t); if (!(n > 0)) return x; const y = { ...x }; EX_DATES.forEach(k => { if (typeof y[k] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(y[k])) y[k] = addDays(y[k], n); }); return y; }); }
 
 /* ================= shell ================= */
 function renderShell() {
@@ -1318,7 +1325,7 @@ function vHome() {
   const mk = monthKey(t), extraMonth = S.data.extras.filter(x => monthKey(x.date) === mk).reduce((s, x) => s + brlOf(x), 0);
   const ending = active.filter(b => { if (ctypeOf(b) !== 'ciclo') return false; const c = cycleInfo(b); return c && c.left <= 7; });
   const fu = sortBy(fLeads().filter(l => isOpenLead(l) && l.next && l.next <= t), 'next');
-  const fresh = S.data.ideas.filter(i => (i.status || 'nova') === 'nova');
+  const fresh = S.data.ideas.filter(i => (i.status || 'nova') === 'nova' && !ideaPast(i));
   const idea = fresh.length ? fresh[(new Date().getDate()) % fresh.length] : null;
 
   return `
@@ -1343,7 +1350,7 @@ function vHome() {
     <div class="stat hero"><div class="l">A receber${S.f.front ? ' · ' + esc(S.f.front) : ''}</div><div class="v">${brl(toReceive)}</div></div>
     <div class="stat"><div class="l">Entregas em 7 dias</div><div class="v">${week.length}${late.length ? ` <span class="pill p-bad" style="font-size:11px;vertical-align:middle">${late.length} atrasada${late.length > 1 ? 's' : ''}</span>` : ''}</div></div>
     <div class="stat"><div class="l">Marcas ativas</div><div class="v">${active.length}</div></div>
-    <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas no mês</div><div class="v">${brl(extraMonth)}</div></button>
+    <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas do mês</div><div class="v">${brl(extraMonth)}</div><div class="sub" style="font-size:11px">recebidas + a receber</div></button>
   </div>
   ${nudgeHtml()}
   ${homeWhatsNew()}
@@ -1688,9 +1695,9 @@ function vMoney() {
   ${frontBar()}
   <div class="month"><button class="iconbtn" data-month="-1" aria-label="Mês anterior">${ic('left')}</button><b>${esc(label)}</b><button class="iconbtn" data-month="1" aria-label="Próximo mês">${ic('right')}</button></div>
   <div class="stats">
-    <div class="stat hero"><div class="l">Recebido no mês</div><div class="v">${brl(received)}</div></div>
-    <div class="stat"><div class="l">A receber no mês</div><div class="v">${brl(pending)}</div></div>
-    <div class="stat"><div class="l">Atrasado (total)</div><div class="v" style="color:${lateSum ? 'var(--bad)' : 'inherit'}">${brl(lateSum)}</div></div>
+    <div class="stat hero"><div class="l">Recebido das marcas</div><div class="v">${brl(received)}</div></div>
+    <div class="stat"><div class="l">A receber das marcas</div><div class="v">${brl(pending)}</div></div>
+    <div class="stat"><div class="l">Atrasado das marcas (total)</div><div class="v" style="color:${lateSum ? 'var(--bad)' : 'inherit'}">${brl(lateSum)}</div></div>
   </div>
   ${S.f.month === monthKey(today()) ? potsCard() : ''}
   ${byArr.length ? `<section class="section"><div class="row-h"><h2>Por marca</h2></div><div class="card bybrand">${byArr.map(([id, v]) => `<div class="bb"><span class="name">${esc(id ? brandName(id) : 'Sem marca')}</span><div class="bar"><span style="width:${Math.round(v / max * 100)}%"></span></div><span class="amt">${brl(v)}</span></div>`).join('')}</div></section>` : ''}
@@ -2891,7 +2898,7 @@ function potsCard() {
   const yr = today().slice(0, 4), yearGot = S.data.payments.filter(p => p.paid && String(p.paidAt || p.due).slice(0, 4) === yr).reduce((s, p) => s + brlOf(p), 0) + S.data.extras.filter(x => x.paid && String(x.date).slice(0, 4) === yr).reduce((s, x) => s + brlOf(x), 0);
   const lim = meiLimit(), pct = Math.min(100, Math.round(yearGot / lim * 100));
   return `<section class="card section"><div class="row-h"><h2>Cofrinho</h2><button class="link" data-act="settings">Ajustar</button></div>
-    ${pots.length && got ? `<div class="sub">Do que entrou este mês (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p]) => `<div><span>${l} · ${p}%</span><b>${brl(got * p / 100)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
+    ${pots.length && got ? `<div class="sub">Do que já caiu este mês, somando marcas e outras rendas (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p]) => `<div><span>${l} · ${p}%</span><b>${brl(got * p / 100)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
     ${S.profile.mei ? `<div class="das ${dasPaid(mk) ? 'ok' : ''}"><div><b>DAS do MEI · ${brl(dasValue())}</b><span>${dasPaid(mk) ? 'Pago este mês' : `Vence dia 20 de ${monthLabel(mk).split(' ')[0].toLowerCase()}`}</span></div>${dasPaid(mk) ? '' : `<div class="row-btns"><a class="btn sm" href="${PGMEI_URL}" target="_blank" rel="noopener">Pagar DAS ${ic('ext')}</a><button class="btn sm soft" data-act="daspaid">Paguei</button></div>`}</div>
     <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">Limite do MEI em ${yr}</span><span class="num">${brl(yearGot)} de ${brl(lim)}</span></div><div class="bar ${pct >= 80 ? 'warn' : ''}"><span style="width:${pct}%"></span></div><div class="meta"><span>${pct >= 100 ? 'Você passou do limite. Fale com um contador.' : pct >= 80 ? 'Perto do limite. Vale conversar com um contador.' : `${pct}% do limite anual`}</span></div></div>` : `<div class="sub">É MEI? Ative em Ajustes para ver o DAS do mês e o limite anual.</div>`}
   </section>`;
@@ -4210,7 +4217,7 @@ async function loadExamples() {
     ['leads', { ...E, id: newId(), name: 'Casa Verde Plantas', front: 'UGC', channel: 'DM TikTok', contact: '@casaverde', stage: 'contatar', next: addDays(t, 2), notes: '' }],
     ['extras', { ...E, id: newId(), name: 'Comissão afiliado Shopee', type: 'Afiliados', amount: 320, date: addDays(t, -5), paid: true, recurring: false }],
     ['extras', { ...E, id: newId(), name: 'Mentoria 1:1 de UGC', type: 'Curso ou mentoria', amount: 250, date: addDays(t, 4), paid: false, recurring: false }],
-    ['extras', { ...E, id: newId(), name: 'Salário clínica', type: 'Emprego fixo', amount: 1800, date: t.slice(0, 8) + '05', paid: true, recurring: true }],
+    ['extras', { ...E, id: newId(), name: 'Salário do emprego fixo', type: 'Emprego fixo', amount: 1800, date: t.slice(0, 8) + '05', paid: true, recurring: true }],
     ['payments', { ...E, id: newId(), brandId: b2.id, desc: 'Bora Café: vídeo unboxing', amount: 450, due: addDays(t, -20), paid: true, paidAt: addDays(t, -18) }],
     ['payments', { ...E, id: newId(), brandId: b2.id, desc: 'Bora Café: vídeo café da manhã', amount: 450, due: addDays(t, 10), paid: false }],
     ['payments', { ...E, id: newId(), brandId: b1.id, desc: 'Lumi Skincare: pacote de 4 vídeos', amount: 1800, due: b1.end, paid: false }],
@@ -4291,7 +4298,7 @@ document.addEventListener('click', async e => {
   if (d.padv) { const x = S.data.perms.find(v => v.id === d.padv); if (x) { const i = PERM_ST.findIndex(s2 => s2[0] === (x.status || 'recebido')); const nx = PERM_ST[Math.min(2, i + 1)][0]; await put('perms', { ...x, status: nx, ...(nx === 'recebido' ? { received: today() } : { postedAt: today() }) }); toast(nx === 'postado' ? (x.returnNeeded ? 'Postado! Falta devolver o produto.' : 'Permuta concluída') : 'Produto recebido'); } return; }
   if (d.pret) { const x = S.data.perms.find(v => v.id === d.pret); if (x) { await put('perms', { ...x, status: 'devolvido', returnedAt: today() }); toast('Devolução registrada'); } return; }
   if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), type: 'trabalho', title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
-  if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
+  if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, eventDate: cd.date, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
   if (d.act === 'kitcopy') { try { await navigator.clipboard.writeText(kitText()); toast('Texto do mídia kit copiado'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
   if (d.act === 'kitdl') { const html = kitHtml(), fn = `midia-kit-${(S.profile.name || 'creator').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'creator'}.html`; if (S.downloads) { try { await S.downloads.save({ filename: fn, data: html }); toast('Mídia kit salvo'); } catch (e) { if (!['declined', 'cancelled'].includes(e?.code)) toast('Não consegui salvar o arquivo.'); } } else { try { await navigator.clipboard.writeText(kitText()); toast('Download indisponível aqui. Copiei o texto.'); } catch (_) {} } return; }
   if (d.hookidea) { const x = S.data.deliveries.find(v => v.id === d.hookidea); if (x && x.hook) { await put('ideas', { id: newId(), title: x.hook, tag: 'Gancho', status: 'nova', notes: `Funcionou em "${x.title}" (${(+x.views).toLocaleString('pt-BR')} views). Tipo: ${x.hookType || '—'}.`, created: new Date().toISOString() }); toast('Gancho salvo nas Ideias'); } return; }
