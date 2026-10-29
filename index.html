@@ -997,7 +997,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wk .d small{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}
 .wk .d b{font-family:var(--display);font-size:15px;font-variant-numeric:tabular-nums}
 .wk .d .mini{width:100%;max-width:34px;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
-.wk .d .mini span{display:block;height:100%;background:var(--ok)}
+.wk .d .mini span{display:block;height:100%;background:var(--ok)} .wk .d .tbar{display:flex;gap:2px;width:100%;max-width:40px;height:7px} .wk .d .tbar span{flex:1;min-width:3px;border-radius:2px;background:var(--tc)} .wk-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;color:var(--muted)} .wk-leg span{display:inline-flex;align-items:center;gap:6px} .wk-leg i{width:10px;height:10px;border-radius:3px;background:var(--tc)} :root[data-theme=dark] .tk[style] .tt-tag{color:color-mix(in srgb,var(--tc) 55%,#fff)} @media (prefers-color-scheme: dark){:root:not([data-theme=light]) .tk[style] .tt-tag{color:color-mix(in srgb,var(--tc) 55%,#fff)}}
 .wk .d.today{border-color:var(--accent-btn)}
 .tips{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
 .tips li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
@@ -1787,11 +1787,17 @@ const TTYPES = [['trabalho', 'Trabalho', 'marcas'], ['pessoal', 'Pessoal', 'hear
 const taskType = t => TTYPES.some(x => x[0] === t.type) ? t.type : (t.brandId || t.briefId ? 'trabalho' : 'pessoal');
 const ttLabel = t => taskType(t) === 'outro' && t.cat ? t.cat : (TTYPES.find(x => x[0] === taskType(t)) || TTYPES[1])[1];
 const taskCats = () => arr(S.profile.taskCats);
+/* cada categoria criada em Outro ganha uma cor própria (fixa pela ordem em que foi criada) */
+const CAT_COLORS = ['#7A3FA0', '#B04E14', '#1F7A8C', '#B03A48', '#4E6B2E', '#5B5BD6', '#7A6000', '#9C4D8F', '#2F6E5B', '#3E6FA8', '#A3524A', '#6B5B95'];
+const catColor = c => { const i = taskCats().indexOf(c); if (i >= 0) return CAT_COLORS[i % CAT_COLORS.length]; let h = 0; for (const ch of String(c || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return CAT_COLORS[h % CAT_COLORS.length]; };
+/* classe + estilo de cor de uma tarefa (tipos fixos usam a classe tt-*, categorias usam --tc) */
+const tColorAttr = t => taskType(t) === 'outro' && t.cat ? `class="tt-outro" style="--tc:${catColor(t.cat)}"` : `class="tt-${taskType(t)}"`;
+const tColorKey = t => taskType(t) === 'outro' && t.cat ? 'cat:' + t.cat : taskType(t);
 const ttIc = k => ic((TTYPES.find(x => x[0] === k) || TTYPES[5])[2]).replace('class="i"', 'class="i tt-i"');
 /* chips de tipo: os 6 fixos e as categorias que a pessoa criou em Outro */
 function ttChips(sel, cat, quick) {
   const cur = sel || 'pessoal';
-  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
+  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" style="--tc:${catColor(c)}" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
     <input type="hidden" name="ttype" value="${esc(cur)}"><input type="text" name="cat" class="tt-cat" placeholder="Nome da categoria (ex.: Faculdade)" value="${esc(cur === 'outro' ? cat || '' : '')}" ${cur === 'outro' && !taskCats().includes(cat || '') ? '' : 'hidden'} aria-label="Nome da categoria" autocomplete="off" ${quick ? 'style="min-height:40px"' : ''}>`;
 }
 /* filtro por tipo (Meu dia e Semana) */
@@ -1810,7 +1816,7 @@ async function migrateTaskTypes() {
 }
 function tkRow(t, showDate) {
   const late = !t.done && t.date < today();
-  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}">
+  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}"${taskType(t) === 'outro' && t.cat ? ` style="--tc:${catColor(t.cat)}"` : ''}>
     <button class="tk-check ${t.done ? 'on' : ''}" data-tdone="${t.id}" aria-label="${t.done ? 'Desmarcar' : 'Concluir'} ${esc(t.title)}">${ic('check')}</button>
     <button class="open" data-edit="tasks:${t.id}"><span class="t">${esc(t.title)}</span>
       <span class="m"><span class="tt-tag">${ttIc(taskType(t))}${esc(ttLabel(t))}</span>${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
@@ -1904,7 +1910,7 @@ function weekData(off) {
   const dels = S.data.deliveries.filter(x => x.due >= ws && x.due <= we);
   const dOk = dels.filter(x => (x.stage || 0) >= 3), dMiss = dels.filter(x => (x.stage || 0) < 3 && x.due < t);
   const hs = activeHabits(); let hPos = 0, hOk = 0; hs.forEach(h => upto.forEach(d => { if (h.created && d < String(h.created).slice(0, 10)) return; hPos++; if (hDone(h, d)) hOk++; }));
-  const perDay = days.map(d => { const a = tasks.filter(x => x.date === d); return { d, n: a.length, ok: a.filter(x => x.done).length, open: a.filter(x => !x.done).length }; });
+  const perDay = days.map(d => { const a = tasks.filter(x => x.date === d); return { d, a, n: a.length, ok: a.filter(x => x.done).length, open: a.filter(x => !x.done).length }; });
   const goalsDone = S.data.goals.filter(g => g.doneAt && g.doneAt >= ws && g.doneAt <= we);
   return { ws, we, days, tasks, tDone, tOpen, dels, dOk, dMiss, hs, hPos, hOk, perDay, goalsDone, past: we < t };
 }
@@ -1930,6 +1936,7 @@ function weekTips(w) {
   if (!w.hs.length) tips.push('Que tal adicionar um hábito simples, como beber água? Creator passa horas gravando e editando e esquece de se cuidar.');
   return tips.slice(0, 4);
 }
+function wkLegend(tasks) { const seen = new Map(); tasks.forEach(t => { const k = tColorKey(t); if (!seen.has(k)) seen.set(k, t); }); if (!seen.size) return ''; return `<div class="wk-leg" aria-label="Cores da semana">${[...seen.values()].map(t => `<span><i ${tColorAttr(t)}></i>${esc(ttLabel(t))}</span>`).join('')}</div>`; }
 function vWeek() {
   const w = weekData(S.f.wk), t = today();
   const label = `${fmtD(w.ws)} a ${fmtD(w.we)}`, tips = weekTips(w);
@@ -1944,7 +1951,7 @@ function vWeek() {
     <div class="stat"><div class="l">Hábitos cumpridos</div><div class="v">${pc(w.hOk, w.hPos)}</div></div>
     <div class="stat"><div class="l">Metas concluídas</div><div class="v">${w.goalsDone.length}</div></div>
   </div>
-  <div class="wk">${w.perDay.map(p => `<button class="d ${p.d === t ? 'today' : ''}" data-goday="${p.d}" style="cursor:pointer"><small>${WD[parse(p.d).getDay()]}</small>${isWorkDay(p.d) ? `<i class="wtag">${esc(workLabel().slice(0, 7))}</i>` : ''}<b>${p.n ? p.ok + '/' + p.n : '—'}</b><span class="mini"><span style="width:${p.n ? Math.round(p.ok / p.n * 100) : 0}%"></span></span></button>`).join('')}</div>
+  <div class="wk">${w.perDay.map(p => `<button class="d ${p.d === t ? 'today' : ''}" data-goday="${p.d}" style="cursor:pointer"><small>${WD[parse(p.d).getDay()]}</small>${isWorkDay(p.d) ? `<i class="wtag">${esc(workLabel().slice(0, 7))}</i>` : ''}<b>${p.n ? p.ok + '/' + p.n : '—'}</b>${p.n ? `<span class="tbar" aria-hidden="true">${p.a.map(x => `<span ${tColorAttr(x)}></span>`).join('')}</span>` : ''}<span class="mini"><span style="width:${p.n ? Math.round(p.ok / p.n * 100) : 0}%"></span></span></button>`).join('')}</div> ${wkLegend(w.tasks)}
   <section class="section"><div class="row-h"><h2>O que deu certo</h2></div>
     ${w.tDone.length || w.dOk.length || w.goalsDone.length ? `<div class="card"><ul class="tips">${[w.tDone.length ? `${w.tDone.length} tarefa${w.tDone.length > 1 ? 's' : ''} concluída${w.tDone.length > 1 ? 's' : ''}` : '', w.dOk.length ? `${w.dOk.length} entrega${w.dOk.length > 1 ? 's' : ''} enviada${w.dOk.length > 1 ? 's' : ''}: ${w.dOk.slice(0, 3).map(x => esc(x.title)).join(', ')}${w.dOk.length > 3 ? '…' : ''}` : '', ...w.goalsDone.map(g => `Meta concluída: ${esc(g.title)}`), ...w.hs.filter(h => w.days.filter(d => d <= t && hDone(h, d)).length >= 5).map(h => `${esc(h.name)} em ${w.days.filter(d => d <= t && hDone(h, d)).length} dias`)].filter(Boolean).map(x => `<li><span>${x}</span></li>`).join('')}</ul></div>` : `<div class="empty">Ainda não há nada concluído ${w.past ? 'nessa semana' : 'esta semana'}. Cada check conta!</div>`}
   </section>
