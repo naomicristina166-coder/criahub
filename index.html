@@ -992,12 +992,12 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .nudge b{color:var(--accent-ink)}
 .nudge.pulse{animation:nudgeIn .5s cubic-bezier(.3,1.5,.5,1)}
 @keyframes nudgeIn{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
-.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.empty .ex{display:block;margin-top:8px;font-size:13px;font-style:italic;color:var(--muted)} .wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .wk .d{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;min-width:0}
 .wk .d small{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)}
 .wk .d b{font-family:var(--display);font-size:15px;font-variant-numeric:tabular-nums}
 .wk .d .mini{width:100%;max-width:34px;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
-.wk .d .mini span{display:block;height:100%;background:var(--ok)}
+.wk .d .mini span{display:block;height:100%;background:var(--ok)} .wk .d .tbar{display:flex;gap:2px;width:100%;max-width:40px;height:7px} .wk .d .tbar span{flex:1;min-width:3px;border-radius:2px;background:var(--tc)} .wk-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;color:var(--muted)} .wk-leg span{display:inline-flex;align-items:center;gap:6px} .wk-leg i{width:10px;height:10px;border-radius:3px;background:var(--tc)} :root[data-theme=dark] .tk[style] .tt-tag{color:color-mix(in srgb,var(--tc) 55%,#fff)} @media (prefers-color-scheme: dark){:root:not([data-theme=light]) .tk[style] .tt-tag{color:color-mix(in srgb,var(--tc) 55%,#fff)}}
 .wk .d.today{border-color:var(--accent-btn)}
 .tips{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
 .tips li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
@@ -1081,6 +1081,8 @@ const EXTRA_TYPES = ['Afiliados', 'Curso ou mentoria', 'Aulas e consultoria', 'E
 const STAGES = ['Roteiro', 'Gravação', 'Edição', 'Enviado', 'Aprovado', 'Publicado'];
 const BRAND_STATUS = { ativo: ['Ativo', 'p-ok'], negociando: ['Negociando', 'p-acc'], pausado: ['Pausado', 'p-warn'], encerrado: ['Encerrado', 'p-mute'] };
 const IDEA_TAGS = ['Gancho', 'Roteiro', 'Tendência', 'Referência', 'Trend de áudio'];
+/* etiquetas do banco de ideias: as da creator (Ajustes) ou as padrão */
+const ideaTags = () => { const a = Array.isArray(S.profile.ideaTags) ? S.profile.ideaTags.map(x => String(x || '').trim()).filter(Boolean) : []; return a.length ? a : IDEA_TAGS; };
 const IDEA_STATUS = { nova: ['Nova', 'p-acc'], separada: ['Separada', 'p-warn'], gravada: ['Gravada', 'p-ok'] };
 /* cores do app: todas com contraste bom pra texto branco nos botões */
 const COLOR_FAMS = [
@@ -1151,7 +1153,7 @@ let mailHash = location.hash === '#emails'; if (mailHash) { try { history.replac
 if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
-function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? j.data[c] : []); S.profile = j.profile || {}; } } catch (e) {} }
+function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? rollEx(j.data[c]) : []); S.profile = j.profile || {}; } } catch (e) {} }
 function saveLocal() { if (S.mode !== 'local') return; try { localStorage.setItem(LS, JSON.stringify({ data: S.data, profile: S.profile })); } catch (e) {} }
 
 let remote = null;
@@ -1176,7 +1178,7 @@ async function connect() {
     const arrive = key => { seen.add(key); if (seen.size >= need) S.loading = false; render(); };
     const onErr = () => { S.loading = false; toast('A sincronização caiu. Recarregue a página para reconectar.'); render(); };
     base.onSnapshot(s => { S.profile = s.exists ? { ...s.data() } : {}; applyAccent(); arrive('profile'); }, onErr);
-    COLS.forEach(k => base.collection(k).onSnapshot(s => { S.data[k] = s.docs.map(d => ({ ...d.data(), id: d.id })); arrive(k); }, onErr));
+    COLS.forEach(k => base.collection(k).onSnapshot(s => { S.data[k] = rollEx(s.docs.map(d => ({ ...d.data(), id: d.id }))); arrive(k); }, onErr));
     setTimeout(() => { if (S.loading) { S.loading = false; render(); } }, 8000);
   } catch (e) { S.loading = false; render(); }
 }
@@ -1189,6 +1191,7 @@ async function recSync(did) {
   }
 }
 async function put(col, obj) {
+  if (obj && obj.example) obj = { ...obj, created: new Date().toISOString() };
   if (col === 'deliveries') { if ((obj.stage || 0) >= 3) { if (!obj.sentAt) obj = { ...obj, sentAt: today() }; } else if (obj.sentAt) { const { sentAt, ...rest } = obj; obj = rest; } }
   const arr = S.data[col]; const i = arr.findIndex(x => x.id === obj.id);
   if (i >= 0) arr[i] = obj; else arr.push(obj);
@@ -1251,6 +1254,12 @@ function deliveredInCycle(b) {
 const isEmpty = () => COLS.every(c => S.data[c].length === 0);
 const hasExamples = () => COLS.some(c => S.data[c].some(x => x.example));
 const exTag = x => x.example ? ' <span class="ex">exemplo</span>' : '';
+/* ideia ligada a uma data comemorativa que já passou não aparece como Ideia do dia */
+const MES3 = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function ideaPast(i) { let d = i.eventDate || ''; if (!d) { const m = /^Data: (\d{1,2}) de ([a-zç]{3})/i.exec(String(i.notes || '')); const mi = m ? MES3.indexOf(m[2].toLowerCase()) : -1; if (mi < 0) return false; const c = String(i.created || today()).slice(0, 10); d = `${c.slice(0, 4)}-${pad(mi + 1)}-${pad(+m[1])}`; if (d < addDays(c, -1)) d = `${+c.slice(0, 4) + 1}-${d.slice(5)}`; } return d < today(); }
+/* os exemplos andam junto com o calendário: as datas deles avançam os dias que passaram desde que foram carregados, pra nunca virarem uma pilha de atrasados */
+const EX_DATES = ['due', 'next', 'date', 'postBy', 'start', 'end', 'last', 'paidAt'];
+function rollEx(list) { const t = today(); return list.map(x => { if (!x || !x.example || !x.created) return x; const n = diff(String(x.created).slice(0, 10), t); if (!(n > 0)) return x; const y = { ...x }; EX_DATES.forEach(k => { if (typeof y[k] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(y[k])) y[k] = addDays(y[k], n); }); return y; }); }
 
 /* ================= shell ================= */
 function renderShell() {
@@ -1316,7 +1325,7 @@ function vHome() {
   const mk = monthKey(t), extraMonth = S.data.extras.filter(x => monthKey(x.date) === mk).reduce((s, x) => s + brlOf(x), 0);
   const ending = active.filter(b => { if (ctypeOf(b) !== 'ciclo') return false; const c = cycleInfo(b); return c && c.left <= 7; });
   const fu = sortBy(fLeads().filter(l => isOpenLead(l) && l.next && l.next <= t), 'next');
-  const fresh = S.data.ideas.filter(i => (i.status || 'nova') === 'nova');
+  const fresh = S.data.ideas.filter(i => (i.status || 'nova') === 'nova' && !ideaPast(i));
   const idea = fresh.length ? fresh[(new Date().getDate()) % fresh.length] : null;
 
   return `
@@ -1341,7 +1350,7 @@ function vHome() {
     <div class="stat hero"><div class="l">A receber${S.f.front ? ' · ' + esc(S.f.front) : ''}</div><div class="v">${brl(toReceive)}</div></div>
     <div class="stat"><div class="l">Entregas em 7 dias</div><div class="v">${week.length}${late.length ? ` <span class="pill p-bad" style="font-size:11px;vertical-align:middle">${late.length} atrasada${late.length > 1 ? 's' : ''}</span>` : ''}</div></div>
     <div class="stat"><div class="l">Marcas ativas</div><div class="v">${active.length}</div></div>
-    <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas no mês</div><div class="v">${brl(extraMonth)}</div></button>
+    <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas do mês</div><div class="v">${brl(extraMonth)}</div><div class="sub" style="font-size:11px">recebidas + a receber</div></button>
   </div>
   ${nudgeHtml()}
   ${homeWhatsNew()}
@@ -1350,7 +1359,7 @@ function vHome() {
   ${homeDay()}
   <section class="section">
     <div class="row-h"><h2>Próximas entregas</h2><button class="link" data-tab="agenda">Ver agenda</button></div>
-    ${open.length ? `<div class="list">${open.slice(0, 5).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<button class="btn sm" data-new="deliveries">${ic('plus')}Nova entrega</button></div>`}
+    ${open.length ? `<div class="list">${open.slice(0, 5).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries">${ic('plus')}Nova entrega</button></div>`}
   </section>
   ${ending.length ? `<section class="section"><div class="row-h"><h2>Ciclos terminando</h2></div><div class="list">${ending.map(b => { const c = cycleInfo(b); return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b>${esc(b.name)}</b>${exTag(b)}<div class="sub">${c.left < 0 ? `Terminou há ${-c.left} dia${c.left < -1 ? 's' : ''}` : c.left === 0 ? 'Termina hoje' : `Termina em ${c.left} dia${c.left > 1 ? 's' : ''}`} · ${fmtD(b.end)}</div></div><div class="row-btns"><button class="btn sm" data-renprop="${b.id}">Proposta</button><button class="btn sm soft" data-renew="${b.id}">Renovar ciclo</button></div></div>`; }).join('')}</div></section>` : ''}
   ${licSoon().length ? `<section class="section"><div class="row-h"><h2>Licenças de uso vencendo</h2><button class="link" data-golic>Ver todas</button></div><div class="list">${licSoon().slice(0, 3).map(licRow).join('')}</div></section>` : ''}
@@ -1427,7 +1436,7 @@ function vBrands() {
   const list = all.filter(b => f === 'todas' || b.status === f).sort((a, b) => (a.status === 'ativo' ? 0 : 1) - (b.status === 'ativo' ? 0 : 1) || String(a.name).localeCompare(String(b.name)));
   return `${head}${frontBar()}
   <div class="chips">${['todas', ...Object.keys(BRAND_STATUS)].map(k => `<button class="chip" data-fbrand="${k}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : BRAND_STATUS[k][0]} <span class="num">${k === 'todas' ? all.length : all.filter(b => b.status === k).length}</span></button>`).join('')}</div>
-  ${list.length ? `<div class="brands">${list.map(brandCard).join('')}</div>` : `<div class="empty"><strong>${all.length ? 'Nenhuma marca com esse status' : 'Nenhuma marca ainda'}</strong>Cadastre a marca e o tipo de trabalho: vídeos avulsos, pacote ou ciclo que renova.<button class="btn sm" data-new="brands">${ic('plus')}Nova marca</button></div>`}`;
+  ${list.length ? `<div class="brands">${list.map(brandCard).join('')}</div>` : `<div class="empty"><strong>${all.length ? 'Nenhuma marca com esse status' : 'Nenhuma marca ainda'}</strong>Cadastre a marca e o tipo de trabalho: vídeos avulsos, pacote ou ciclo que renova.<span class="ex">Exemplo: marca de café, ciclo de 30 dias com 4 vídeos.</span><button class="btn sm" data-new="brands">${ic('plus')}Nova marca</button></div>`}`;
 }
 function brandCard(b) {
   const st = BRAND_STATUS[b.status] || BRAND_STATUS.ativo, ct = ctypeOf(b), done = deliveredInCycle(b), vids = +b.videos || 0;
@@ -1540,7 +1549,7 @@ function vContracts() {
   } else {
     const list = [...S.data.contracts].sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
     body = list.length ? `<div class="list">${list.map(x => `<div class="lead"><button class="open" data-openct="${x.id}"><span class="t">${esc(x.title || 'Contrato')}</span><span class="m">${esc(x.brandId ? brandName(x.brandId) : 'Sem marca')} · ${fmtD(String(x.created || '').slice(0, 10))}</span></button><span class="pill ${x.kind === 'traduzido' ? 'p-acc' : 'p-ok'}">${x.kind === 'traduzido' ? 'Tradução' : 'Contrato'}</span></div>`).join('')}</div>`
-      : `<div class="empty"><strong>Nenhum contrato salvo</strong>Contratos gerados do seu modelo e traduções que você salvar aparecem aqui, ligados à marca.</div>`;
+      : `<div class="empty"><strong>Nenhum contrato salvo</strong>Contratos gerados do seu modelo e traduções que você salvar aparecem aqui, ligados à marca.<span class="ex">Exemplo: contrato de 3 meses com uma marca gringa, traduzido pro português.</span></div>`;
   }
   return `<div class="chips">${subs.map(([k, l]) => `<button class="chip" data-ctsub="${k}" aria-pressed="${sub === k}">${l}</button>`).join('')}</div>${sub !== 'salvos' ? usageCard() : ''}${body}`;
 }
@@ -1626,7 +1635,7 @@ function vLeads() {
   ${past.length ? `<section class="section"><div class="row-h"><h2>Ex-clientes pra chamar de volta</h2></div><div class="sub" style="margin-top:-6px">Quem já confiou no seu trabalho fecha mais fácil. Mande um vídeo novo ou uma ideia pra marca.</div>
     <div class="list">${past.map(({ b, last }) => `<div class="lead"><div style="min-width:0"><div class="t">${esc(b.name)}${exTag(b)}</div><div class="m">${esc(brandFront(b))} · ${last ? `último vídeo há ${diff(last, t)} dias` : 'contrato encerrado'}</div></div><button class="adv" data-reprospect="${b.id}">Prospectar de novo</button></div>`).join('')}</div></section>` : ''}
   ${open.length ? LEAD_STAGES.slice(0, 4).map(([k, l]) => { const arr = sortBy(open.filter(x => (x.stage || 'contatar') === k), 'next'); return arr.length ? `<section class="section"><div class="row-h"><h2>${l} <span class="muted num" style="font-weight:500">${arr.length}</span></h2></div><div class="list">${arr.map(leadRow).join('')}</div></section>` : ''; }).join('')
-    : `<div class="empty"><strong>Nenhuma prospecção em andamento</strong>Anote as marcas que você quer abordar, o canal e quando fazer o follow-up.<button class="btn sm" data-new="leads">${ic('plus')}Nova prospecção</button></div>`}
+    : `<div class="empty"><strong>Nenhuma prospecção em andamento</strong>Anote as marcas que você quer abordar, o canal e quando fazer o follow-up.<span class="ex">Exemplo: marca de acessórios, contato pela DM, follow-up em 5 dias.</span><button class="btn sm" data-new="leads">${ic('plus')}Nova prospecção</button></div>`}
   ${closed.length ? `<section class="section"><div class="row-h"><h2>Encerradas</h2><span class="sub">${won} fecharam · ${lost} não rolaram</span></div><div class="list">${closed.map(leadRow).join('')}</div></section>` : ''}`;
 }
 function vAgenda() {
@@ -1648,7 +1657,7 @@ function vAgenda() {
   ${frontBar()}
   ${fBrands().length ? `<div style="max-width:280px"><select id="agb" data-fag aria-label="Filtrar por marca"><option value="">Todas as marcas</option>${fBrands().map(b => `<option value="${b.id}" ${fb === b.id ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}</select></div>` : ''}
   ${open.length ? groups.filter(g => g[1].length).map(([l, arr]) => `<section class="section"><div class="row-h"><h2>${l} <span class="muted num" style="font-weight:500">${arr.length}</span></h2></div><div class="list">${arr.map(dvRow).join('')}</div></section>`).join('')
-    : `<div class="empty"><strong>Tudo entregue por aqui</strong>Cadastre a próxima entrega com o prazo da marca.<button class="btn sm" data-new="deliveries">${ic('plus')}Nova entrega</button></div>`}
+    : `<div class="empty"><strong>Tudo entregue por aqui</strong>Cadastre a próxima entrega com o prazo da marca.<span class="ex">Exemplo: 2 TikToks pra marca de fone, prazo dia 15.</span><button class="btn sm" data-new="deliveries">${ic('plus')}Nova entrega</button></div>`}
   ${pub.length ? `<section class="section"><div class="row-h"><h2>Publicadas recentemente</h2></div><div class="list">${pub.map(dvRow).join('')}</div></section>` : ''}`;
 }
 
@@ -1658,7 +1667,7 @@ function vIdeas() {
   return `
   <div class="head"><div><h1>Estúdio</h1><div class="sub">Ganchos, roteiros e referências antes que fujam da cabeça.</div></div><button class="btn ghost" data-new="ideas">${ic('plus')}Ideia completa</button></div>${studioSeg()}
   <form class="quick" data-form="quickidea"><input type="text" id="qi" name="title" placeholder="Anote um gancho rápido e aperte Enter" autocomplete="off" required><button class="btn">Salvar</button></form>
-  <div class="chips">${['todas', ...IDEA_TAGS].map(k => `<button class="chip" data-fidea="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
+  <div class="chips">${['todas', ...ideaTags()].map(k => `<button class="chip" data-fidea="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
   ${list.length ? `<div class="ideas">${list.map(i => { const st = IDEA_STATUS[i.status || 'nova']; return `<article class="card idea">
       <button class="open" data-edit="ideas:${i.id}" style="background:none;border:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:6px">
         <span class="q">${esc(i.title)}</span>${i.notes ? `<span class="n">${esc(i.notes)}</span>` : ''}
@@ -1666,7 +1675,7 @@ function vIdeas() {
       <div class="f"><span class="sub">${esc(i.tag || 'Sem etiqueta')}${i.brandId ? ' · ' + esc(brandName(i.brandId)) : ''}${exTag(i)}</span>
       <button class="pill ${st[1]}" style="border:0;cursor:pointer" data-istat="${i.id}" title="Mudar status">${st[0]}</button></div>
     </article>`; }).join('')}</div>`
-    : `<div class="empty"><strong>${S.data.ideas.length ? 'Nada com essa etiqueta' : 'Seu banco de ideias está vazio'}</strong>Anote ganchos que você viu, trends de áudio e roteiros que quer testar.</div>`}`;
+    : `<div class="empty"><strong>${S.data.ideas.length ? 'Nada com essa etiqueta' : 'Seu banco de ideias está vazio'}</strong>Anote ganchos que você viu, trends de áudio e roteiros que quer testar.<span class="ex">Exemplo: gancho "Testei por 7 dias e…" com a etiqueta Gancho.</span></div>`}`;
 }
 
 function vMoney() {
@@ -1686,14 +1695,14 @@ function vMoney() {
   ${frontBar()}
   <div class="month"><button class="iconbtn" data-month="-1" aria-label="Mês anterior">${ic('left')}</button><b>${esc(label)}</b><button class="iconbtn" data-month="1" aria-label="Próximo mês">${ic('right')}</button></div>
   <div class="stats">
-    <div class="stat hero"><div class="l">Recebido no mês</div><div class="v">${brl(received)}</div></div>
-    <div class="stat"><div class="l">A receber no mês</div><div class="v">${brl(pending)}</div></div>
-    <div class="stat"><div class="l">Atrasado (total)</div><div class="v" style="color:${lateSum ? 'var(--bad)' : 'inherit'}">${brl(lateSum)}</div></div>
+    <div class="stat hero"><div class="l">Recebido das marcas</div><div class="v">${brl(received)}</div></div>
+    <div class="stat"><div class="l">A receber das marcas</div><div class="v">${brl(pending)}</div></div>
+    <div class="stat"><div class="l">Atrasado das marcas (total)</div><div class="v" style="color:${lateSum ? 'var(--bad)' : 'inherit'}">${brl(lateSum)}</div></div>
   </div>
   ${S.f.month === monthKey(today()) ? potsCard() : ''}
   ${byArr.length ? `<section class="section"><div class="row-h"><h2>Por marca</h2></div><div class="card bybrand">${byArr.map(([id, v]) => `<div class="bb"><span class="name">${esc(id ? brandName(id) : 'Sem marca')}</span><div class="bar"><span style="width:${Math.round(v / max * 100)}%"></span></div><span class="amt">${brl(v)}</span></div>`).join('')}</div></section>` : ''}
   <section class="section"><div class="row-h"><h2>Pagamentos do mês</h2></div>
-  ${inMonth.length ? `<div class="list">${inMonth.map(payRow).join('')}</div>` : `<div class="empty"><strong>Nenhum pagamento neste mês</strong>Ao cadastrar uma marca com valor, a cobrança do ciclo entra aqui sozinha.</div>`}
+  ${inMonth.length ? `<div class="list">${inMonth.map(payRow).join('')}</div>` : `<div class="empty"><strong>Nenhum pagamento neste mês</strong>Ao cadastrar uma marca com valor, a cobrança do ciclo entra aqui sozinha.<span class="ex">Exemplo: marca de skincare, R$ 600 por ciclo, vence todo dia 10.</span></div>`}
   </section>
   ${lateAll.filter(p => monthKey(p.due) !== mk).length ? `<section class="section"><div class="row-h"><h2>Atrasados de outros meses</h2></div><div class="list">${lateAll.filter(p => monthKey(p.due) !== mk).map(payRow).join('')}</div></section>` : ''}`;
 }
@@ -1727,7 +1736,7 @@ function vExtras() {
     <button class="open" data-edit="extras:${x.id}"><div class="t">${esc(x.name)}${exTag(x)}</div>
       <div class="m">${esc(x.type || 'Outro')}${x.recurring ? ' · mensal' : ''} · ${x.paid ? 'recebido' : (x.date < t ? `<span style="color:var(--bad);font-weight:700">previsto ${fmtD(x.date)}</span>` : `previsto ${fmtD(x.date)}`)}</div></button>
     <div class="amt">${money(x)}</div></div>`).join('')}</div>`
-    : `<div class="empty"><strong>Nenhuma outra renda neste mês</strong>Creator quase sempre tem mais de uma fonte. Cadastre comissões de afiliado, aulas, curso, emprego ou freela.<button class="btn sm" data-new="extras">${ic('plus')}Nova renda</button></div>`}
+    : `<div class="empty"><strong>Nenhuma outra renda neste mês</strong>Creator quase sempre tem mais de uma fonte. Cadastre comissões de afiliado, aulas, curso, emprego ou freela.<span class="ex">Exemplo: comissão de afiliado, R$ 120 no mês.</span><button class="btn sm" data-new="extras">${ic('plus')}Nova renda</button></div>`}
   </section>`;
 }
 function payRow(p) {
@@ -1787,11 +1796,17 @@ const TTYPES = [['trabalho', 'Trabalho', 'marcas'], ['pessoal', 'Pessoal', 'hear
 const taskType = t => TTYPES.some(x => x[0] === t.type) ? t.type : (t.brandId || t.briefId ? 'trabalho' : 'pessoal');
 const ttLabel = t => taskType(t) === 'outro' && t.cat ? t.cat : (TTYPES.find(x => x[0] === taskType(t)) || TTYPES[1])[1];
 const taskCats = () => arr(S.profile.taskCats);
+/* cada categoria criada em Outro ganha uma cor própria (fixa pela ordem em que foi criada) */
+const CAT_COLORS = ['#7A3FA0', '#B04E14', '#1F7A8C', '#B03A48', '#4E6B2E', '#5B5BD6', '#7A6000', '#9C4D8F', '#2F6E5B', '#3E6FA8', '#A3524A', '#6B5B95'];
+const catColor = c => { const i = taskCats().indexOf(c); if (i >= 0) return CAT_COLORS[i % CAT_COLORS.length]; let h = 0; for (const ch of String(c || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return CAT_COLORS[h % CAT_COLORS.length]; };
+/* classe + estilo de cor de uma tarefa (tipos fixos usam a classe tt-*, categorias usam --tc) */
+const tColorAttr = t => taskType(t) === 'outro' && t.cat ? `class="tt-outro" style="--tc:${catColor(t.cat)}"` : `class="tt-${taskType(t)}"`;
+const tColorKey = t => taskType(t) === 'outro' && t.cat ? 'cat:' + t.cat : taskType(t);
 const ttIc = k => ic((TTYPES.find(x => x[0] === k) || TTYPES[5])[2]).replace('class="i"', 'class="i tt-i"');
 /* chips de tipo: os 6 fixos e as categorias que a pessoa criou em Outro */
 function ttChips(sel, cat, quick) {
   const cur = sel || 'pessoal';
-  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
+  return `<div class="tt-chips" role="group" aria-label="Tipo da tarefa">${TTYPES.map(([k, l]) => k === 'outro' ? '' : `<button type="button" class="chip tt tt-${k}" data-ttype="${k}" aria-pressed="${cur === k}">${ttIc(k)}${l}</button>`).join('')}${taskCats().map(c => `<button type="button" class="chip tt tt-outro" style="--tc:${catColor(c)}" data-ttype="outro" data-tcat="${esc(c)}" aria-pressed="${cur === 'outro' && cat === c}">${ttIc('outro')}${esc(c)}</button>`).join('')}<button type="button" class="chip tt tt-outro" data-ttype="outro" data-tcat="" aria-pressed="${cur === 'outro' && !taskCats().includes(cat || '')}">${ttIc('outro')}Outro</button></div>
     <input type="hidden" name="ttype" value="${esc(cur)}"><input type="text" name="cat" class="tt-cat" placeholder="Nome da categoria (ex.: Faculdade)" value="${esc(cur === 'outro' ? cat || '' : '')}" ${cur === 'outro' && !taskCats().includes(cat || '') ? '' : 'hidden'} aria-label="Nome da categoria" autocomplete="off" ${quick ? 'style="min-height:40px"' : ''}>`;
 }
 /* filtro por tipo (Meu dia e Semana) */
@@ -1810,7 +1825,7 @@ async function migrateTaskTypes() {
 }
 function tkRow(t, showDate) {
   const late = !t.done && t.date < today();
-  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}">
+  return `<div class="tk tk-${taskType(t)} ${t.done ? 'done' : ''}"${taskType(t) === 'outro' && t.cat ? ` style="--tc:${catColor(t.cat)}"` : ''}>
     <button class="tk-check ${t.done ? 'on' : ''}" data-tdone="${t.id}" aria-label="${t.done ? 'Desmarcar' : 'Concluir'} ${esc(t.title)}">${ic('check')}</button>
     <button class="open" data-edit="tasks:${t.id}"><span class="t">${esc(t.title)}</span>
       <span class="m"><span class="tt-tag">${ttIc(taskType(t))}${esc(ttLabel(t))}</span>${t.time ? `<span class="time">${esc(t.time)}</span>` : ''}${showDate || late ? `<span style="${late ? 'color:var(--bad);font-weight:700' : ''}">${late ? 'era ' : ''}${esc(dayLabel(t.date).toLowerCase())}</span>` : ''}${t.brandId ? `<span>${esc(brandName(t.brandId))}</span>` : ''}${Array.isArray(t.delIds) && t.delIds.length > 1 ? `<span>${t.delIds.length} entregas</span>` : ''}${t.moved ? `<span>adiada ${t.moved}x</span>` : ''}</span></button>
@@ -1854,7 +1869,7 @@ function vDay() {
     <div class="row-h"><h2>Tarefas</h2>${list.length ? `<span class="sub num">${done} de ${list.length} feitas</span>` : ''}</div>
     ${ttFilter()}
     ${list.length ? `<div class="bar ${pct === 100 ? 'ok' : ''}"><span style="width:${pct}%"></span></div><div class="list">${list.map(x => tkRow(x)).join('')}</div>${pct === 100 ? '<div class="sub" style="color:var(--ok);font-weight:700">Dia fechado. Tudo feito!</div>' : ''}`
-      : `<div class="empty"><strong>${S.f.ttype ? 'Nenhuma tarefa desse tipo' : 'Nada planejado'} ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>${S.f.ttype ? '<button class="link" data-tfilter="">Ver todas</button>' : 'Escreva até 3 prioridades. Lista curta é lista que fecha.'}</div>`}
+      : `<div class="empty"><strong>${S.f.ttype ? 'Nenhuma tarefa desse tipo' : 'Nada planejado'} ${d === t ? 'pra hoje' : 'pra esse dia'}</strong>${S.f.ttype ? '<button class="link" data-tfilter="">Ver todas</button>' : 'Escreva até 3 prioridades. Lista curta é lista que fecha.<span class="ex">Exemplo: gravar 2 vídeos da marca, responder e-mails, academia às 18h. Cada uma pode ter um tipo (Trabalho, Pessoal, Estudos…) ou uma categoria sua.</span>'}</div>`}
   </section>
   ${dels.length ? `<section class="section"><div class="row-h"><h2>Entregas com prazo ${d === t ? 'hoje' : 'nesse dia'}</h2><button class="link" data-tab="agenda">Ver agenda</button></div><div class="list">${dels.map(dvRow).join('')}</div></section>` : ''}
   ${hab.length ? `<section class="section"><div class="row-h"><h2>Hábitos de hoje</h2><button class="link" data-rview="habitos">Ver hábitos</button></div><div class="habits">${hab.map(h => hbRow(h, true)).join('')}</div></section>` : ''}
@@ -1904,7 +1919,7 @@ function weekData(off) {
   const dels = S.data.deliveries.filter(x => x.due >= ws && x.due <= we);
   const dOk = dels.filter(x => (x.stage || 0) >= 3), dMiss = dels.filter(x => (x.stage || 0) < 3 && x.due < t);
   const hs = activeHabits(); let hPos = 0, hOk = 0; hs.forEach(h => upto.forEach(d => { if (h.created && d < String(h.created).slice(0, 10)) return; hPos++; if (hDone(h, d)) hOk++; }));
-  const perDay = days.map(d => { const a = tasks.filter(x => x.date === d); return { d, n: a.length, ok: a.filter(x => x.done).length, open: a.filter(x => !x.done).length }; });
+  const perDay = days.map(d => { const a = tasks.filter(x => x.date === d); return { d, a, n: a.length, ok: a.filter(x => x.done).length, open: a.filter(x => !x.done).length }; });
   const goalsDone = S.data.goals.filter(g => g.doneAt && g.doneAt >= ws && g.doneAt <= we);
   return { ws, we, days, tasks, tDone, tOpen, dels, dOk, dMiss, hs, hPos, hOk, perDay, goalsDone, past: we < t };
 }
@@ -1930,6 +1945,7 @@ function weekTips(w) {
   if (!w.hs.length) tips.push('Que tal adicionar um hábito simples, como beber água? Creator passa horas gravando e editando e esquece de se cuidar.');
   return tips.slice(0, 4);
 }
+function wkLegend(tasks) { const seen = new Map(); tasks.forEach(t => { const k = tColorKey(t); if (!seen.has(k)) seen.set(k, t); }); if (!seen.size) return ''; return `<div class="wk-leg" aria-label="Cores da semana">${[...seen.values()].map(t => `<span><i ${tColorAttr(t)}></i>${esc(ttLabel(t))}</span>`).join('')}</div>`; }
 function vWeek() {
   const w = weekData(S.f.wk), t = today();
   const label = `${fmtD(w.ws)} a ${fmtD(w.we)}`, tips = weekTips(w);
@@ -1944,7 +1960,7 @@ function vWeek() {
     <div class="stat"><div class="l">Hábitos cumpridos</div><div class="v">${pc(w.hOk, w.hPos)}</div></div>
     <div class="stat"><div class="l">Metas concluídas</div><div class="v">${w.goalsDone.length}</div></div>
   </div>
-  <div class="wk">${w.perDay.map(p => `<button class="d ${p.d === t ? 'today' : ''}" data-goday="${p.d}" style="cursor:pointer"><small>${WD[parse(p.d).getDay()]}</small>${isWorkDay(p.d) ? `<i class="wtag">${esc(workLabel().slice(0, 7))}</i>` : ''}<b>${p.n ? p.ok + '/' + p.n : '—'}</b><span class="mini"><span style="width:${p.n ? Math.round(p.ok / p.n * 100) : 0}%"></span></span></button>`).join('')}</div>
+  <div class="wk">${w.perDay.map(p => `<button class="d ${p.d === t ? 'today' : ''}" data-goday="${p.d}" style="cursor:pointer"><small>${WD[parse(p.d).getDay()]}</small>${isWorkDay(p.d) ? `<i class="wtag">${esc(workLabel().slice(0, 7))}</i>` : ''}<b>${p.n ? p.ok + '/' + p.n : '—'}</b>${p.n ? `<span class="tbar" aria-hidden="true">${p.a.map(x => `<span ${tColorAttr(x)}></span>`).join('')}</span>` : ''}<span class="mini"><span style="width:${p.n ? Math.round(p.ok / p.n * 100) : 0}%"></span></span></button>`).join('')}</div> ${wkLegend(w.tasks)}
   <section class="section"><div class="row-h"><h2>O que deu certo</h2></div>
     ${w.tDone.length || w.dOk.length || w.goalsDone.length ? `<div class="card"><ul class="tips">${[w.tDone.length ? `${w.tDone.length} tarefa${w.tDone.length > 1 ? 's' : ''} concluída${w.tDone.length > 1 ? 's' : ''}` : '', w.dOk.length ? `${w.dOk.length} entrega${w.dOk.length > 1 ? 's' : ''} enviada${w.dOk.length > 1 ? 's' : ''}: ${w.dOk.slice(0, 3).map(x => esc(x.title)).join(', ')}${w.dOk.length > 3 ? '…' : ''}` : '', ...w.goalsDone.map(g => `Meta concluída: ${esc(g.title)}`), ...w.hs.filter(h => w.days.filter(d => d <= t && hDone(h, d)).length >= 5).map(h => `${esc(h.name)} em ${w.days.filter(d => d <= t && hDone(h, d)).length} dias`)].filter(Boolean).map(x => `<li><span>${x}</span></li>`).join('')}</ul></div>` : `<div class="empty">Ainda não há nada concluído ${w.past ? 'nessa semana' : 'esta semana'}. Cada check conta!</div>`}
   </section>
@@ -2031,7 +2047,7 @@ function vLicenses() {
   ${late.length ? `<section class="section"><div class="row-h"><h2>Vencidas</h2><span class="sub">ofereça a renovação</span></div><div class="list">${late.map(licRow).join('')}</div></section>` : ''}
   ${soon.length ? `<section class="section"><div class="row-h"><h2>Vencendo em breve</h2></div><div class="list">${soon.map(licRow).join('')}</div></section>` : ''}
   ${ok.length ? `<section class="section"><div class="row-h"><h2>Em uso</h2></div><div class="list">${ok.map(licRow).join('')}</div></section>` : ''}
-  ${!all.length ? `<div class="empty"><strong>Nenhuma licença cadastrada</strong>Ao editar uma entrega enviada, preencha o uso orgânico e o uso em anúncios combinados com a marca. O app conta o prazo e te avisa.</div>` : ''}
+  ${!all.length ? `<div class="empty"><strong>Nenhuma licença cadastrada</strong>Ao editar uma entrega enviada, preencha o uso orgânico e o uso em anúncios combinados com a marca. O app conta o prazo e te avisa.<span class="ex">Exemplo: uso orgânico por 90 dias e em anúncios por 30 dias.</span></div>` : ''}
   ${undef.length ? `<section class="section"><div class="row-h"><h2>Vídeos sem prazo de uso</h2><span class="sub">toque para definir</span></div><div class="list">${undef.map(d => `<div class="lead"><button class="open" data-edit="deliveries:${d.id}"><span class="t">${esc(d.title)}${exTag(d)}</span><span class="m">${esc(brandName(d.brandId))} · entregue ${fmtD(d.due)}</span></button><button class="adv" data-edit="deliveries:${d.id}">Definir</button></div>`).join('')}</div></section>` : ''}`;
 }
 const dateIn = (s, lang) => s ? parse(s).toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
@@ -2712,7 +2728,7 @@ function vDollar() {
   <div class="stats"><div class="stat hero"><div class="l">Recebido em ${lw}</div><div class="v">${fmtCur(gotU, c)}</div><div class="l" style="margin-top:2px">${brl(gotR)}</div></div><div class="stat"><div class="l">A receber em ${lw}</div><div class="v">${fmtCur(penU, c)}</div><div class="l" style="margin-top:2px">≈ ${brl(penR)}</div></div></div>
   <section class="section"><div class="row-h"><h2>Pagamentos em ${lw} do mês</h2></div>
   ${pays.length ? `<div class="list">${pays.filter(p => S.data.payments.some(x => x.id === p.id)).map(payRow).join('')}${pays.filter(p => !S.data.payments.some(x => x.id === p.id)).map(x => `<div class="pay ${x.paid ? 'paid' : ''}"><button class="check ${x.paid ? 'on' : ''}" data-xpaid="${x.id}" aria-label="${x.paid ? 'Marcar como não recebido' : 'Marcar como recebido'}">${ic('check')}</button><button class="open" data-edit="extras:${x.id}"><div class="t">${esc(x.name)}</div><div class="m">${esc(x.type || 'Outro')} · ${x.paid ? 'recebido' : 'previsto ' + fmtD(x.date)}</div></button><div class="amt">${money(x)}</div></div>`).join('')}</div>`
-    : `<div class="empty"><strong>Nenhum pagamento em ${lw} neste mês</strong>Cadastre a marca com a moeda ${M.name} e as cobranças entram aqui já convertidas.</div>`}
+    : `<div class="empty"><strong>Nenhum pagamento em ${lw} neste mês</strong>Cadastre a marca com a moeda ${M.name} e as cobranças entram aqui já convertidas.<span class="ex">Exemplo: marca gringa, US$ 150 por vídeo.</span></div>`}
   </section>
   <div class="sub">O valor em reais de pagamentos já recebidos fica travado na cotação do dia em que você marcou como recebido. Se souber quanto caiu na conta, edite o pagamento e preencha.</div>`;
 }
@@ -2794,7 +2810,7 @@ function vIncome() {
       ${lic ? `<li><span><b>${lic} licença${lic > 1 ? 's' : ''} de uso</b> vencendo. Renovar é renda sem gravar. <button class="link" data-golic>Ver licenças</button></span></li>` : ''}
       ${!vVideo && !vCycle ? `<li><span>Cadastre o valor das suas marcas ou use o <button class="link" data-fview="preco">Quanto cobrar</button> para eu calcular quantos vídeos faltam.</span></li>` : ''}`
       : `<li><span>Tudo que está cadastrado para este mês já cobre a sua meta. Agora é garantir o recebimento.</span></li>`}
-    </ul></div></section>` : `<div class="empty"><strong>Defina sua meta de renda</strong>Eu somo o que já está garantido com marcas e outras rendas e mostro quantos vídeos ou ciclos faltam.</div>`}`;
+    </ul></div></section>` : `<div class="empty"><strong>Defina sua meta de renda</strong>Eu somo o que já está garantido com marcas e outras rendas e mostro quantos vídeos ou ciclos faltam.<span class="ex">Exemplo: meta de R$ 3.000 por mês.</span></div>`}`;
 }
 const PR = { base: '', qtd: 1, tipo: 'editado', hooks: 0, org: '90', ads: '', exc: '', urg: '', raw: false, lang: 'pt' };
 const PR_ORG = [['30', '30 dias', 0], ['90', '90 dias', 0], ['180', '6 meses', .10], ['365', '12 meses', .20], ['perp', 'Sem prazo', .40]];
@@ -2869,7 +2885,7 @@ function vExpenses() {
   ${byArr.length ? `<section class="section"><div class="row-h"><h2>Para onde foi</h2></div><div class="card bybrand">${byArr.map(([k, v]) => `<div class="bb"><span class="name">${esc(k)}</span><div class="bar warn"><span style="width:${Math.round(v / max * 100)}%"></span></div><span class="amt">${brl(v)}</span></div>`).join('')}</div></section>` : ''}
   <section class="section"><div class="row-h"><h2>Gastos do mês</h2></div>
   ${list.length ? `<div class="list">${list.map(e => `<div class="lead"><button class="open" data-edit="expenses:${e.id}"><span class="t">${esc(e.desc)}${exTag(e)}</span><span class="m">${esc(e.cat || 'Outro')}${e.recurring ? ' · mensal' : ''} · ${fmtD(e.date)}</span></button><span class="amt" style="font-family:var(--display);font-weight:700;color:var(--bad)">${CURS[e.currency] ? fmtCur(e.amount, e.currency) : '− ' + brl(e.amount)}</span></div>`).join('')}</div>`
-    : `<div class="empty"><strong>Nenhum gasto neste mês</strong>Anote equipamento, apps, internet, produto que comprou pra gravar, taxas. Assim você sabe o seu lucro real.</div>`}</section>`;
+    : `<div class="empty"><strong>Nenhum gasto neste mês</strong>Anote equipamento, apps, internet, produto que comprou pra gravar, taxas. Assim você sabe o seu lucro real.<span class="ex">Exemplo: ring light, R$ 90.</span></div>`}</section>`;
 }
 /* ================= cofrinho do MEI ================= */
 const meiLimit = () => +S.profile.meiLimit || 81000;
@@ -2882,7 +2898,7 @@ function potsCard() {
   const yr = today().slice(0, 4), yearGot = S.data.payments.filter(p => p.paid && String(p.paidAt || p.due).slice(0, 4) === yr).reduce((s, p) => s + brlOf(p), 0) + S.data.extras.filter(x => x.paid && String(x.date).slice(0, 4) === yr).reduce((s, x) => s + brlOf(x), 0);
   const lim = meiLimit(), pct = Math.min(100, Math.round(yearGot / lim * 100));
   return `<section class="card section"><div class="row-h"><h2>Cofrinho</h2><button class="link" data-act="settings">Ajustar</button></div>
-    ${pots.length && got ? `<div class="sub">Do que entrou este mês (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p]) => `<div><span>${l} · ${p}%</span><b>${brl(got * p / 100)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
+    ${pots.length && got ? `<div class="sub">Do que já caiu este mês, somando marcas e outras rendas (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p]) => `<div><span>${l} · ${p}%</span><b>${brl(got * p / 100)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
     ${S.profile.mei ? `<div class="das ${dasPaid(mk) ? 'ok' : ''}"><div><b>DAS do MEI · ${brl(dasValue())}</b><span>${dasPaid(mk) ? 'Pago este mês' : `Vence dia 20 de ${monthLabel(mk).split(' ')[0].toLowerCase()}`}</span></div>${dasPaid(mk) ? '' : `<div class="row-btns"><a class="btn sm" href="${PGMEI_URL}" target="_blank" rel="noopener">Pagar DAS ${ic('ext')}</a><button class="btn sm soft" data-act="daspaid">Paguei</button></div>`}</div>
     <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">Limite do MEI em ${yr}</span><span class="num">${brl(yearGot)} de ${brl(lim)}</span></div><div class="bar ${pct >= 80 ? 'warn' : ''}"><span style="width:${pct}%"></span></div><div class="meta"><span>${pct >= 100 ? 'Você passou do limite. Fale com um contador.' : pct >= 80 ? 'Perto do limite. Vale conversar com um contador.' : `${pct}% do limite anual`}</span></div></div>` : `<div class="sub">É MEI? Ative em Ajustes para ver o DAS do mês e o limite anual.</div>`}
   </section>`;
@@ -2985,7 +3001,7 @@ function vPerms() {
   ${open.length ? `<section class="section"><div class="row-h"><h2>Para postar</h2></div><div class="list">${open.map(permRow).join('')}</div></section>` : ''}
   ${ret.length ? `<section class="section"><div class="row-h"><h2>Para devolver</h2></div><div class="list">${ret.map(permRow).join('')}</div></section>` : ''}
   ${done.length ? `<section class="section"><div class="row-h"><h2>Concluídas</h2></div><div class="list">${done.slice(0, 15).map(permRow).join('')}</div></section>` : ''}
-  ${!all.length ? `<div class="empty"><strong>Nenhuma permuta registrada</strong>Anote cada produto recebido em troca de conteúdo: valor, prazo para postar e se precisa devolver.<button class="btn sm" data-new="perms">${ic('plus')}Nova permuta</button></div>` : ''}
+  ${!all.length ? `<div class="empty"><strong>Nenhuma permuta registrada</strong>Anote cada produto recebido em troca de conteúdo: valor, prazo para postar e se precisa devolver.<span class="ex">Exemplo: kit de skincare de R$ 250, postar até dia 20, não precisa devolver.</span><button class="btn sm" data-new="perms">${ic('plus')}Nova permuta</button></div>` : ''}
   <div class="sub">Produto recebido em permuta não entra como dinheiro nas suas Finanças, mas tem valor. Combine sempre o que precisa ser entregue.</div>`;
 }
 /* ================= datas comerciais ================= */
@@ -3222,7 +3238,7 @@ function vBatch() {
     <div class="row-btns"><button class="btn" data-act="lotetp" ${sel.length ? '' : 'disabled'}>${ic('right')}Teleprompter em sequência</button><button class="btn soft" data-act="lotedone" ${sel.length ? '' : 'disabled'}>Gravei! Mandar pra edição</button></div></div>
   ${Object.entries(groups).map(([k, arr2]) => `<section class="section"><div class="row-h"><h2>${esc(k)} <span class="muted num" style="font-weight:500">${arr2.length}</span></h2></div><div class="list">${arr2.map(d => { const on = S.ct.lote[d.id] !== false; return `<div class="tk ${on ? '' : 'done'}"><button class="tk-check ${on ? 'on' : ''}" data-lotesel="${d.id}" aria-label="${on ? 'Tirar do lote' : 'Incluir no lote'}">${ic('check')}</button><button class="open" data-edit="deliveries:${d.id}"><span class="t">${esc(d.title)}</span><span class="m">${esc(d.format || '')}${d.due ? ' · prazo ' + fmtD(d.due) : ''}${d.script ? '' : ' · <span style="color:var(--warn);font-weight:700">sem roteiro</span>'}${Array.isArray(d.scenes) && d.scenes.length ? ' · ' + d.scenes.length + ' cenas' : ''}</span></button><span></span></div>`; }).join('')}</div></section>`).join('')}
   ${rules.length ? `<section class="section"><div class="row-h"><h2>Antes de começar</h2></div><div class="card"><ul class="tips">${rules.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ul></div></section>` : ''}`
-  : '<div class="empty"><strong>Nada para gravar agora</strong>Os vídeos na etapa Roteiro ou Gravação aparecem aqui para você gravar todos de uma vez.</div>'}`;
+  : '<div class="empty"><strong>Nada para gravar agora</strong>Os vídeos na etapa Roteiro ou Gravação aparecem aqui para você gravar todos de uma vez.<span class="ex">Exemplo: 3 entregas em Roteiro gravadas juntas no seu dia livre.</span></div>'}`;
 }
 /* ================= pacotes ================= */
 let PK = null;
@@ -3388,7 +3404,7 @@ function vHooks() {
   ${noV.length ? `<section class="card section"><h2 style="font-size:16px">Anotar views</h2><div class="sub">Coloque as views dos vídeos publicados e o tipo de gancho.</div>
     <div class="list">${noV.map(d => `<form class="views-row" data-form="views" data-id="${d.id}"><div style="min-width:0"><div class="t">${esc(d.title)}</div><div class="m">${esc(brandName(d.brandId))}</div></div><select name="hookType" aria-label="Tipo de gancho"><option value="">Tipo de gancho</option>${HOOK_TYPES.map(h => `<option ${d.hookType === h ? 'selected' : ''}>${h}</option>`).join('')}</select><input type="number" name="views" min="0" inputmode="numeric" placeholder="Views" required><button class="btn sm">Salvar</button></form>`).join('')}</div></section>` : ''}
   ${rows.length ? `<section class="section"><div class="row-h"><h2>Ganchos por média de views</h2></div><div class="card bybrand">${rows.map(r => `<div class="bb" style="grid-template-columns:minmax(0,130px) minmax(0,1fr) auto"><span class="name">${esc(r.k)} <span class="muted" style="font-weight:500">(${r.n})</span></span><div class="bar ${r.n >= 3 ? 'ok' : ''}"><span style="width:${Math.round(r.avg / mx * 100)}%"></span></div><span class="amt">${nf(Math.round(r.avg))}</span></div>`).join('')}</div>
-    <div class="sub">Barra verde: tipo com 3 vídeos ou mais, já dá pra ver um padrão. Com menos vídeos, trate como pista e teste de novo.</div></section>` : `<div class="empty"><strong>Ainda sem dados</strong>Anote as views dos vídeos publicados e o tipo de gancho. Com alguns vídeos, aparece o que funciona melhor pra você.</div>`}
+    <div class="sub">Barra verde: tipo com 3 vídeos ou mais, já dá pra ver um padrão. Com menos vídeos, trate como pista e teste de novo.</div></section>` : `<div class="empty"><strong>Ainda sem dados</strong>Anote as views dos vídeos publicados e o tipo de gancho. Com alguns vídeos, aparece o que funciona melhor pra você.<span class="ex">Exemplo: gancho de pergunta com 12 mil views.</span></div>`}
   ${top.length ? `<section class="section"><div class="row-h"><h2>Seus vídeos com mais views</h2></div><div class="list">${top.map(d => `<div class="lead"><button class="open" data-edit="deliveries:${d.id}"><span class="t">${esc(d.title)}</span><span class="m">${nf(d.views)} views · ${esc(d.hookType || 'sem tipo')}${d.hook ? ' · "' + esc(d.hook) + '"' : ''}</span></button>${d.hook ? `<button class="adv" data-hookidea="${d.id}">Reusar gancho</button>` : ''}</div>`).join('')}</div></section>` : ''}`;
 }
 /* ================= conquistas ================= */
@@ -3942,7 +3958,7 @@ const FORMS = {
   ] },
   ideas: { title: 'ideia', fields: [
     { k: 'title', l: 'Gancho ou ideia', t: 'text', req: 1, ph: 'Ex.: "Testei por 7 dias e…"' },
-    { row: [{ k: 'tag', l: 'Etiqueta', t: 'select', o: IDEA_TAGS.map(x => [x, x]), d: 'Gancho' }, { k: 'status', l: 'Status', t: 'select', o: Object.entries(IDEA_STATUS).map(([k, v]) => [k, v[0]]), d: 'nova' }] },
+    { row: [{ k: 'tag', l: 'Etiqueta', t: 'select', o: () => [...new Set([...ideaTags(), ...S.data.ideas.map(i => i.tag).filter(Boolean)])].map(x => [x, x]), d: 'Gancho' }, { k: 'status', l: 'Status', t: 'select', o: Object.entries(IDEA_STATUS).map(([k, v]) => [k, v[0]]), d: 'nova' }] },
     { k: 'brandId', l: 'Para qual marca (opcional)', t: 'select', o: brandOpts },
     { k: 'notes', l: 'Detalhes', t: 'textarea', ph: 'Roteiro, link de referência, áudio…' },
   ] },
@@ -4144,7 +4160,7 @@ function openSettings() {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="settings" role="dialog" aria-modal="true" aria-label="Ajustes">
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
-    <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div>
+    <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div> <div class="field"><label for="s_cats">Suas categorias de tarefa</label><input type="text" id="s_cats" name="taskCats" value="${esc(taskCats().join(', '))}" placeholder="Ex.: Faculdade, Curso, Academia"><span class="hint">Além de Trabalho, Pessoal, Saúde, Estudos e Casa. Separe por vírgula. Pode renomear ou apagar quando quiser.</span></div> <div class="field"><label for="s_itags">Etiquetas do banco de ideias</label><input type="text" id="s_itags" name="ideaTags" value="${esc(ideaTags().join(', '))}"><span class="hint">Separe por vírgula. Ex.: Gancho, Roteiro, Trend de áudio. Deixe vazio pra voltar às etiquetas padrão.</span></div>
     <div class="field"><label>Seu aniversário <span class="hint" style="display:inline;margin:0">(opcional)</span></label><div class="bd-sel">${bdSelects('s_bd', S.profile.bday)}</div><span class="hint">Só dia e mês. No dia, o CriaHub comemora com você 🎂</span></div>
     ${toolsSettings()}
     <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div><span class="hint">Automático segue o modo do seu celular ou computador.</span></div>
@@ -4201,7 +4217,7 @@ async function loadExamples() {
     ['leads', { ...E, id: newId(), name: 'Casa Verde Plantas', front: 'UGC', channel: 'DM TikTok', contact: '@casaverde', stage: 'contatar', next: addDays(t, 2), notes: '' }],
     ['extras', { ...E, id: newId(), name: 'Comissão afiliado Shopee', type: 'Afiliados', amount: 320, date: addDays(t, -5), paid: true, recurring: false }],
     ['extras', { ...E, id: newId(), name: 'Mentoria 1:1 de UGC', type: 'Curso ou mentoria', amount: 250, date: addDays(t, 4), paid: false, recurring: false }],
-    ['extras', { ...E, id: newId(), name: 'Salário clínica', type: 'Emprego fixo', amount: 1800, date: t.slice(0, 8) + '05', paid: true, recurring: true }],
+    ['extras', { ...E, id: newId(), name: 'Salário do emprego fixo', type: 'Emprego fixo', amount: 1800, date: t.slice(0, 8) + '05', paid: true, recurring: true }],
     ['payments', { ...E, id: newId(), brandId: b2.id, desc: 'Bora Café: vídeo unboxing', amount: 450, due: addDays(t, -20), paid: true, paidAt: addDays(t, -18) }],
     ['payments', { ...E, id: newId(), brandId: b2.id, desc: 'Bora Café: vídeo café da manhã', amount: 450, due: addDays(t, 10), paid: false }],
     ['payments', { ...E, id: newId(), brandId: b1.id, desc: 'Lumi Skincare: pacote de 4 vídeos', amount: 1800, due: b1.end, paid: false }],
@@ -4282,7 +4298,7 @@ document.addEventListener('click', async e => {
   if (d.padv) { const x = S.data.perms.find(v => v.id === d.padv); if (x) { const i = PERM_ST.findIndex(s2 => s2[0] === (x.status || 'recebido')); const nx = PERM_ST[Math.min(2, i + 1)][0]; await put('perms', { ...x, status: nx, ...(nx === 'recebido' ? { received: today() } : { postedAt: today() }) }); toast(nx === 'postado' ? (x.returnNeeded ? 'Postado! Falta devolver o produto.' : 'Permuta concluída') : 'Produto recebido'); } return; }
   if (d.pret) { const x = S.data.perms.find(v => v.id === d.pret); if (x) { await put('perms', { ...x, status: 'devolvido', returnedAt: today() }); toast('Devolução registrada'); } return; }
   if (d.dtask) { const [k, dt] = d.dtask.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { const day = cd.start > today() ? cd.start : today(); await put('tasks', { id: newId(), type: 'trabalho', title: `Prospectar marcas para ${cd.name}`, date: day, time: '', done: false, notes: 'Ideias: ' + cd.ideas.join('; '), created: new Date().toISOString() }); toast(`Tarefa criada para ${fmtD(day)}`); } return; }
-  if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
+  if (d.didea) { const [k, dt] = d.didea.split('|'); const cd = upcomingDates().find(x => x.key === k && x.date === dt); if (cd) { for (const t2 of cd.ideas) await put('ideas', { id: newId(), title: `${cd.name}: ${t2}`, tag: 'Tendência', status: 'nova', notes: `Data: ${fmtD(cd.date)}`, eventDate: cd.date, created: new Date().toISOString() }); toast('Ideias salvas no Estúdio'); } return; }
   if (d.act === 'kitcopy') { try { await navigator.clipboard.writeText(kitText()); toast('Texto do mídia kit copiado'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
   if (d.act === 'kitdl') { const html = kitHtml(), fn = `midia-kit-${(S.profile.name || 'creator').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'creator'}.html`; if (S.downloads) { try { await S.downloads.save({ filename: fn, data: html }); toast('Mídia kit salvo'); } catch (e) { if (!['declined', 'cancelled'].includes(e?.code)) toast('Não consegui salvar o arquivo.'); } } else { try { await navigator.clipboard.writeText(kitText()); toast('Download indisponível aqui. Copiei o texto.'); } catch (_) {} } return; }
   if (d.hookidea) { const x = S.data.deliveries.find(v => v.id === d.hookidea); if (x && x.hook) { await put('ideas', { id: newId(), title: x.hook, tag: 'Gancho', status: 'nova', notes: `Funcionou em "${x.title}" (${(+x.views).toLocaleString('pt-BR')} views). Tipo: ${x.hookType || '—'}.`, created: new Date().toISOString() }); toast('Gancho salvo nas Ideias'); } return; }
@@ -4507,9 +4523,9 @@ document.addEventListener('submit', async e => {
   if (kind === 'quicktask') { const v = f.elements.title.value.trim(), tm = f.elements.time.value, ty = f.elements.ttype?.value || 'pessoal', cat = ty === 'outro' ? (f.elements.cat?.value || '').trim() : ''; if (!v) return; f.reset(); S.ct.qtype = 'pessoal'; S.ct.qcat = '';
     if (cat && !taskCats().includes(cat)) await saveProfile({ taskCats: [...taskCats(), cat].slice(-12) });
     await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, type: ty, ...(cat ? { cat } : {}), created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
-  if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : 'Gancho', status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
-  if (kind === 'settings') { const n = f.elements.name.value.trim(); const bd = bdRead('s_bd'); if (bd === null) { toast('Confira o dia do seu aniversário'); return; } const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
-    closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value, bday: bd }); toast('Ajustes salvos'); }
+  if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : ideaTags()[0], status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
+  if (kind === 'settings') { const n = f.elements.name.value.trim(); const bd = bdRead('s_bd'); if (bd === null) { toast('Confira o dia do seu aniversário'); return; } const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const csv = (el, max) => el ? [...new Set(el.value.split(',').map(x => x.trim().slice(0, 30)).filter(Boolean))].slice(0, max) : null; const tcs = csv(f.elements.taskCats, 12), its = csv(f.elements.ideaTags, 12); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
+    closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, ...(tcs ? { taskCats: tcs } : {}), ...(its ? { ideaTags: its } : {}), workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value, bday: bd }); toast('Ajustes salvos'); }
 });
 
 /* ================= abertura + boas-vindas ================= */
