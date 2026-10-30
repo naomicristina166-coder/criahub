@@ -354,8 +354,8 @@ footer a:hover{color:#fff}
             </div>
           </fieldset>
           <div class="field" style="margin-top:18px">
-            <label for="f-pain">O que mais te atrapalha na rotina de creator? <span class="opt">(opcional)</span></label>
-            <textarea id="f-pain" name="pain" maxlength="500"></textarea>
+            <label for="f-pain">O que mais te atrapalha na rotina de creator?</label>
+            <textarea id="f-pain" name="pain" maxlength="500" required placeholder="Ex.: esqueço prazo de marca, não sei o que postar, me perco no financeiro…"></textarea>
           </div>
           <div class="hp" aria-hidden="true"><label for="f-site">Não preencha</label><input type="text" id="f-site" name="site" tabindex="-1" autocomplete="off"></div>
           <label class="consent"><input type="checkbox" id="f-ok" name="consent" required><span>Aceito receber e-mail e mensagem do CriaHub sobre o lançamento. Meus dados não são compartilhados e posso sair da lista quando quiser.</span></label>
@@ -460,12 +460,13 @@ footer a:hover{color:#fff}
     if (!name) return fail('Coloca o seu nome.'), f.name.focus();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Confere o seu e-mail.'), f.email.focus();
     if (!kind) return fail('Conta pra gente o que você faz.');
+    if (pain.length < 3) return fail('Conta pra gente o que mais te atrapalha na rotina. Pode ser bem curtinho.'), f.pain.focus();
     if (!f.consent.checked) return fail('Pra entrar na lista, marque que aceita receber o aviso do lançamento.');
     if (!sb) return fail('Não conseguimos conectar agora. Confere a internet e tenta de novo.');
     send.disabled = true; send.textContent = 'Entrando…';
     const { error } = await sb.from('waitlist').insert({
       name, email, instagram: instagram ? '@' + instagram : null, whatsapp: whatsapp || null,
-      kind, pain: pain || null, source, consent: true
+      kind, pain, source, consent: true
     });
     if (error) {
       if (error.code === '23505') return ok('Você já está na lista!', 'Esse e-mail já entrou. No dia 23 de novembro você recebe o acesso antes de todo mundo.');
