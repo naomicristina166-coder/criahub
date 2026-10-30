@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CriaHub · Lista de espera</title>
+<meta name="description" content="O app que organiza a rotina de quem cria: rotina, marcas, conteúdo e dinheiro num lugar só. Entre na lista de espera do lançamento.">
+<meta name="theme-color" content="#420725">
+<meta property="og:title" content="CriaHub · Lista de espera">
+<meta property="og:description" content="Rotina, marcas, conteúdo e dinheiro num lugar só. Feito por quem vive a mesma rotina que você.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://criahub.app.br/lista/">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Playfair+Display:ital,wght@0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --vinho:#420725; --vinho-2:#5A0F33; --rosa:#F2C9CF; --rosa-2:#F7DDE1; --creme:#F6EEE8;
+  --ink:#2A1218; --muted:#7A4A53; --on-vinho:#F6EEE8; --on-vinho-muted:#E3C9CE; --lima:#D9F26A;
+  --r:22px; --display:'Playfair Display', Georgia, serif; --sans:'DM Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--vinho);color:var(--ink);font:400 17px/1.55 var(--sans)}
+a{color:inherit}
+img,video,iframe{max-width:100%;display:block}
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 20px}
+section{padding:72px 0}
+@media (min-width:760px){section{padding:104px 0}.wrap{padding:0 32px}}
+
+/* marca */
+.logo{display:inline-flex;align-items:baseline;font:700 26px/1 var(--sans);letter-spacing:-.04em;text-decoration:none}
+.logo .c{color:var(--rosa)} .logo .h{color:#fff}
+.dotless{position:relative;display:inline-block}
+.dotless::after{content:"";position:absolute;left:50%;top:.02em;width:.19em;height:.19em;margin-left:-.095em;border-radius:50%;background:var(--rosa)}
+.logo.big{flex-direction:column;align-items:flex-start;font-size:clamp(88px,22vw,150px);line-height:.84;letter-spacing:-.06em}
+
+/* topo */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--vinho) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(242,201,207,.12)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;border:0;font:700 16px/1 var(--sans);cursor:pointer;text-decoration:none;transition:transform .15s ease, box-shadow .15s ease}
+.btn:active{transform:translateY(1px)}
+.btn-rosa{background:var(--rosa);color:var(--vinho)}
+.btn-rosa:hover{box-shadow:0 0 0 4px rgba(242,201,207,.25)}
+.btn-vinho{background:var(--vinho);color:var(--on-vinho)}
+.btn-vinho:hover{box-shadow:0 0 0 4px rgba(66,7,37,.18)}
+.btn-sm{min-height:44px;padding:0 18px;font-size:15px}
+:focus-visible{outline:3px solid var(--lima);outline-offset:3px}
+
+/* hero */
+.hero{color:var(--on-vinho);padding-top:48px}
+.hero .grid{display:grid;gap:40px;align-items:end}
+@media (min-width:860px){.hero .grid{grid-template-columns:1.1fr .9fr}}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(242,201,207,.12);color:var(--rosa);font-weight:700;font-size:14px;letter-spacing:.02em}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--lima);display:inline-block}
+.hero h1{font:800 clamp(40px,8.5vw,68px)/1.02 var(--display);margin:22px 0 0;letter-spacing:-.01em}
+.hero h1 em{color:var(--rosa)}
+.hero .lead{font-size:clamp(18px,2.6vw,21px);color:var(--on-vinho-muted);margin:20px 0 0;max-width:34em}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:30px}
+.counter{font-size:15px;color:var(--on-vinho-muted)}
+.counter b{color:var(--rosa)}
+.stickers{position:relative;min-height:220px}
+.sticker{position:absolute;font-weight:700;border:3px solid #1E0B10;box-shadow:6px 6px 0 #1E0B10;border-radius:999px;color:#1E0B10;white-space:nowrap}
+.s1{top:8px;left:4%;transform:rotate(-6deg);background:var(--lima);padding:12px 22px;font-size:18px;text-transform:uppercase;letter-spacing:.03em}
+.s2{top:96px;right:2%;transform:rotate(5deg);background:var(--rosa);padding:10px 22px;font-size:18px}
+.s3{top:170px;left:14%;transform:rotate(-2deg);background:#fff;padding:10px 22px;font-size:18px}
+
+/* seções claras */
+.light{background:var(--creme)}
+.rosa{background:var(--rosa)}
+.eyebrow{display:block;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.on-vinho .eyebrow{color:var(--rosa)}
+h2{font:800 clamp(32px,6vw,52px)/1.06 var(--display);margin:12px 0 0;color:var(--vinho);letter-spacing:-.01em}
+h2 em{font-style:italic}
+.on-vinho{color:var(--on-vinho)}
+.on-vinho h2{color:var(--on-vinho)}
+.on-vinho h2 em{color:var(--rosa)}
+.sub{font-size:18px;color:var(--muted);margin:16px 0 0;max-width:36em}
+.on-vinho .sub{color:var(--on-vinho-muted)}
+
+/* fundadora */
+.founder{display:grid;gap:36px;align-items:center}
+@media (min-width:860px){.founder{grid-template-columns:.8fr 1.2fr}}
+.video-box{aspect-ratio:9/16;max-height:640px;width:100%;max-width:360px;margin:0 auto;border-radius:28px;overflow:hidden;background:var(--vinho);border:6px solid var(--vinho);box-shadow:10px 10px 0 var(--rosa)}
+.video-box video,.video-box iframe{width:100%;height:100%;object-fit:cover;border:0}
+.founder-card{border-radius:28px;background:var(--vinho);color:var(--on-vinho);padding:34px 28px;max-width:420px;margin:0 auto;box-shadow:10px 10px 0 var(--rosa)}
+.founder-card .logo{font-size:40px}
+.founder-card p{margin:14px 0 0;color:var(--on-vinho-muted);font-size:16px}
+.founder-card .sig{font:italic 700 24px/1.2 var(--display);color:var(--rosa);margin-top:22px}
+.story p{font-size:18px;margin:16px 0 0;max-width:34em}
+.story .quote{font:italic 700 clamp(22px,3.4vw,28px)/1.3 var(--display);color:var(--vinho);margin:26px 0 0;padding-left:18px;border-left:4px solid var(--vinho)}
+
+/* funções */
+.cards{display:grid;gap:16px;margin-top:40px}
+@media (min-width:700px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:#fff;border-radius:var(--r);padding:26px 24px;border:2px solid rgba(66,7,37,.08)}
+.card.dark{background:var(--vinho);color:var(--on-vinho);border-color:transparent}
+.card h3{font:800 26px/1.15 var(--display);margin:0;color:var(--vinho);display:flex;align-items:center;gap:12px}
+.card.dark h3{color:var(--rosa)}
+.card h3 svg{flex:none}
+.card ul{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+.card li{display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start;font-size:16px}
+.card li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--vinho);margin:8px 0 0 4px}
+.card.dark li::before{background:var(--rosa)}
+.who{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chip{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;background:var(--vinho);color:var(--on-vinho);font-weight:700;font-size:15px}
+
+/* planos */
+.plans{display:grid;gap:18px;margin-top:40px}
+@media (min-width:760px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.plan{border-radius:26px;padding:30px 26px;background:var(--vinho-2);border:2px solid rgba(242,201,207,.18);color:var(--on-vinho)}
+.plan.pro{background:var(--rosa);color:var(--ink);border-color:transparent}
+.plan .name{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.plan .name b{font:800 40px/1 var(--display)}
+.plan .price{font-weight:700;color:var(--rosa)}
+.plan.pro .price{color:var(--vinho)}
+.plan .for{margin:10px 0 0;color:var(--on-vinho-muted)}
+.plan.pro .for{color:var(--muted)}
+.plan ul{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:12px}
+.plan li{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;font-size:16px}
+.plan li svg{margin-top:2px}
+.note{margin-top:22px;font-size:15px;color:var(--on-vinho-muted)}
+
+/* formulário */
+.form-wrap{display:grid;gap:36px}
+@media (min-width:900px){.form-wrap{grid-template-columns:.9fr 1.1fr;align-items:start}}
+.perks{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:14px}
+.perks li{display:grid;grid-template-columns:28px 1fr;gap:12px;font-size:17px;align-items:start}
+form{background:#fff;border-radius:28px;padding:28px 22px;box-shadow:10px 10px 0 var(--vinho)}
+@media (min-width:560px){form{padding:34px 32px}}
+.field{display:grid;gap:8px;margin-top:18px}
+.field:first-of-type{margin-top:0}
+label,.legend{font-weight:700;font-size:15px;color:var(--vinho)}
+.opt{font-weight:500;color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],textarea{width:100%;font:400 16px/1.4 var(--sans);color:var(--ink);background:var(--creme);border:2px solid transparent;border-radius:14px;padding:13px 14px;min-height:50px}
+textarea{min-height:92px;resize:vertical}
+input:focus,textarea:focus{border-color:var(--vinho);outline:none;background:#fff}
+fieldset{border:0;padding:0;margin:18px 0 0}
+.kinds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.kind{position:relative}
+.kind input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.kind span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px;padding:8px 10px;border-radius:14px;background:var(--creme);border:2px solid transparent;font-weight:700;font-size:15px;color:var(--vinho);cursor:pointer}
+.kind input:checked + span{background:var(--vinho);color:var(--on-vinho)}
+.kind input:focus-visible + span{outline:3px solid var(--lima);outline-offset:2px}
+.consent{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;margin-top:20px;font-size:14px;color:var(--muted)}
+.consent input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--vinho)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+form .btn{width:100%;margin-top:22px;min-height:56px;font-size:17px}
+.err{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#FCE8EA;color:#8A1530;font-size:15px;font-weight:500}
+.err.on{display:block}
+.done{display:none;text-align:center;padding:12px 4px}
+.done.on{display:block}
+.done h3{font:800 34px/1.1 var(--display);color:var(--vinho);margin:12px 0 0}
+.done p{color:var(--muted);margin:12px auto 0;max-width:26em}
+.done .num{display:inline-flex;margin-top:18px;padding:10px 18px;border-radius:999px;background:var(--rosa);color:var(--vinho);font-weight:700}
+.done .links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
+
+/* dúvidas */
+.faq{margin-top:32px;display:grid;gap:12px;max-width:820px}
+details{background:#fff;border-radius:18px;padding:0 20px;border:2px solid rgba(66,7,37,.08)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:60px;font-weight:700;font-size:17px;color:var(--vinho)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:400 28px/1 var(--sans);color:var(--vinho);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{margin:0 0 18px;color:var(--ink)}
+
+footer{color:var(--on-vinho-muted);padding:56px 0 calc(40px + env(safe-area-inset-bottom))}
+footer .wrap{display:grid;gap:18px}
+footer .tag{font:italic 700 26px/1.2 var(--display);color:var(--rosa)}
+footer .row{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:15px}
+footer a{text-decoration:none;border-bottom:1px solid rgba(242,201,207,.35)}
+footer a:hover{color:#fff}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#topo" aria-label="CriaHub, voltar ao topo"><span class="c">cr<span class="dotless">ı</span>a</span><span class="h">hub</span></a>
+    <a class="btn btn-rosa btn-sm" href="#lista">Entrar na lista</a>
+  </div>
+</header>
+
+<main id="topo">
+
+  <!-- 1. Apresentação -->
+  <section class="hero">
+    <div class="wrap grid">
+      <div>
+        <span class="pill"><i aria-hidden="true"></i>Lançamento em 16 de novembro</span>
+        <h1>Sua vida de creator, organizada num <em>lugar só</em>.</h1>
+        <p class="lead">Rotina, marcas, prazos, ideias e dinheiro. O CriaHub junta tudo que hoje vive espalhado em mil apps e abas, e você monta do seu jeito. Feito por quem vive a mesma rotina que você.</p>
+        <div class="ctas">
+          <a class="btn btn-rosa" href="#lista">Quero entrar na lista</a>
+          <span class="counter" id="counter" hidden><b id="countNum">0</b> crias já estão na lista</span>
+        </div>
+      </div>
+      <div class="stickers" aria-hidden="true">
+        <span class="sticker s1">organizada core</span>
+        <span class="sticker s2">nunca mais "era hoje?"</span>
+        <span class="sticker s3">quem cria, se organiza</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Fundadora -->
+  <section class="light">
+    <div class="wrap founder">
+      <div>
+        <div class="video-box" id="videoBox" hidden></div>
+        <div class="founder-card" id="founderCard">
+          <span class="logo"><span class="c">cr<span class="dotless">ı</span>a</span><span class="h">hub</span></span>
+          <p>Criado por uma creator UGC que concilia trabalho, faculdade de publicidade e vídeos pra marcas.</p>
+          <p class="sig">Naomi Cristina, fundadora</p>
+        </div>
+      </div>
+      <div class="story">
+        <span class="eyebrow">Quem criou</span>
+        <h2>Oi, eu sou a <em>Naomi</em>.</h2>
+        <p>Sou creator UGC, faço faculdade de publicidade e divido a semana com o trabalho. Meus prazos ficavam numa nota, as ideias nos prints, os pagamentos numa planilha e os roteiros em outro app.</p>
+        <p>Um dia eu cansei de procurar as coisas e comecei a construir um lugar onde tudo isso morasse junto. Usei primeiro na minha rotina. Agora quero que ele seja seu também.</p>
+        <p class="quote">"Eu fiz o app que eu queria ter quando comecei."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. O que tem dentro -->
+  <section class="rosa">
+    <div class="wrap">
+      <span class="eyebrow">O que tem dentro</span>
+      <h2>Tudo da sua rotina de creator, <em>junto</em>.</h2>
+      <p class="sub">Pra quem faz UGC tradicional, UGC Tech Canvas ou está começando agora.</p>
+      <div class="cards">
+        <article class="card">
+          <h3><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M7.5 8.5l1.2 1.2 2.3-2.4M13 8.5h4M7.5 13.5l1.2 1.2 2.3-2.4M13 13.5h4"/></svg>Sua rotina</h3>
+          <ul>
+            <li>Meu dia com até 3 prioridades</li>
+            <li>Semana colorida por tipo de tarefa, com as categorias que você criar</li>
+            <li>Hábitos e metas, porque beber água também é rotina de creator</li>
+            <li>Retrospectiva do mês e do ano, prontas pro story</li>
+          </ul>
+        </article>
+        <article class="card dark">
+          <h3><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 7.5V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3 13h18"/></svg>Suas marcas</h3>
+          <ul>
+            <li>Ciclos, pacotes e vídeos avulsos de cada marca</li>
+            <li>Entregas por etapa, do roteiro ao publicado, com lembrete</li>
+            <li>Prospecção com follow-up pra nenhuma marca esfriar</li>
+            <li>Aviso antes do direito de uso de imagem vencer</li>
+          </ul>
+        </article>
+        <article class="card dark">
+          <h3><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>Seu conteúdo</h3>
+          <ul>
+            <li>Banco de ideias com as suas etiquetas</li>
+            <li>Briefing da marca vira plano e roteiro</li>
+            <li>Teleprompter e gravação em lote</li>
+            <li>Radar UGC com as notícias do mercado todo dia</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.5-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.9-2.8 2.1 0 2.7 5.6 1.4 5.6 4.2 0 1.2-1.2 2.1-2.8 2.1-1.3 0-2.4-.6-2.9-1.5M12 6.2v1.6M12 16.2v1.6"/></svg>Seu dinheiro</h3>
+          <ul>
+            <li>Pagamentos das marcas e as suas outras rendas</li>
+            <li>Ganhos em dólar e euro já convertidos</li>
+            <li>Cofrinho pra reserva e equipamento</li>
+            <li>MEI e notas fiscais no mesmo lugar</li>
+          </ul>
+        </article>
+      </div>
+      <div class="who" aria-label="Pra quem é">
+        <span class="chip">UGC tradicional</span><span class="chip">UGC Tech Canvas</span><span class="chip">Quem está começando</span><span class="chip">Pra todo mundo que cria</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Planos -->
+  <section class="on-vinho">
+    <div class="wrap">
+      <span class="eyebrow">Planos</span>
+      <h2>Comece grátis. <em>De verdade.</em></h2>
+      <p class="sub">O Pro é pra quando o seu trabalho crescer. Mudou de plano? Tudo que você cadastrou continua lá.</p>
+      <div class="plans">
+        <article class="plan">
+          <div class="name"><b>Grátis</b><span class="price">R$ 0</span></div>
+          <p class="for">Pra organizar a rotina e as marcas.</p>
+          <ul>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Rotina completa: Meu dia, semana, hábitos e metas</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Até 10 marcas, com agenda e entregas</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Banco de ideias e Radar UGC</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Finanças: pagamentos das marcas e outras rendas</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Retrospectiva do mês e do ano</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Do seu jeito: sua cor, suas categorias e só as ferramentas que você usa</span></li>
+          </ul>
+        </article>
+        <article class="plan pro">
+          <div class="name"><b>Pro</b><span class="price">tudo do Grátis, mais:</span></div>
+          <p class="for">Pra quem já vive de conteúdo.</p>
+          <ul>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Marcas ilimitadas</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>IA: briefing vira plano, revisor de vídeo, tradução de contrato e de mensagem</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Em alta: trends da semana pro seu nicho</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Métricas por plataforma, e das contas de marca se você faz Tech Canvas</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Dólar e euro, mídia kit, notas fiscais e MEI</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Ganchos que mais deram views pra você</span></li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">O valor do Pro sai primeiro pra quem está na lista, com uma condição especial de lançamento.</p>
+    </div>
+  </section>
+
+  <!-- 5. Lista de espera -->
+  <section class="rosa" id="lista">
+    <div class="wrap form-wrap">
+      <div>
+        <span class="eyebrow">Lista de espera</span>
+        <h2>Entra na lista e seja uma das <em>primeiras crias</em>.</h2>
+        <ul class="perks">
+          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Acesso ao CriaHub antes de todo mundo</span></li>
+          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Valor do Pro revelado primeiro, com condição especial</span></li>
+          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Sua resposta ajuda a decidir as próximas funções do app</span></li>
+        </ul>
+      </div>
+
+      <div>
+        <form id="form" novalidate>
+          <div class="field">
+            <label for="f-name">Seu nome</label>
+            <input type="text" id="f-name" name="name" autocomplete="name" maxlength="80" required>
+          </div>
+          <div class="field">
+            <label for="f-email">Seu e-mail</label>
+            <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email" maxlength="160" required>
+          </div>
+          <div class="field">
+            <label for="f-ig">Seu @ no Instagram <span class="opt">(opcional)</span></label>
+            <input type="text" id="f-ig" name="instagram" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="@seuperfil">
+          </div>
+          <div class="field">
+            <label for="f-wa">WhatsApp <span class="opt">(opcional, pra te avisar no dia)</span></label>
+            <input type="tel" id="f-wa" name="whatsapp" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="(61) 90000-0000">
+          </div>
+          <fieldset>
+            <legend class="legend">Você faz</legend>
+            <div class="kinds">
+              <label class="kind"><input type="radio" name="kind" value="ugc" required><span>UGC tradicional</span></label>
+              <label class="kind"><input type="radio" name="kind" value="tech"><span>UGC Tech Canvas</span></label>
+              <label class="kind"><input type="radio" name="kind" value="ambos"><span>Os dois</span></label>
+              <label class="kind"><input type="radio" name="kind" value="comecando"><span>Tô começando</span></label>
+            </div>
+          </fieldset>
+          <div class="field" style="margin-top:18px">
+            <label for="f-pain">O que mais te atrapalha na rotina de creator? <span class="opt">(opcional)</span></label>
+            <textarea id="f-pain" name="pain" maxlength="500"></textarea>
+          </div>
+          <div class="hp" aria-hidden="true"><label for="f-site">Não preencha</label><input type="text" id="f-site" name="site" tabindex="-1" autocomplete="off"></div>
+          <label class="consent"><input type="checkbox" id="f-ok" name="consent" required><span>Aceito receber e-mail e mensagem do CriaHub sobre o lançamento. Meus dados não são compartilhados e posso sair da lista quando quiser.</span></label>
+          <button class="btn btn-vinho" type="submit" id="send">Quero entrar na lista</button>
+          <p class="err" id="err" role="alert"></p>
+        </form>
+
+        <div class="done" id="done" tabindex="-1" aria-live="polite">
+          <span class="logo" style="font-size:44px;justify-content:center"><span class="c" style="color:var(--vinho)">cr<span class="dotless">ı</span>a</span><span class="h" style="color:var(--vinho)">hub</span></span>
+          <h3 id="doneTitle">Você está na lista, cria!</h3>
+          <p id="doneText">No dia 16 de novembro você recebe o acesso antes de todo mundo. Enquanto isso, acompanha os bastidores no Instagram.</p>
+          <span class="num" id="doneNum" hidden></span>
+          <div class="links">
+            <a class="btn btn-vinho btn-sm" href="https://www.instagram.com/criahubapp/" target="_blank" rel="noopener">Seguir @criahubapp</a>
+            <a class="btn btn-rosa btn-sm" href="https://www.instagram.com/naomicristinna_/" target="_blank" rel="noopener" style="background:#fff">Seguir @naomicristinna_</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Dúvidas -->
+  <section class="light">
+    <div class="wrap">
+      <span class="eyebrow">Dúvidas</span>
+      <h2>Ficou alguma <em>dúvida?</em></h2>
+      <div class="faq">
+        <details><summary>O plano grátis é grátis mesmo?</summary><p>É. Sem cartão e sem prazo pra acabar. Você usa o plano grátis o quanto quiser e só passa pro Pro se fizer sentido pra você.</p></details>
+        <details><summary>Funciona no celular?</summary><p>Funciona no navegador do celular e do computador, e dá pra instalar na tela inicial como um app, sem precisar baixar de loja.</p></details>
+        <details><summary>É só pra quem faz UGC Tech Canvas?</summary><p>Não. O CriaHub é pra quem faz UGC tradicional, Tech Canvas, os dois, ou está começando agora. Cada creator monta o app do jeito da própria rotina.</p></details>
+        <details><summary>Quando o CriaHub abre?</summary><p>No dia 16 de novembro. Quem está na lista recebe o acesso primeiro.</p></details>
+        <details><summary>O que vocês fazem com os meus dados?</summary><p>Usamos só pra te avisar do lançamento e das novidades do CriaHub. Pra sair da lista, é só mandar um e-mail pra <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a>.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#topo" aria-label="CriaHub"><span class="c">cr<span class="dotless">ı</span>a</span><span class="h">hub</span></a>
+    <span class="tag">quem cria, se organiza.</span>
+    <div class="row">
+      <a href="https://www.instagram.com/criahubapp/" target="_blank" rel="noopener">@criahubapp</a>
+      <a href="https://www.instagram.com/naomicristinna_/" target="_blank" rel="noopener">@naomicristinna_</a>
+      <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a>
+    </div>
+    <small>© 2026 CriaHub</small>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* CriaHub · lista de espera
+   Grava em public.waitlist (ver supabase/lista-de-espera.sql). A chave "publishable" pode ficar aqui:
+   quem protege os dados é o RLS, que só deixa ENTRAR na lista, nunca ler. */
+(() => {
+  const CFG = { url: 'https://dvzfllqcgozecvhodygz.supabase.co', key: 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F' };
+
+  /* Vídeo da fundadora: cole aqui o link quando ele existir.
+     Pode ser um arquivo .mp4 nesta pasta (ex.: 'naomi.mp4') ou um link do YouTube. */
+  const VIDEO = '';
+
+  const $ = id => document.getElementById(id);
+  const sb = window.supabase ? window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: false } }) : null;
+
+  // vídeo
+  if (VIDEO) {
+    const box = $('videoBox'), yt = VIDEO.match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/);
+    box.innerHTML = yt
+      ? `<iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0" title="Naomi conta por que criou o CriaHub" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+      : `<video src="${VIDEO}" controls playsinline preload="metadata" aria-label="Naomi conta por que criou o CriaHub"></video>`;
+    box.hidden = false; $('founderCard').hidden = true;
+  }
+
+  // contador (só aparece com 20 crias ou mais)
+  async function count() {
+    if (!sb) return null;
+    try { const { data, error } = await sb.rpc('waitlist_count'); return error ? null : data; } catch (_) { return null; }
+  }
+  count().then(n => { if (n >= 20) { $('countNum').textContent = n.toLocaleString('pt-BR'); $('counter').hidden = false; } });
+
+  // origem do clique (ex.: criahub.app.br/lista?origem=bio)
+  const qs = new URLSearchParams(location.search);
+  const source = (qs.get('origem') || qs.get('utm_source') || 'site').slice(0, 60);
+
+  const form = $('form'), err = $('err'), send = $('send');
+  const fail = msg => { err.textContent = msg; err.classList.add('on'); send.disabled = false; send.textContent = 'Quero entrar na lista'; };
+  const ok = (title, text, n) => {
+    form.hidden = true; $('doneTitle').textContent = title; $('doneText').textContent = text;
+    if (n) { $('doneNum').textContent = `Você é a cria nº ${n.toLocaleString('pt-BR')} da lista`; $('doneNum').hidden = false; }
+    $('done').classList.add('on'); $('done').focus();
+  };
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault(); err.classList.remove('on');
+    const f = form.elements;
+    if (f.site.value) { ok('Você está na lista, cria!', $('doneText').textContent); return; }
+    const name = f.name.value.trim(), email = f.email.value.trim().toLowerCase();
+    const instagram = f.instagram.value.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@+/, '');
+    const whatsapp = f.whatsapp.value.trim(), pain = f.pain.value.trim();
+    const kind = (form.querySelector('input[name=kind]:checked') || {}).value;
+    if (!name) return fail('Coloca o seu nome.'), f.name.focus();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Confere o seu e-mail.'), f.email.focus();
+    if (!kind) return fail('Conta pra gente o que você faz.');
+    if (!f.consent.checked) return fail('Pra entrar na lista, marque que aceita receber o aviso do lançamento.');
+    if (!sb) return fail('Não conseguimos conectar agora. Confere a internet e tenta de novo.');
+    send.disabled = true; send.textContent = 'Entrando…';
+    const { error } = await sb.from('waitlist').insert({
+      name, email, instagram: instagram ? '@' + instagram : null, whatsapp: whatsapp || null,
+      kind, pain: pain || null, source, consent: true
+    });
+    if (error) {
+      if (error.code === '23505') return ok('Você já está na lista!', 'Esse e-mail já entrou. No dia 16 de novembro você recebe o acesso antes de todo mundo.');
+      return fail('Não deu certo agora. Tenta de novo em alguns segundos.');
+    }
+    ok('Você está na lista, cria!', $('doneText').textContent, await count());
+  });
+})();
+</script>
+</body>
+</html>
