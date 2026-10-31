@@ -1119,7 +1119,7 @@ const COLOR_FAMS = [
 ];
 const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
 const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
-const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
+const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
@@ -1165,7 +1165,7 @@ const LEAD_NEXT = { contatada: 3, respondeu: 2, proposta: 4 };
 const CHANNELS = ['DM Instagram', 'E-mail', 'DM TikTok', 'LinkedIn', 'WhatsApp', 'Indicação', 'Plataforma de UGC'];
 
 /* ================= state & storage ================= */
-const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
+const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
   f: { brand: 'todas', idea: 'todas', month: monthKey(today()), agBrand: '', front: '', mview: 'clientes', rview: 'hoje', day: today(), wk: 0, sview: 'briefing', fview: 'marcas', year: 0, cur: 'USD', aview: 'calendario', calM: today().slice(0, 7), calDay: today() },
   ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
   sample: null, imgLimits: null, news: [], newsReady: false };
@@ -1776,7 +1776,7 @@ function payRow(p) {
 }
 
 /* ================= rotina: dia, metas, hábitos, semana ================= */
-const RVIEWS = [['hoje', 'Meu dia'], ['metas', 'Metas'], ['habitos', 'Hábitos'], ['semana', 'Semana'], ['conquistas', 'Conquistas']];
+const RVIEWS = [['hoje', 'Meu dia'], ['metas', 'Metas'], ['sonhos', 'Sonhos'], ['habitos', 'Hábitos'], ['semana', 'Semana'], ['conquistas', 'Conquistas']];
 const WD = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const WD_LONG = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const HABIT_SUGG = [
@@ -1873,12 +1873,12 @@ function hbRow(h, compact) {
 
 function vRoutine() {
   const rv = S.f.rview, nLate = lateTasks().length;
-  const sub = { hoje: 'Planeje o dia e marque o que já foi feito.', metas: 'Onde você quer chegar, e quanto já andou.', habitos: 'Cuidar de você também é parte da rotina de creator.', semana: 'O que deu certo, o que ficou e como organizar a próxima.', conquistas: 'Cada passo da sua jornada de creator.' }[rv];
-  const btn = rv === 'metas' ? `<button class="btn" data-new="goals">${ic('plus')}Nova meta</button>` : rv === 'habitos' ? `<button class="btn" data-new="habits">${ic('plus')}Novo hábito</button>` : rv === 'hoje' ? `<button class="btn ghost" data-new="tasks">${ic('plus')}Tarefa completa</button>` : '';
+  const sub = { hoje: 'Planeje o dia e marque o que já foi feito.', metas: 'Onde você quer chegar, e quanto já andou.', sonhos: 'Seus sonhos com imagem, pra lembrar todo dia por que você cria.', habitos: 'Cuidar de você também é parte da rotina de creator.', semana: 'O que deu certo, o que ficou e como organizar a próxima.', conquistas: 'Cada passo da sua jornada de creator.' }[rv];
+  const btn = rv === 'sonhos' ? `<button class="btn" data-dream-new="">${ic('plus')}Novo sonho</button>` : rv === 'metas' ? `<button class="btn" data-new="goals">${ic('plus')}Nova meta</button>` : rv === 'habitos' ? `<button class="btn" data-new="habits">${ic('plus')}Novo hábito</button>` : rv === 'hoje' ? `<button class="btn ghost" data-new="tasks">${ic('plus')}Tarefa completa</button>` : '';
   return `<div class="head"><div><h1>Rotina</h1><div class="sub">${sub}</div></div>${btn}</div>
   <div class="seg" role="group" aria-label="Rotina">${RVIEWS.map(([k, l]) => `<button data-rview="${k}" aria-pressed="${rv === k}">${l}${k === 'hoje' && nLate ? `<span class="n">${nLate}</span>` : ''}</button>`).join('')}</div>
   ${nudgeHtml()}
-  ${({ hoje: vDay, metas: vGoals, habitos: vHabits, semana: vWeek, conquistas: vBadges })[rv]()}`;
+  ${({ hoje: vDay, metas: vGoals, sonhos: vDreams, habitos: vHabits, semana: vWeek, conquistas: vBadges })[rv]()}`;
 }
 
 function vDay() {
@@ -2418,7 +2418,7 @@ Responda em português do Brasil, texto simples sem markdown, com as ideias nume
 /* ================= fácil pra quem está começando: ferramentas que eu uso, boas-vindas, primeiros passos e "o que é isso?" ================= */
 /* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
 const TOOLS = {
-  rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
+  rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
   estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
@@ -4253,6 +4253,9 @@ async function loadExamples() {
     ['payments', { ...E, id: newId(), brandId: b2.id, desc: 'Bora Café: vídeo café da manhã', amount: 450, due: addDays(t, 10), paid: false }],
     ['payments', { ...E, id: newId(), brandId: b1.id, desc: 'Lumi Skincare: pacote de 4 vídeos', amount: 1800, due: b1.end, paid: false }],
     ['payments', { ...E, id: newId(), brandId: b1.id, desc: 'Lumi Skincare: pacote anterior', amount: 1800, due: addDays(t, -26), paid: false }],
+    ['dreams', { ...E, id: newId(), title: 'Viver só de conteúdo', area: 'carreira', when: 'até o fim de 2027', why: 'Ter tempo pra criar com calma e escolher as marcas.' }],
+    ['dreams', { ...E, id: newId(), title: 'Viagem pra Lisboa', area: 'viagem', when: 'férias de julho', why: '' }],
+    ['dreams', { ...E, id: newId(), title: 'Reserva de 6 meses', area: 'dinheiro', when: '2027', why: 'Dormir tranquila mesmo no mês fraco.' }],
   ];
   closeForm();
   for (const [c, o] of items) await put(c, o);
@@ -4682,6 +4685,156 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => { if (e.target && e.target.id === 's_painel') { try { localStorage.setItem('criahub:hidepainel', e.target.checked ? '' : '1'); } catch (_) {} renderShell(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('painelLayer')) closePainel(); });
 setTimeout(adminCheck, 1500);
+/* ================= quadro dos sonhos (Rotina › Sonhos) ================= */
+const DREAM_AREAS = [['carreira', 'Carreira', '#420725', '#9C2F5E'], ['dinheiro', 'Dinheiro', '#1F5C45', '#3FA37A'], ['viagem', 'Viagem', '#1D4E7A', '#4C93C9'], ['casa', 'Casa', '#7A4A12', '#D08A3A'], ['saude', 'Saúde', '#5B2C7A', '#A06CC8'], ['familia', 'Amor e família', '#8A2440', '#E0607E'], ['pessoal', 'Pessoal', '#3B3B5C', '#7E7EB0']];
+const DREAM_SUGG = ['Viver só de conteúdo', 'Fechar com a marca dos sonhos', 'Viagem dos sonhos', 'Minha casa', 'Reserva de emergência', 'Equipamento novo', 'Trabalhar de onde eu quiser'];
+const dArea = k => DREAM_AREAS.find(a => a[0] === k) || DREAM_AREAS[6];
+let DR = null; /* sonho aberto no formulário */
+(() => { const st = document.createElement('style'); st.textContent = `
+.dr-grid{columns:2 170px;column-gap:12px}
+@media (min-width:900px){.dr-grid{columns:3 200px}}
+.dr{break-inside:avoid;margin:0 0 12px;position:relative;border-radius:18px;overflow:hidden;display:block;width:100%;border:0;padding:0;cursor:pointer;text-align:left;color:#fff;background:#420725;box-shadow:0 1px 0 rgb(0 0 0 / .04)}
+.dr:focus-visible{outline:3px solid var(--accent,#420725);outline-offset:2px}
+.dr img{display:block;width:100%;height:auto;min-height:150px;object-fit:cover}
+.dr .ph{min-height:170px;display:flex;align-items:flex-end;padding:16px}
+.dr .cap{position:absolute;inset:auto 0 0 0;padding:44px 14px 13px;background:linear-gradient(transparent,rgb(0 0 0 / .62))}
+.dr .ph .cap{position:static;padding:0;background:none}
+.dr b{display:block;font-family:var(--display);font-size:18px;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+.dr small{display:block;font-size:12px;opacity:.85;margin-top:3px}
+.dr .area{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgb(255 255 255 / .9);color:#22141A;border-radius:99px;padding:3px 8px}
+.dr.done{opacity:.92}.dr.done::after{content:"✓ Realizado";position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;background:#FF5C8A;color:#fff;border-radius:99px;padding:3px 9px}
+.dr-tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+.dr-prev{width:100%;max-height:220px;object-fit:cover;border-radius:14px;display:block}
+.dr-full{position:fixed;inset:0;z-index:250;background:#1A0E13;color:#fff;overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dr-full .dr-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;max-width:980px;margin:0 auto 14px}
+.dr-full h2{font-family:var(--display);font-size:clamp(26px,6vw,40px);letter-spacing:-.02em;margin:0}
+.dr-full h2 em{font-style:normal;color:#F4C9D8}
+.dr-full .dr-grid{max-width:980px;margin:0 auto}
+.dr-full .acts{display:flex;gap:8px;flex-wrap:wrap}
+.dr-full .acts button{white-space:nowrap;border:0;border-radius:11px;min-height:40px;padding:0 14px;font-weight:800;cursor:pointer;background:rgb(255 255 255 / .14);color:#fff}
+.dr-full .acts button.pri{background:#F4C9D8;color:#420725}
+`; document.head.appendChild(st); })();
+
+function dreamCard(x) {
+  const a = dArea(x.area), bg = `linear-gradient(150deg,${a[2]},${a[3]})`;
+  const cap = `<span class="cap"><b>${esc(x.title)}</b>${x.when ? `<small>${esc(x.when)}</small>` : ''}</span>`;
+  return `<button type="button" class="dr ${x.done ? 'done' : ''}" data-dream-edit="${x.id}" aria-label="${esc(x.title)}${x.done ? ', realizado' : ''}">
+    ${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy">${cap}` : `<span class="ph" style="background:${bg}">${cap}</span>`}
+    <span class="area">${esc(a[1])}</span>${x.example ? '<span class="ex" style="position:absolute;bottom:10px;right:10px;background:rgb(255 255 255 / .85)">exemplo</span>' : ''}</button>`;
+}
+function vDreams() {
+  const all = S.data.dreams, open = all.filter(x => !x.done), done = all.filter(x => x.done);
+  if (!all.length) return `<div class="empty"><strong>Seu quadro dos sonhos começa aqui</strong>Coloque uma imagem pra cada sonho: a viagem, a casa, a marca que você quer fechar. Ver todo dia lembra por que você está criando.
+    <div class="chips" style="justify-content:center;margin-top:12px">${DREAM_SUGG.map(t => `<button type="button" class="chip" data-dream-new="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+    <span class="sub" style="display:block;margin-top:12px;font-style:italic">Ex.: "Viagem pra Lisboa" com uma foto da cidade, pra julho de 2027.</span></div>`;
+  return `<div class="stats"><div class="stat"><div class="l">Sonhos no quadro</div><div class="v">${open.length}</div></div><div class="stat"><div class="l">Realizados</div><div class="v">${done.length}</div></div></div>
+  <div class="dr-tools"><button class="btn sm soft" data-dream-full="">Ver em tela cheia</button><button class="btn sm ghost" data-dream-png="">Baixar como imagem</button></div>
+  ${open.length ? `<div class="dr-grid">${open.map(dreamCard).join('')}</div>` : '<div class="empty"><strong>Todos realizados! 🎉</strong>Que tal sonhar o próximo?</div>'}
+  ${done.length ? `<section class="section"><div class="row-h"><h2>Realizados</h2></div><div class="dr-grid">${done.map(dreamCard).join('')}</div></section>` : ''}`;
+}
+function openDream(id, title) {
+  const x = id ? S.data.dreams.find(d => d.id === id) : { area: 'carreira', title: title || '' }; if (!x) return;
+  if (!id && S.data.dreams.filter(d => !d.example).length >= 30) { toast('Seu quadro já tem 30 sonhos. Marque alguns como realizados ou apague pra colocar novos.'); return; }
+  DR = { id: id || '', img: x.img || '' };
+  sheet = { col: 'dreams', id: id || '' };
+  const goals = S.data.goals.filter(g => !g.example || g.id === x.goalId);
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="dream" role="dialog" aria-modal="true" aria-label="${id ? 'Editar sonho' : 'Novo sonho'}">
+    <div class="sh"><h2>${id ? 'Editar sonho' : 'Novo sonho'}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    ${x.example ? '<div class="sub"><span class="ex">exemplo</span> Este sonho é de exemplo. Edite ou apague à vontade.</div>' : ''}
+    <div class="field"><label for="dr_title">Qual é o sonho?</label><input type="text" id="dr_title" name="title" maxlength="80" required value="${esc(x.title || '')}" placeholder="Ex.: Viagem pra Lisboa"></div>
+    <div class="field"><label>Imagem</label><div id="dr_imgbox">${dreamImgBox()}</div><span class="hint">Escolha uma foto da galeria. Ela fica guardada na sua conta.</span></div>
+    <div class="grid2"><div class="field"><label for="dr_area">Área da vida</label><select id="dr_area" name="area">${DREAM_AREAS.map(([k, l]) => `<option value="${k}" ${x.area === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="dr_when">Pra quando? <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="dr_when" name="when" maxlength="40" value="${esc(x.when || '')}" placeholder="Ex.: julho de 2027"></div></div>
+    <div class="field"><label for="dr_why">Por que isso importa pra você? <span class="hint" style="display:inline;margin:0">(opcional)</span></label><textarea id="dr_why" name="why" maxlength="240" placeholder="Ex.: quero levar minha mãe comigo">${esc(x.why || '')}</textarea></div>
+    ${goals.length ? `<div class="field"><label for="dr_goal">Ligar a uma meta <span class="hint" style="display:inline;margin:0">(opcional)</span></label><select id="dr_goal" name="goalId"><option value="">Nenhuma</option>${goals.map(g => `<option value="${g.id}" ${x.goalId === g.id ? 'selected' : ''}>${esc(g.title || g.name || 'Meta')}</option>`).join('')}</select><span class="hint">A meta é o passo a passo pra chegar no sonho.</span></div>` : ''}
+    ${id ? `<label class="checkline"><input type="checkbox" name="done" ${x.done ? 'checked' : ''}>Realizei esse sonho! 🎉</label>` : ''}
+    <div class="foot">${id ? '<button type="button" class="btn danger" data-dream-del="">Excluir</button>' : ''}<div class="r"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn">Salvar</button></div></div>
+  </form></div>`;
+  setTimeout(() => $('#dr_title')?.focus(), 30);
+}
+function dreamImgBox() {
+  return DR && DR.img ? `<img class="dr-prev" src="${esc(DR.img)}" alt="Imagem do sonho"><div class="row-btns" style="margin-top:8px"><label class="btn sm ghost" style="cursor:pointer">Trocar imagem<input type="file" id="dr_file" accept="image/*" hidden></label><button type="button" class="btn sm ghost" data-dream-noimg="">Tirar imagem</button></div>`
+    : `<label class="btn soft" style="cursor:pointer;width:100%;justify-content:center">${ic('plus')}Escolher imagem<input type="file" id="dr_file" accept="image/*" hidden></label>`;
+}
+/* reduz a foto pra caber bem na conta (lado maior até 900 px, JPEG) */
+function shrinkImg(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { const k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.72)); };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    im.src = url;
+  });
+}
+function dreamFull() {
+  const all = [...S.data.dreams.filter(x => !x.done), ...S.data.dreams.filter(x => x.done)];
+  const el = document.createElement('div'); el.className = 'dr-full'; el.id = 'dreamFull'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Quadro dos sonhos');
+  el.innerHTML = `<div class="dr-top"><h2>Quadro dos sonhos${S.profile.name ? ` <em>de ${esc(S.profile.name)}</em>` : ''}</h2><div class="acts"><button class="pri" data-dream-png="">Baixar imagem</button><button data-dream-fullclose="">Fechar</button></div></div><div class="dr-grid">${all.map(dreamCard).join('')}</div>`;
+  document.body.appendChild(el); document.body.style.overflow = 'hidden'; el.querySelector('[data-dream-fullclose]').focus();
+}
+function dreamFullClose() { document.getElementById('dreamFull')?.remove(); document.body.style.overflow = ''; }
+/* imagem 1080x1920 pra usar de papel de parede ou postar nos stories */
+async function dreamPng() {
+  const list = [...S.data.dreams.filter(x => !x.done), ...S.data.dreams.filter(x => x.done)].slice(0, 9);
+  if (!list.length) { toast('Coloque pelo menos um sonho no quadro'); return; }
+  toast('Montando a sua imagem…');
+  try { await Promise.all(['800 64px "Bricolage Grotesque"', '700 30px Manrope'].map(f => document.fonts.load(f))); } catch (_) {}
+  const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = '#420725'; g.fillRect(0, 0, W, H);
+  const disp = '"Bricolage Grotesque", system-ui, sans-serif', body = 'Manrope, system-ui, sans-serif';
+  g.fillStyle = '#F4C9D8'; g.font = `800 30px ${body}`; g.fillText('MEU QUADRO DOS SONHOS', 72, 150);
+  g.fillStyle = '#FFFFFF'; g.font = `800 92px ${disp}`; g.fillText(String(new Date().getFullYear() + (new Date().getMonth() >= 10 ? 1 : 0)), 72, 250);
+  if (S.profile.name) { g.fillStyle = '#F4C9D8'; g.font = `800 52px ${disp}`; g.fillText(S.profile.name, 72, 320); }
+  const cols = list.length <= 4 ? 2 : 3, rows = Math.ceil(list.length / cols), gap = 24, top = 380, bottom = H - 170;
+  const tw = (W - 144 - gap * (cols - 1)) / cols, th = Math.min(tw * 1.35, (bottom - top - gap * (rows - 1)) / rows);
+  const load = src => new Promise(r => { if (!src) return r(null); const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = src; });
+  const imgs = await Promise.all(list.map(x => load(x.img)));
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  const wrap = (txt, maxW) => { const words = String(txt).split(' '), out = []; let ln = ''; for (const w of words) { const t = ln ? ln + ' ' + w : w; if (g.measureText(t).width > maxW && ln) { out.push(ln); ln = w; } else ln = t; } if (ln) out.push(ln); return out.slice(0, 3); };
+  list.forEach((d, i) => {
+    const x = 72 + (i % cols) * (tw + gap), y = top + Math.floor(i / cols) * (th + gap), im = imgs[i], a = dArea(d.area);
+    g.save(); rr(x, y, tw, th, 28); g.clip();
+    if (im) { const s = Math.max(tw / im.width, th / im.height), w = im.width * s, h = im.height * s; g.drawImage(im, x + (tw - w) / 2, y + (th - h) / 2, w, h); }
+    else { const lg = g.createLinearGradient(x, y, x + tw, y + th); lg.addColorStop(0, a[2]); lg.addColorStop(1, a[3]); g.fillStyle = lg; g.fillRect(x, y, tw, th); }
+    const sh = g.createLinearGradient(0, y + th * 0.45, 0, y + th); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.65)'); g.fillStyle = sh; g.fillRect(x, y, tw, th);
+    g.fillStyle = '#FFFFFF'; g.font = `800 ${cols === 2 ? 40 : 32}px ${disp}`; const lines = wrap(d.title, tw - 40), lh = cols === 2 ? 46 : 37;
+    lines.forEach((l, k) => g.fillText(l, x + 20, y + th - 24 - (lines.length - 1 - k) * lh));
+    if (d.done) { g.font = `800 22px ${body}`; const bw = g.measureText('✓ REALIZADO').width + 36; g.fillStyle = '#FF5C8A'; rr(x + tw - bw - 18, y + 18, bw, 46, 23); g.fill(); g.fillStyle = '#fff'; g.fillText('✓ REALIZADO', x + tw - bw, y + 49); }
+    g.restore();
+  });
+  g.fillStyle = '#F4C9D8'; g.font = `800 40px ${disp}`; g.fillText('criahub', 72, H - 92); g.fillStyle = 'rgba(255,255,255,0.7)'; g.font = `600 26px ${body}`; g.fillText('quem cria, se organiza.', 72, H - 54);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')); if (!blob) { toast('Não consegui montar a imagem.'); return; }
+  const file = new File([blob], 'quadro-dos-sonhos.png', { type: 'image/png' });
+  try { if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Meu quadro dos sonhos' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quadro-dos-sonhos.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('Imagem salva! Dá pra usar de papel de parede 💗');
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-dream-new],[data-dream-edit],[data-dream-full],[data-dream-fullclose],[data-dream-png],[data-dream-del],[data-dream-noimg]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.dreamNew !== undefined) { closeForm(); openDream('', d.dreamNew); return; }
+  if (d.dreamEdit) { dreamFullClose(); openDream(d.dreamEdit); return; }
+  if (d.dreamFull !== undefined) { dreamFull(); return; }
+  if (d.dreamFullclose !== undefined) { dreamFullClose(); return; }
+  if (d.dreamPng !== undefined) { dreamPng(); return; }
+  if (d.dreamNoimg !== undefined) { DR.img = ''; $('#dr_imgbox').innerHTML = dreamImgBox(); return; }
+  if (d.dreamDel !== undefined) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Toque de novo pra excluir'; return; } const id = DR.id; closeForm(); await del('dreams', id); toast('Sonho excluído'); return; }
+}, true);
+document.addEventListener('change', async e => {
+  if (!e.target || e.target.id !== 'dr_file' || !e.target.files || !e.target.files[0]) return;
+  const f = e.target.files[0]; if (!/^image\//.test(f.type)) { toast('Escolha uma imagem'); return; }
+  try { DR.img = await shrinkImg(f); $('#dr_imgbox').innerHTML = dreamImgBox(); } catch (_) { toast('Não consegui abrir essa imagem. Tenta outra.'); }
+});
+document.addEventListener('submit', async e => {
+  if (!e.target.dataset || e.target.dataset.form !== 'dream') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const f = e.target, title = f.elements.title.value.trim(); if (!title) { toast('Dê um nome pro sonho'); return; }
+  const old = DR.id ? S.data.dreams.find(x => x.id === DR.id) || {} : {};
+  const done = !!(f.elements.done && f.elements.done.checked);
+  const obj = { ...old, id: DR.id || newId(), title: title.slice(0, 80), area: f.elements.area.value, when: f.elements.when.value.trim().slice(0, 40), why: f.elements.why.value.trim().slice(0, 240), goalId: f.elements.goalId ? f.elements.goalId.value : (old.goalId || ''), img: DR.img || '', done, doneAt: done ? (old.doneAt || today()) : '', created: old.created || new Date().toISOString() };
+  closeForm(); await put('dreams', obj);
+  toast(done && !old.done ? 'Sonho realizado! Que orgulho 🎉' : old.id ? 'Sonho atualizado' : 'Sonho no quadro ✨');
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('dreamFull')) dreamFullClose(); });
 connect();
 })();
 </script>

@@ -213,7 +213,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     'financeiro.marcas': 'Finanças › Marcas', 'financeiro.dolar': 'Finanças › US$ / €', 'financeiro.rendas': 'Finanças › Rendas', 'financeiro.gastos': 'Finanças › Gastos', 'financeiro.ano': 'Finanças › Ano', 'financeiro.meta': 'Finanças › Meta', 'financeiro.preco': 'Finanças › Preço', 'financeiro.notas': 'Finanças › Notas fiscais'
   };
   const scr = k => SCREENS[k] || k || '—';
-  const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
+  const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', dreams: 'sonhos', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
   const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', rendas: 'tem outras rendas', comecando: 'está começando' };
   const waNum = v => { const w = String(v || '').replace(/\D/g, ''); return w ? (w.length <= 11 ? '55' + w : w) : ''; };
   const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
