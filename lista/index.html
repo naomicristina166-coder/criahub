@@ -122,6 +122,15 @@ h2 em{font-style:italic}
 .plan li{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;font-size:16px}
 .plan li svg{margin-top:2px}
 .note{margin-top:22px;font-size:15px;color:var(--on-vinho-muted)}
+.plan .sub-price{margin:6px 0 0;font-weight:700;font-size:15px;color:var(--muted)}
+.founder-deal{margin-top:22px;border-radius:24px;padding:24px;background:var(--lima);color:var(--ink);display:grid;gap:10px;box-shadow:8px 8px 0 #1E0B10;border:3px solid #1E0B10}
+.founder-deal .tag{justify-self:start;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:#1E0B10;color:var(--lima);border-radius:99px;padding:4px 10px}
+.founder-deal h3{margin:0;font:800 clamp(24px,5vw,32px)/1.1 var(--display);color:var(--vinho)}
+.founder-deal p{margin:0;font-size:16px}
+.founder-deal .prices{display:flex;flex-wrap:wrap;gap:10px}
+.founder-deal .prices span{background:#fff;border:2px solid #1E0B10;border-radius:14px;padding:8px 12px;font-weight:700}
+.founder-deal .prices b{font:800 22px/1 var(--display);color:var(--vinho)}
+.pay-ways{margin-top:14px;font-size:15px;color:var(--on-vinho-muted)}
 
 /* formulário */
 .form-wrap{display:grid;gap:36px}
@@ -241,6 +250,7 @@ footer a:hover{color:#fff}
             <li>Semana colorida por tipo de tarefa, com as categorias que você criar</li>
             <li>Hábitos e metas, porque beber água também é rotina de creator</li>
             <li>Retrospectiva do mês e do ano, prontas pro story</li>
+            <li>Quadro dos sonhos com as suas imagens</li>
           </ul>
         </article>
         <article class="card dark">
@@ -285,7 +295,7 @@ footer a:hover{color:#fff}
       <p class="sub">O Pro é pra quando o seu trabalho crescer. Mudou de plano? Tudo que você cadastrou continua lá.</p>
       <div class="plans">
         <article class="plan">
-          <div class="name"><b>Grátis</b><span class="price">R$ 0</span></div>
+          <div class="name"><b>Grátis</b><span class="price">R$ 0 pra sempre</span></div>
           <p class="for">Pra organizar a rotina e as marcas.</p>
           <ul>
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2C9CF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Rotina completa: Meu dia, semana, hábitos e metas</span></li>
@@ -297,8 +307,9 @@ footer a:hover{color:#fff}
           </ul>
         </article>
         <article class="plan pro">
-          <div class="name"><b>Pro</b><span class="price">tudo do Grátis, mais:</span></div>
-          <p class="for">Pra quem já vive de conteúdo.</p>
+          <div class="name"><b>Pro</b><span class="price">R$ 24,90 por mês</span></div>
+          <p class="sub-price">ou R$ 199 por ano, em até 12x de R$ 16,58</p>
+          <p class="for">Pra quem já vive de conteúdo. Tudo do Grátis, mais:</p>
           <ul>
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Marcas ilimitadas</span></li>
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>IA: briefing vira plano, revisor de vídeo, tradução de contrato e de mensagem</span></li>
@@ -306,10 +317,19 @@ footer a:hover{color:#fff}
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Métricas por plataforma, e das contas de marca se você faz Tech Canvas</span></li>
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Dólar e euro, mídia kit, notas fiscais e MEI</span></li>
             <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Ganchos que mais deram views pra você</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Quadro dos sonhos com imagens, pra baixar de papel de parede</span></li>
+            <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/></svg><span>Tudo que chegar de novo no CriaHub</span></li>
           </ul>
         </article>
       </div>
-      <p class="note">O valor do Pro sai primeiro pra quem está na lista, com uma condição especial de lançamento.</p>
+      <p class="pay-ways">Pague como preferir: Pix, boleto, cartão de crédito ou débito. Cancela quando quiser.</p>
+      <div class="founder-deal">
+        <span class="tag">Só pra quem está na lista</span>
+        <h3>Preço de Cria Fundadora</h3>
+        <p>Assinando o Pro na semana do lançamento, de 23 a 29 de novembro, você garante:</p>
+        <div class="prices"><span><b>R$ 24,90</b> por mês, congelado pra sempre</span><span><b>R$ 149</b> no anual, ou 12x de R$ 12,42</span></div>
+        <p>Quando o CriaHub crescer e o preço subir, o seu continua o mesmo enquanto você for assinante.</p>
+      </div>
     </div>
   </section>
 
@@ -321,7 +341,7 @@ footer a:hover{color:#fff}
         <h2>Entra na lista e seja uma das <em>primeiras crias</em>.</h2>
         <ul class="perks">
           <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Acesso ao CriaHub antes de todo mundo</span></li>
-          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Valor do Pro revelado primeiro, com condição especial</span></li>
+          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Preço de Cria Fundadora: R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual</span></li>
           <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Sua resposta ajuda a decidir as próximas funções do app</span></li>
         </ul>
       </div>
@@ -383,6 +403,9 @@ footer a:hover{color:#fff}
       <h2>Ficou alguma <em>dúvida?</em></h2>
       <div class="faq">
         <details><summary>O plano grátis é grátis mesmo?</summary><p>É. Sem cartão e sem prazo pra acabar. Você usa o plano grátis o quanto quiser e só passa pro Pro se fizer sentido pra você.</p></details>
+        <details><summary>Quanto custa o Pro?</summary><p>R$ 24,90 por mês, ou R$ 199 por ano (em até 12x de R$ 16,58 no cartão). Quem está na lista e assina de 23 a 29 de novembro paga o preço de Cria Fundadora: R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual.</p></details>
+        <details><summary>Como eu pago?</summary><p>Pix, boleto, cartão de crédito (o anual parcela em até 12x) ou cartão de débito. No mensal, o cartão de crédito renova sozinho; no Pix e no boleto, a cobrança chega pra você todo mês.</p></details>
+        <details><summary>Posso cancelar?</summary><p>Pode, quando quiser. Você volta pro plano Grátis e tudo que cadastrou continua lá.</p></details>
         <details><summary>Funciona no celular?</summary><p>Funciona no navegador do celular e do computador, e dá pra instalar na tela inicial como um app, sem precisar baixar de loja.</p></details>
         <details><summary>Pra quem é o CriaHub?</summary><p>Pra todo mundo que cria: quem faz UGC tradicional, UGC Tech Canvas, quem é afiliado, quem tem outros trabalhos e outras rendas, e quem está começando agora. Cada creator monta o app do jeito da própria rotina.</p></details>
         <details><summary>Quando o CriaHub abre?</summary><p>No dia 23 de novembro. Quem está na lista recebe o acesso primeiro.</p></details>

@@ -272,6 +272,7 @@ window.CRIAHUB_CONFIG = {
   });
   async function callAI(prompt, opts, json) {
     opts = opts || {};
+    if (window.criahubIsPro && !window.criahubIsPro()) { if (window.criahubOpenPro) setTimeout(() => window.criahubOpenPro('ia'), 0); throw aiErr('pro_only'); }
     const { data } = await sb.auth.getSession(); const s = data && data.session; if (!s) throw aiErr('session_expired');
     const images = opts.images && opts.images.length ? await Promise.all([...opts.images].slice(0, 5).map(toImg)) : [];
     let res;
@@ -1310,6 +1311,7 @@ function render() {
   if (S.tab === 'radar' && S.news[0] && newsSeen !== S.news[0].date) { newsSeen = S.news[0].date; try { localStorage.setItem('criahub:newsSeen', newsSeen); } catch (e) {} renderShell(); }
   const subK = S.tab + '|' + (({ rotina: S.f.rview, marcas: S.f.mview, estudio: S.f.sview, financeiro: S.f.fview, agenda: S.f.aview })[S.tab] || '');
   Object.entries(TOOLS).forEach(([tab, T]) => v.querySelectorAll(`.seg [data-${T.attr}]`).forEach(b => { if (!toolOn(tab, b.dataset[T.attr])) b.hidden = true; }));
+  proDecorate(v);
   if (armKey && armSel && Date.now() - armAt < 5000) { const ab = v.querySelector(armSel); if (ab) { ab.classList.add('armed'); ab.textContent = armMsg; } }
   { const h1 = v.querySelector('.head h1'); if (h1 && !h1.querySelector('.helpq')) h1.insertAdjacentHTML('beforeend', `<button class="helpq" data-help="${helpKey()}" aria-label="O que é essa tela?">?</button>`); }
   segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); checkBday(); }
@@ -1586,7 +1588,7 @@ function fillTpl(tpl, b) {
   return tpl.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (m, k) => (k in v ? String(v[k]) : m));
 }
 function aiErr(code) {
-  return ({ daily_limit: 'Você usou todos os usos de IA deste mês. Eles renovam no dia 1º.', not_granted: 'A IA não foi liberada para este app. Libere nas permissões do app e tente de novo.', sampling_disabled: 'A IA ainda não está ligada neste app. Tente mais tarde.', rate_limited: 'Muitos pedidos seguidos ou limite de uso atingido. Tente de novo daqui a pouco.', image_rejected: 'Não consegui ler uma das fotos. Envie em JPG ou PNG.', images_unavailable: 'O envio de fotos não está disponível aqui. Cole o texto.', prompt_too_large: 'O texto é grande demais. Envie em partes.', refused: 'A IA não conseguiu processar esse conteúdo.', session_expired: 'Sua sessão expirou. Entre de novo no app.' })[code] || 'A conexão falhou no meio. Tente de novo.';
+  return ({ pro_only: 'A IA é do plano Pro.', daily_limit: 'Você usou todos os usos de IA deste mês. Eles renovam no dia 1º.', not_granted: 'A IA não foi liberada para este app. Libere nas permissões do app e tente de novo.', sampling_disabled: 'A IA ainda não está ligada neste app. Tente mais tarde.', rate_limited: 'Muitos pedidos seguidos ou limite de uso atingido. Tente de novo daqui a pouco.', image_rejected: 'Não consegui ler uma das fotos. Envie em JPG ou PNG.', images_unavailable: 'O envio de fotos não está disponível aqui. Cole o texto.', prompt_too_large: 'O texto é grande demais. Envie em partes.', refused: 'A IA não conseguiu processar esse conteúdo.', session_expired: 'Sua sessão expirou. Entre de novo no app.' })[code] || 'A conexão falhou no meio. Tente de novo.';
 }
 async function ask(key, prompt, images) {
   if (!S.sample) { toast('Os recursos de IA chegam na próxima atualização do CriaHub.'); return null; }
@@ -4083,6 +4085,7 @@ function fieldHtml(f, obj) {
   return `<div class="field"${w}><label for="${id}">${f.l}</label>${inp}${f.hint ? `<span class="hint">${f.hint}</span>` : ''}</div>`;
 }
 function openForm(col, id, preset = {}) {
+  if (col === 'brands' && !id && brandCapHit()) { openPro('marcas'); return; }
   const F = FORMS[col], obj = id ? S.data[col].find(x => x.id === id) : { ...preset };
   if (!obj) return;
   sheet = { col, id };
@@ -4170,6 +4173,7 @@ async function convertLead(l) {
   const ex = l.brandId && S.data.brands.find(b => b.id === l.brandId);
   if (ex) { await put('brands', { ...ex, status: 'ativo' }); toast(`${ex.name} voltou a ser cliente!`); if (!l.example) celebSource(ex.name); return; }
   const front = leadFront(l);
+  if (brandCapHit()) { openPro('marcas'); return; }
   await put('brands', { id: newId(), name: l.name, contact: l.contact || '', front, status: 'ativo', ctype: defaultCtype(front), cycle: 30, start: today(), end: '', videos: '', value: l.value || '', currency: l.currency || 'BRL', notes: l.notes || '', created: new Date().toISOString(), ...(l.example ? { example: true } : {}) });
   toast(`${l.name} virou cliente! Complete os dados em Clientes.`);
   if (!l.example) celebSource(l.name);
@@ -4660,7 +4664,7 @@ function painelOn() { return ADMIN && !painelHidden(); }
 async function adminCheck() {
   const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
   try { const { data, error } = await sb.rpc('is_admin'); ADMIN = !error && data === true; } catch (_) { ADMIN = false; }
-  if (ADMIN) { renderShell(); if (location.hash === '#painel') openPainel(); }
+  if (ADMIN) { render(); if (location.hash === '#painel') openPainel(); }
 }
 function openPainel() {
   if (!ADMIN || document.getElementById('painelLayer')) return;
@@ -4684,7 +4688,7 @@ document.addEventListener('click', e => {
 }, true);
 document.addEventListener('change', e => { if (e.target && e.target.id === 's_painel') { try { localStorage.setItem('criahub:hidepainel', e.target.checked ? '' : '1'); } catch (_) {} renderShell(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('painelLayer')) closePainel(); });
-setTimeout(adminCheck, 1500);
+var ADMIN_P = new Promise(r => setTimeout(() => adminCheck().then(r, r), 1500));
 /* ================= quadro dos sonhos (Rotina › Sonhos) ================= */
 const DREAM_AREAS = [['carreira', 'Carreira', '#420725', '#9C2F5E'], ['dinheiro', 'Dinheiro', '#1F5C45', '#3FA37A'], ['viagem', 'Viagem', '#1D4E7A', '#4C93C9'], ['casa', 'Casa', '#7A4A12', '#D08A3A'], ['saude', 'Saúde', '#5B2C7A', '#A06CC8'], ['familia', 'Amor e família', '#8A2440', '#E0607E'], ['pessoal', 'Pessoal', '#3B3B5C', '#7E7EB0']];
 const DREAM_SUGG = ['Viver só de conteúdo', 'Fechar com a marca dos sonhos', 'Viagem dos sonhos', 'Minha casa', 'Reserva de emergência', 'Equipamento novo', 'Trabalhar de onde eu quiser'];
@@ -4835,6 +4839,64 @@ document.addEventListener('submit', async e => {
   toast(done && !old.done ? 'Sonho realizado! Que orgulho 🎉' : old.id ? 'Sonho atualizado' : 'Sonho no quadro ✨');
 }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('dreamFull')) dreamFullClose(); });
+/* ================= planos: Grátis e Pro =================
+   O que já existia no Grátis continua no Grátis. O que é mais elaborado (e tudo que é novo) é Pro.
+   Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
+const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
+const FREE_BRANDS = 10;
+const PRO_TOOLS = { 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
+const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
+var PLAN = null, PLAN_READY = false;
+function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
+window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
+function proLocked(key) { return PLAN_READY && S.mode === 'remote' && !isPro() && !!PRO_TOOLS[key]; }
+function brandCapHit() { return PLAN_READY && S.mode === 'remote' && !isPro() && S.data.brands.filter(b => !b.example && b.status !== 'encerrado').length >= FREE_BRANDS; }
+async function planLoad() {
+  const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  try { const { data, error } = await sb.from('plans').select('plan,until').maybeSingle(); PLAN = error ? null : data; } catch (_) { PLAN = null; }
+  PLAN_READY = true; render();
+}
+(() => { const st = document.createElement('style'); st.textContent = `
+.pro-pill{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:800;letter-spacing:.06em;background:var(--accent,#420725);color:#fff;border-radius:99px;padding:1px 6px;vertical-align:2px}
+.pro-lock{border-radius:20px;padding:22px;background:linear-gradient(150deg,#420725,#7A1E48);color:#fff;display:flex;flex-direction:column;gap:12px}
+.pro-lock h2{margin:0;font-family:var(--display);font-size:22px;letter-spacing:-.01em;color:#fff}
+.pro-lock p{margin:0;color:#F4DCE5}
+.pro-lock .btn{align-self:flex-start;background:#F4C9D8;color:#420725;border:0}
+.pro-sheet ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.pro-sheet li{display:flex;gap:10px;align-items:flex-start}
+.pro-sheet li::before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent,#420725);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
+.pro-price{border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:4px}
+.pro-price b{font-family:var(--display);font-size:24px}
+`; document.head.appendChild(st); })();
+function proDecorate(v) {
+  if (!PLAN_READY || S.mode !== 'remote' || isPro()) return;
+  Object.entries(TOOLS).forEach(([tab, T]) => v.querySelectorAll(`.seg [data-${T.attr}]`).forEach(b => { if (PRO_TOOLS[tab + '.' + b.dataset[T.attr]] && !b.querySelector('.pro-pill')) b.insertAdjacentHTML('beforeend', '<span class="pro-pill">PRO</span>'); }));
+  const T = TOOLS[S.tab], key = T ? S.tab + '.' + S.f[T.f] : '';
+  if (!proLocked(key)) return;
+  const sg = v.querySelector('.seg'); if (!sg) return;
+  v.querySelectorAll('.head .btn').forEach(b => b.remove());
+  let n = sg.nextElementSibling; while (n) { const nx = n.nextElementSibling; n.remove(); n = nx; }
+  const desc = { 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
+  sg.insertAdjacentHTML('afterend', `<div class="pro-lock section"><span class="pro-pill" style="align-self:flex-start;margin:0;background:#F4C9D8;color:#420725">PRO</span><h2>${esc(PRO_TOOLS[key])}</h2><p>${esc(desc)}</p><button class="btn" data-pro="${esc(key)}">Conhecer o Pro</button></div>`);
+}
+function openPro(reason) {
+  const why = reason === 'marcas' ? `Você chegou nas ${FREE_BRANDS} marcas ativas do plano Grátis. No Pro, as marcas são ilimitadas.` : reason === 'ia' ? 'A IA do CriaHub é do plano Pro.' : PRO_TOOLS[reason] ? `${PRO_TOOLS[reason]} é do plano Pro.` : 'Tudo do Grátis e mais um monte de coisa pra quem já vive de conteúdo.';
+  sheet = { col: 'pro' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet pro-sheet" role="dialog" aria-modal="true" aria-label="CriaHub Pro">
+    <div class="sh"><h2>CriaHub Pro ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">${esc(why)}</div>
+    <ul>${PRO_LIST.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 199, em até 12x de R$ 16,58 no cartão</span></div>
+    <div class="sub">Pix, boleto, cartão de crédito ou débito. Tudo que você cadastrou continua igual quando muda de plano.</div>
+    <div class="foot"><div class="r">${PRO_URL ? `<a class="btn" href="${PRO_URL}" target="_blank" rel="noopener">Assinar o Pro</a>` : '<button type="button" class="btn" disabled>Assinaturas abrem em 23/11</button>'}</div></div>
+  </div></div>`;
+}
+window.criahubOpenPro = r => { if (sheet) closeForm(); openPro(r); };
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-pro]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); if (sheet) closeForm(); openPro(t.dataset.pro);
+}, true);
+ADMIN_P.then(planLoad);
 connect();
 })();
 </script>
