@@ -5354,7 +5354,7 @@ document.addEventListener('click', async e => {
 .ow-a{background:#FFE0EA;color:#A3123F}.ow-m{background:var(--soft,#F3EAED);color:var(--muted)}.ow-b{background:transparent;border:1px dashed var(--line);color:var(--muted)}
 `; document.head.appendChild(st); })();
 /* ================= Ideias pro seu nicho (IA, Pro): ideias pro perfil da creator, a partir do nicho, objetivo e do que já deu certo pra ela ================= */
-const NI_GOALS = [['crescer', 'Crescer seguidores'], ['marcas', 'Atrair marcas'], ['portfolio', 'Mostrar meu trabalho'], ['engajar', 'Engajar quem já me segue']];
+const NI_GOALS = [['crescer', 'Crescer seguidores'], ['marcas', 'Atrair marcas'], ['portfolio', 'Mostrar meu trabalho'], ['bastidores', 'Bastidores'], ['engajar', 'Engajar quem já me segue']];
 const NI_FMTS = [['misto', 'Misturar'], ['reels', 'Reels/TikTok'], ['carrossel', 'Carrossel'], ['stories', 'Stories']];
 const niSt = () => { const c = S.ct; c.ni = c.ni || { goal: S.profile.niGoal || 'crescer', fmt: 'misto', topic: '', res: null, saved: [], seen: [] }; return c.ni; };
 function niCard() {
@@ -5391,7 +5391,10 @@ Objetivo agora: ${goal}.
 ${n.topic.trim() ? `Assunto que ela quer explorar: ${n.topic.trim().slice(0, 160)}\n` : ''}${brands.length ? `Marcas com quem ela trabalha: ${brands.join(', ')}.\n` : ''}${vids.length ? `Os vídeos dela que mais deram views (use como pista do que o público dela gosta):\n${vids.map(v => `- ${v.t || ''}${v.h ? ` · gancho: "${v.h}"` : ''}${v.ty ? ' · tipo: ' + v.ty : ''} · ${v.v} views`).join('\n')}\n` : ''}${ideas.length || n.seen.length ? `Ideias que ela já tem (NÃO repita nem faça parecidas):\n${[...ideas, ...n.seen].slice(0, 40).map(t => '- ' + t).join('\n')}\n` : ''}
 Crie 6 ideias variadas e práticas pra ela gravar sozinha, com o celular. Formato: ${fmt}.
 Se o objetivo for atrair marcas ou mostrar o trabalho, pense em conteúdo que prova a habilidade dela como creator (bastidores, antes e depois, review honesto, "como eu faria o anúncio de…").
-Não invente números, dados, marcas ou trends específicas. Nada de música famosa: se citar áudio, diga só "áudio em alta" ou "áudio original".
+${n.goal === 'bastidores' ? `O objetivo é mostrar os BASTIDORES da vida de creator: a rotina real, montagem do cenário, iluminação, erros de gravação, recebidos, edição, organização da semana, o dia a dia conciliando com o trabalho. Ideias leves, que ela consegue gravar no meio do dia, com cara de conversa com quem segue.
+${(() => { const wk = S.data.deliveries.filter(d => (d.stage || 0) < 5 && d.due && d.due >= today() && d.due <= addDays(today(), 7)); return wk.length ? `Nesta semana ela tem ${wk.length} vídeo${wk.length > 1 ? 's' : ''} pra gravar ou editar (etapas: ${[...new Set(wk.map(d => STAGES[d.stage || 0]))].join(', ')}): use isso como gancho de bastidor.
+` : ''; })()}IMPORTANTE: campanha de marca que ainda não saiu pode ser confidencial. Não mostre produto, nome da marca nem o roteiro de campanha antes de publicar; nesses casos, o bastidor mostra só o processo (luz, cenário, tomadas, erros) sem revelar a marca.
+` : ''}Não invente números, dados, marcas ou trends específicas. Nada de música famosa: se citar áudio, diga só "áudio em alta" ou "áudio original".
 Responda APENAS com JSON, em português do Brasil:
 {"ideias":[{"titulo":"curto","formato":"Reels|Carrossel|Stories","gancho":"a primeira frase ou o texto da capa","passos":["passo 1","passo 2","passo 3"],"porque":"1 frase"}]}`;
 }
