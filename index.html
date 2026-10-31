@@ -3280,13 +3280,22 @@ let PK = null;
 const pkTiers = () => PK || (PK = (Array.isArray(S.profile.pkTiers) && S.profile.pkTiers.length === 3 ? S.profile.pkTiers : [{ n: 'Básico', q: 3, d: 0 }, { n: 'Padrão', q: 5, d: 10 }, { n: 'Premium', q: 10, d: 20 }]).map(x => ({ ...x })));
 function pkCalc() { const r = prCalc(), unit = r.q ? r.total / r.q : 0; return pkTiers().map(t => { const q = Math.max(1, +t.q || 1), dsc = Math.min(90, Math.max(0, +t.d || 0)), tot = unit * q * (1 - dsc / 100); return { ...t, q, d: dsc, tot, per: tot / q }; }); }
 function pkOutHtml() { const ts = pkCalc(); return `<div class="pkg">${ts.map(t => `<div class="card"><b>${esc(t.n)}</b><span class="num" style="font-size:22px;font-weight:800">${brl(t.tot)}</span><span class="sub">${t.q} vídeos · ${brl(t.per)} cada${t.d ? ` · ${t.d}% off` : ''}</span></div>`).join('')}</div>`; }
-function pkText() { const ts = pkCalc(), nm = S.profile.name || ''; return `Proposta de pacotes de conteúdo UGC\n\n${ts.map(t => `${t.n.toUpperCase()}: ${t.q} vídeos por ${brl(t.tot)} (${brl(t.per)} por vídeo${t.d ? `, ${t.d}% de desconto` : ''})`).join('\n')}\n\nTodos incluem roteiro, gravação e edição${PR.hooks && +PR.hooks ? `, com ${PR.hooks} variação(ões) de gancho por vídeo` : ''}. Uso de imagem e prazos conforme combinado.\n\nQual opção faz mais sentido para vocês?${nm ? `\n\n${nm}` : ''}`; }
+var PKM = { mode: 'eu', brand: '', about: '', tone: 'simpatica' };
+function pkText() { const ts = pkCalc(), nm = S.profile.name || '', br = (PKM.brand || '').trim(); return `${br ? `Oi, pessoal da ${br}! Tudo bem?\n\nPreparei 3 opções de pacote de conteúdo UGC pra vocês:` : 'Proposta de pacotes de conteúdo UGC'}\n\n${ts.map(t => `${t.n.toUpperCase()}: ${t.q} vídeos por ${brl(t.tot)} (${brl(t.per)} por vídeo${t.d ? `, ${t.d}% de desconto` : ''})`).join('\n')}\n\nTodos incluem roteiro, gravação e edição${PR.hooks && +PR.hooks ? `, com ${PR.hooks} variação(ões) de gancho por vídeo` : ''}. Uso de imagem e prazos conforme combinado.\n\nQual opção faz mais sentido para vocês?${nm ? `\n\n${nm}` : ''}`; }
 function pkSection() { const ts = pkTiers(); return `<section class="card section" id="pkcalc"><div class="row-h"><h2>Pacotes</h2></div><span class="sub">Usa o valor por vídeo calculado acima (com uso de imagem e adicionais). Ajuste a quantidade e o desconto de cada pacote.</span>
   ${ts.map((t, i) => `<div class="grid3"><input type="text" data-pk="${i}:n" value="${esc(t.n)}" aria-label="Nome do pacote ${i + 1}"><input type="number" min="1" data-pk="${i}:q" value="${esc(t.q)}" aria-label="Vídeos no pacote ${i + 1}"><input type="number" min="0" max="90" data-pk="${i}:d" value="${esc(t.d)}" aria-label="Desconto % do pacote ${i + 1}"></div>`).join('')}
   <div class="hint">Nome · quantidade de vídeos · desconto (%)</div>
   <div id="pk_out">${pkOutHtml()}</div>
-  <textarea id="pk_txt" class="big" style="min-height:180px">${esc(pkText())}</textarea>
-  <div class="row-btns"><button class="btn" data-act="pkcopy">Copiar proposta de pacotes</button><button class="btn ghost sm" data-act="pksave">Salvar pacotes</button></div></section>`; }
+  <h3 style="margin:8px 0 0;font-size:16px">Mensagem pra marca</h3>
+  <div class="field"><label for="pk_brand">Pra qual marca? <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="pk_brand" list="pk_brands" value="${esc(PKM.brand)}" placeholder="Ex.: Glow Beauty" autocomplete="off"><datalist id="pk_brands">${[...new Set([...S.data.leads.map(l => l.name), ...S.data.brands.map(b => b.name)].filter(Boolean))].map(n => `<option value="${esc(n)}"></option>`).join('')}</datalist></div>
+  <div class="seg" role="group" aria-label="Como fazer a mensagem"><button data-pkmode="eu" aria-pressed="${PKM.mode === 'eu'}">Escrever eu mesma</button><button data-pkmode="ia" aria-pressed="${PKM.mode === 'ia'}">A IA escreve pra mim${typeof proLocked === 'function' && PLAN_READY && S.mode === 'remote' && !isPro() ? ' <span class="pro-pill">PRO</span>' : ''}</button></div>
+  ${PKM.mode === 'eu' ? `<span class="sub">Um modelo pronto com os seus pacotes. Mude o que quiser antes de copiar.</span><textarea id="pk_txt" class="big" style="min-height:200px">${esc(pkText())}</textarea>`
+    : `<span class="sub">Conta um pouquinho sobre a marca e a IA escreve uma mensagem personalizada com os seus pacotes. Depois você ajusta.</span>
+      <div class="field"><label for="pk_about">Sobre a marca ou o que quer destacar <span class="hint" style="display:inline;margin:0">(opcional)</span></label><textarea id="pk_about" style="min-height:70px" placeholder="Ex.: lançaram uma linha vegana; já fiz vídeo pra marca parecida que passou de 500 mil views">${esc(PKM.about)}</textarea></div>
+      <div class="chips" role="group" aria-label="Tom da mensagem">${[['simpatica', 'Simpática'], ['profissional', 'Profissional'], ['direta', 'Curta e direta']].map(([k, l]) => `<button class="chip" data-pktone="${k}" aria-pressed="${PKM.tone === k}">${l}</button>`).join('')}</div>
+      <div class="row-btns"><button class="btn soft" data-act="pkai" ${S.ct.busy ? 'disabled' : ''}>${S.ct.busy === 'pkAi' ? 'Escrevendo…' : S.ct.pkAi ? 'Escrever de novo' : 'Escrever a mensagem'}</button></div>
+      ${S.ct.pkAi || S.ct.busy === 'pkAi' ? `<textarea id="o_pkAi" class="big" style="min-height:200px">${esc(S.ct.pkAi || '')}</textarea>` : ''}`}
+  <div class="row-btns"><button class="btn" data-act="pkcopy">Copiar mensagem</button><button class="btn ghost sm" data-act="pksave">Salvar pacotes</button></div></section>`; }
 function pkUpdate() { const o = $('#pk_out'); if (o) o.innerHTML = pkOutHtml(); const t = $('#pk_txt'); if (t) t.value = pkText(); }
 /* ================= recibo ================= */
 function extenso(v) {
@@ -4315,7 +4324,15 @@ document.addEventListener('click', async e => {
   if (d.lotesel) { S.ct.lote = S.ct.lote || {}; S.ct.lote[d.lotesel] = S.ct.lote[d.lotesel] === false; render(); return; }
   if (d.act === 'lotetp') { const sel = sortBy(S.data.deliveries.filter(x => (x.stage || 0) <= 1 && inFront(x.brandId) && (S.ct.lote || {})[x.id] !== false), 'due'); openPrompter(sel.map((x, i) => `▶ VÍDEO ${i + 1} DE ${sel.length}\n${brandName(x.brandId)} · ${x.title}\n\n${x.script || '(sem roteiro)'}`).join('\n\n\n\n')); return; }
   if (d.act === 'lotedone') { const sel = S.data.deliveries.filter(x => (x.stage || 0) <= 1 && inFront(x.brandId) && (S.ct.lote || {})[x.id] !== false); for (const x of sel) await put('deliveries', { ...x, stage: 2 }); S.ct.lote = {}; toast(`${sel.length} vídeo${sel.length === 1 ? '' : 's'} na edição`); return; }
-  if (d.act === 'pkcopy') { try { await navigator.clipboard.writeText($('#pk_txt')?.value || pkText()); toast('Proposta copiada'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
+  if (d.act === 'pkcopy') { const v = PKM.mode === 'ia' ? ($('#o_pkAi')?.value || '') : ($('#pk_txt')?.value || pkText()); if (!v.trim()) { toast('Escreva a mensagem primeiro'); return; } try { await navigator.clipboard.writeText(v); toast('Mensagem copiada'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
+  if (d.act === 'pkai') { const ts = pkCalc(), nm = S.profile.name || '', k = kit();
+    const prompt = `Você escreve mensagens de creators de UGC brasileiras para marcas. Escreva UMA mensagem pronta pra mandar por DM ou e-mail ${PKM.brand ? `para a marca ${PKM.brand}` : 'para uma marca'}, apresentando os pacotes de vídeos abaixo.
+Tom: ${({ simpatica: 'simpático, próximo e animado, sem exagero', profissional: 'profissional e cordial', direta: 'curto e direto ao ponto' })[PKM.tone]}.
+${PKM.about.trim() ? `O que a creator quer destacar ou sabe sobre a marca: ${PKM.about.trim().slice(0, 800)}\n` : ''}${k.niches ? `Nichos da creator: ${k.niches}\n` : ''}Pacotes (use exatamente estes valores):
+${ts.map(t => `- ${t.n}: ${t.q} vídeos por ${brl(t.tot)} (${brl(t.per)} por vídeo${t.d ? `, ${t.d}% de desconto` : ''})`).join('\n')}
+Todos incluem roteiro, gravação e edição.
+Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} palavras; texto simples, sem markdown e sem asteriscos; não invente números, resultados ou informações que não estão aqui; termine com uma pergunta convidando a marca a escolher um pacote${nm ? ` e assine como ${nm}` : ''}.`;
+    await gated('msg', () => ask('pkAi', prompt)); return; }
   if (d.act === 'pksave') { await saveProfile({ pkTiers: pkTiers().map(x => ({ n: x.n, q: +x.q || 1, d: +x.d || 0 })) }); toast('Pacotes salvos'); return; }
   if (d.recibo) { const p = S.data.payments.find(x => x.id === d.recibo); if (!p) return; const html = reciboHtml(p), fn = `recibo-${(nfBrand(p).name || 'marca').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${(p.paidAt || p.due || today()).slice(0, 7)}.html`; if (S.downloads) { try { await S.downloads.save({ filename: fn, data: html }); toast('Recibo salvo. Abra e use Imprimir › Salvar como PDF.'); } catch (e) { if (!['declined', 'cancelled'].includes(e?.code)) toast('Não consegui salvar o arquivo.'); } } else { const w = window.open('', '_blank'); if (w) { w.document.write(html); w.document.close(); } } return; }
   if (d.dasncopy) { try { await navigator.clipboard.writeText(Number(d.dasncopy).toLocaleString('pt-BR', { minimumFractionDigits: 2 })); toast('Valor copiado'); } catch (_) {} return; }
@@ -5256,6 +5273,8 @@ document.addEventListener('keydown', e => {
 .learn-link svg{width:22px;height:22px;flex:none;color:var(--accent,#420725)}
 .learn-link b{display:block}.learn-link small{display:block;font-size:12.5px;color:var(--muted)}
 `; document.head.appendChild(st); })();
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-pkmode],[data-pktone]'); if (!t) return; e.stopImmediatePropagation(); e.preventDefault(); if (t.dataset.pkmode) PKM.mode = t.dataset.pkmode; else PKM.tone = t.dataset.pktone; render(); }, true);
+document.addEventListener('input', e => { const id = e.target && e.target.id; if (id === 'pk_brand') { PKM.brand = e.target.value; if (PKM.mode === 'eu') { const t = $('#pk_txt'); if (t) t.value = pkText(); } } else if (id === 'pk_about') PKM.about = e.target.value; else if (id === 'o_pkAi') S.ct.pkAi = e.target.value; });
 connect();
 })();
 </script>
