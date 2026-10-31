@@ -422,7 +422,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const byKind = Object.keys(KINDS).map(k => [k, all.filter(w => w.kind === k).length]);
     const src = {}; all.forEach(w => { const s = w.source || 'site'; src[s] = (src[s] || 0) + 1; });
     const pains = all.filter(w => w.pain).slice(0, 6);
-    return `<div class="sec-h"><div><h1>Lista de espera</h1><p class="sub">${nf(all.length)} ${all.length === 1 ? 'pessoa' : 'pessoas'} esperando o dia 23/11.</p></div>
+    return `<div class="sec-h"><div><h1>Lista de espera</h1><p class="sub">${nf(all.length)} ${all.length === 1 ? 'pessoa' : 'pessoas'} esperando o dia 15/12.</p></div>
       <button class="btn ghost sm" data-csv="wl">Baixar planilha</button></div>
       <div class="two">
         <section class="card"><h2>Quem são</h2><div class="rank" style="margin-top:12px">${byKind.map(([k, v]) => `<div class="r"><span class="n">${KINDS[k]}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${all.length ? Math.round(v / all.length * 100) : 0}%"></i></span></div>`).join('')}</div></section>

@@ -25,7 +25,7 @@ const NAME = env('MAIL_NAME') || 'CriaHub';
 const GMAIL = env('GMAIL_USER') || 'criahubb@gmail.com';
 const GPASS = env('GMAIL_APP_PASSWORD').replace(/\s+/g, '');
 const REPLY_TO = env('MAIL_REPLY_TO') || GMAIL;
-const LAUNCH = '23 de novembro';
+const LAUNCH = '15 de dezembro';
 const GROUP_URL = env('GROUP_URL');
 
 const esc = (s: string) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -41,8 +41,8 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
     'Que bom ter você aqui. Você acabou de entrar na lista de espera do CriaHub, o app que junta rotina, marcas, conteúdo e dinheiro de quem cria num lugar só.',
     '',
     'O que acontece agora:',
-    `1. No dia ${LAUNCH}, você recebe o acesso antes de todo mundo.`,
-    '2. O valor do Pro chega primeiro pra você, com uma condição especial de lançamento.',
+    `1. No dia ${LAUNCH}, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`,
+    '2. Preço de Cria Fundadora: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual.',
     '3. Até lá, eu mostro os bastidores no Instagram: @criahubapp e @naomicristinna_',
     ...(GROUP_URL ? ['', `Entra no grupo VIP das Crias no WhatsApp, onde saem os spoilers: ${GROUP_URL}`] : []),
     ...(row.pain ? ['', `Você me contou que o que mais te atrapalha é: "${String(row.pain).trim()}". Anotei. É exatamente pra isso que o CriaHub existe.`] : []),
@@ -68,14 +68,14 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
   <tr><td style="background:#420725;padding:36px 32px 32px">
     <div style="font:700 40px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.5px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span></div>
     <div style="font:700 30px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:26px">Você está na lista, <em style="color:#F2C9CF">${nome}</em>!</div>
-    <div style="font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;margin-top:12px">Lançamento em ${LAUNCH}</div>
+    <div style="font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;margin-top:12px">Lançamento em 17 de dezembro</div>
   </td></tr>
   <tr><td style="padding:32px">
     <p style="margin:0 0 18px;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Que bom ter você aqui. Você acabou de entrar na lista de espera do <b>CriaHub</b>, o app que junta rotina, marcas, conteúdo e dinheiro de quem cria num lugar só.</p>
     <p style="margin:0 0 14px;font:700 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#7A4A53">O que acontece agora</p>
     <table role="presentation" cellpadding="0" cellspacing="0">
-      ${step('1', `No dia <b>${LAUNCH}</b>, você recebe o acesso antes de todo mundo.`)}
-      ${step('2', 'O valor do Pro chega primeiro pra você, com uma condição especial de lançamento.')}
+      ${step('1', `No dia <b>${LAUNCH}</b>, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`)}
+      ${step('2', 'Preço de <b>Cria Fundadora</b>: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual.')}
       ${step('3', 'Até lá, eu mostro os bastidores no Instagram.')}
     </table>
     ${GROUP_URL ? `<div style="margin:6px 0 14px;padding:16px 18px;border-radius:16px;background:#E3F5EC;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218"><b>Grupo VIP das Crias</b><br>É lá que saem os spoilers do app e o aviso na hora que as portas abrirem.<div style="margin-top:10px">${btn(GROUP_URL, 'Entrar no grupo VIP', '#1F8A5B', '#FFFFFF')}</div></div>` : ''}
