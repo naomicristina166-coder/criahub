@@ -135,12 +135,22 @@ window.CRIAHUB_CONFIG = {
   /* ---------- uso do app: só quanto tempo fica em cada tela (nunca o conteúdo). Vai pro painel da fundadora ---------- */
   (() => {
     let acc = {}, last = Date.now(), opened = false;
-    const screen = () => { try { const T = TOOLS[S.tab]; return T ? S.tab + '.' + (S.f[T.f] || T.list[0][0]) : S.tab; } catch (_) { return 'inicio'; } };
+    const screen = () => { try { return window.criahubScreen ? window.criahubScreen() : 'inicio'; } catch (_) { return 'inicio'; } };
     const tick = () => { const now = Date.now(), d = Math.min(now - last, 60000); last = now; if (document.visibilityState !== 'visible' || !session || document.getElementById('auth')) return; const k = String(screen() || '').toLowerCase().replace(/[^a-z._]/g, '').slice(0, 40) || 'outro'; acc[k] = (acc[k] || 0) + d / 1000; };
     const flush = () => { tick(); const p = {}; for (const [k, v] of Object.entries(acc)) if (v >= 1) p[k] = Math.round(v); acc = {}; if (!session) return; const open = !opened; if (!open && !Object.keys(p).length) return; opened = true; sb.rpc('track_usage', { p_secs: p, p_open: open }).then(() => {}, () => {}); };
     ready.then(() => { last = Date.now(); setInterval(tick, 5000); setInterval(flush, 60000); setTimeout(flush, 3000); });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); else last = Date.now(); });
     window.addEventListener('pagehide', flush);
+    /* erros do app: registra sozinho pra fundadora ver no painel (só a mensagem técnica, nunca os dados) */
+    const sent = new Set();
+    const logErr = (msg, src) => {
+      msg = String(msg || '').slice(0, 300); if (!session || !msg || sent.has(msg) || sent.size >= 5) return;
+      if (/ResizeObserver|Script error\.?$|extension|NetworkError|Failed to fetch|Load failed|AbortError/i.test(msg)) return;
+      if (src && !String(src).startsWith(location.origin)) return;
+      sent.add(msg); sb.rpc('log_error', { p_msg: msg, p_src: String(src || '').replace(location.origin, '').slice(0, 200), p_screen: String(screen() || '').slice(0, 40), p_ua: navigator.userAgent.slice(0, 200) }).then(() => {}, () => {});
+    };
+    window.addEventListener('error', e => logErr(e.message + (e.lineno ? ` (linha ${e.lineno})` : ''), e.filename));
+    window.addEventListener('unhandledrejection', e => { const r = e.reason; logErr('Promise: ' + (r && (r.message || r.code) || String(r)), ''); });
     /* entrada escondida do painel: 5 toques rápidos no logo (só abre pra admin; pras outras não acontece nada) */
     let taps = [];
     document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('[data-logo]') || !session) return; const n = Date.now(); taps = taps.filter(t => n - t < 2500); taps.push(n); if (taps.length < 5) return; taps = []; sb.rpc('is_admin').then(({ data }) => { if (data === true) location.href = location.origin + '/admin/'; }, () => {}); });
@@ -2446,6 +2456,7 @@ function obRender() {
   let body = '';
   if (o.i === 0) body = `<h2>Oi! Vamos deixar o CriaHub do seu jeito</h2><p>3 perguntas rápidas. Dá pra mudar tudo depois em Ajustes.</p>
     <label class="ob-f">Como quer ser chamada?<input type="text" id="ob_name" value="${esc(o.name)}" placeholder="Seu nome" autocomplete="given-name"></label>
+    <label class="ob-f">Seu @ do Instagram <small>opcional</small><input type="text" id="ob_ig" value="${esc(o.ig ? '@' + o.ig : '')}" placeholder="@seuperfil" autocomplete="off" autocapitalize="none"></label>
     <div class="ob-q">Como você trabalha hoje? <small>pode marcar mais de um</small></div><div class="ob-opts">${OB_KINDS.map(([k, l, d]) => opt('data-obkind', k, l, d, o.kinds.includes(k))).join('')}</div>`;
   else if (o.i === 1) body = `<h2>Você tem outro trabalho?</h2><p>Assim eu deixo gravar e editar pros seus dias livres.</p>
     <div class="ob-opts two">${opt('data-obwork', 'nao', 'Não tenho', '', o.work === 'nao')}${opt('data-obwork', 'sim', 'Tenho sim', 'CLT, clínica, faculdade…', o.work === 'sim')}</div>
@@ -2457,12 +2468,13 @@ function obRender() {
   el.innerHTML = `<div class="ob-box"><div class="ob-top"><span class="logo-w">cr<span class="ii">ı<b></b></span>a<em>hub</em></span><div class="ob-dots" aria-label="Passo ${o.i + 1} de 3">${dots}</div></div>${body}
     <div class="ob-acts">${o.i ? '<button type="button" class="ob-link" data-ob="back">Voltar</button>' : '<button type="button" class="ob-link" data-ob="skip">Pular</button>'}<button type="button" class="ob-go" data-ob="${o.i === 2 ? 'finish' : 'next'}" ${can ? '' : 'disabled'}>${o.i === 2 ? 'Começar' : 'Continuar'}</button></div></div>`;
 }
-function obRead() { const n = $('#ob_name'), l = $('#ob_label'); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); }
+function obRead() { const n = $('#ob_name'), l = $('#ob_label'), g = $('#ob_ig'); if (g) OB.ig = igClean(g.value); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); }
 async function obFinish(skip) {
   const o = OB; OB = null; document.getElementById('ob')?.remove();
-  if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}) }); return; }
+  if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}), ...(o.ig ? { ig: o.ig } : {}) }); return; }
   const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
   if (o.name) patch.name = o.name;
+  if (o.ig) patch.ig = o.ig;
   if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
   await saveProfile(patch);
   S.tab = 'inicio'; render(); window.scrollTo(0, 0);
@@ -4174,6 +4186,7 @@ function openSettings() {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="settings" role="dialog" aria-modal="true" aria-label="Ajustes">
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
+    <div class="field"><label for="s_ig">Seu @ do Instagram <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="s_ig" name="ig" value="${esc(S.profile.ig ? '@' + S.profile.ig : '')}" placeholder="@seuperfil" autocomplete="off" autocapitalize="none"></div>
     <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div> <div class="field"><label for="s_cats">Suas categorias de tarefa</label><input type="text" id="s_cats" name="taskCats" value="${esc(taskCats().join(', '))}" placeholder="Ex.: Faculdade, Curso, Academia"><span class="hint">Além de Trabalho, Pessoal, Saúde, Estudos e Casa. Separe por vírgula. Pode renomear ou apagar quando quiser.</span></div> <div class="field"><label for="s_itags">Etiquetas do banco de ideias</label><input type="text" id="s_itags" name="ideaTags" value="${esc(ideaTags().join(', '))}"><span class="hint">Separe por vírgula. Ex.: Gancho, Roteiro, Trend de áudio. Deixe vazio pra voltar às etiquetas padrão.</span></div>
     <div class="field"><label>Seu aniversário <span class="hint" style="display:inline;margin:0">(opcional)</span></label><div class="bd-sel">${bdSelects('s_bd', S.profile.bday)}</div><span class="hint">Só dia e mês. No dia, o CriaHub comemora com você 🎂</span></div>
     ${toolsSettings()}
@@ -4195,6 +4208,7 @@ function openSettings() {
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
       <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
     </div>
+    <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
     <div class="card section" style="gap:8px"><b>Seus dados</b><span class="sub">Baixe uma cópia de tudo ou traga dados de outra versão do CriaHub.</span>
       <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
       ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
@@ -4539,7 +4553,7 @@ document.addEventListener('submit', async e => {
     await put('tasks', { id: newId(), title: v, date: S.tab === 'inicio' ? today() : (S.f.day || today()), time: tm || '', done: false, type: ty, ...(cat ? { cat } : {}), created: new Date().toISOString() }); setTimeout(() => $('#qt')?.focus(), 0); return; }
   if (kind === 'quickidea') { const v = f.elements.title.value.trim(); if (!v) return; f.reset(); await put('ideas', { id: newId(), title: v, tag: S.f.idea !== 'todas' ? S.f.idea : ideaTags()[0], status: 'nova', notes: '', created: new Date().toISOString() }); setTimeout(() => $('#qi')?.focus(), 0); return; }
   if (kind === 'settings') { const n = f.elements.name.value.trim(); const bd = bdRead('s_bd'); if (bd === null) { toast('Confira o dia do seu aniversário'); return; } const c = $('#s_color').value; const fr = [...new Set(f.elements.fronts.value.split(',').map(x => x.trim()).filter(Boolean))].slice(0, 6); const csv = (el, max) => el ? [...new Set(el.value.split(',').map(x => x.trim().slice(0, 30)).filter(Boolean))].slice(0, max) : null; const tcs = csv(f.elements.taskCats, 12), its = csv(f.elements.ideaTags, 12); const wm = f.elements.workMode.value, wd = [...f.querySelectorAll('input[name=wd]:checked')].map(x => +x.value); const ws = f.elements.workStart.value, wl = f.elements.workLabel.value.trim().slice(0, 30);
-    closeForm(); await saveProfile({ name: n, accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, ...(tcs ? { taskCats: tcs } : {}), ...(its ? { ideaTags: its } : {}), workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value, bday: bd }); toast('Ajustes salvos'); }
+    closeForm(); await saveProfile({ name: n, ig: igClean(f.elements.ig ? f.elements.ig.value : S.profile.ig), accent: c, fronts: fr.length ? fr : DEFAULT_FRONTS, ...(tcs ? { taskCats: tcs } : {}), ...(its ? { ideaTags: its } : {}), workMode: wm === 'semana' && !wd.length ? '' : wm === 'alternado' && !ws ? '' : wm, workDays: wd, workStart: ws, workLabel: wl, mei: f.elements.mei.checked, dasValue: +f.elements.dasValue.value || 86.05, meiLimit: +f.elements.meiLimit.value || 81000, meiCnpj: (f.elements.meiCnpj?.value || '').trim(), potReserve: f.elements.potReserve.value === '' ? 0 : +f.elements.potReserve.value, potGear: f.elements.potGear.value === '' ? 0 : +f.elements.potGear.value, potTax: f.elements.potTax.value === '' ? 0 : +f.elements.potTax.value, bday: bd }); toast('Ajustes salvos'); }
 });
 
 /* ================= abertura + boas-vindas ================= */
@@ -4583,6 +4597,56 @@ loadLocal(); applyAccent();
 if (!window.claude) S.loading = false;
 render();
 if (!splash()) setTimeout(playLogo, 200);
+/* ================= fale com o CriaHub: feedback, erros e ideias (vai pro painel da fundadora) ================= */
+function igClean(v) { return String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@+/, '').replace(/[^\w.]/g, '').slice(0, 40); }
+window.criahubScreen = () => { const T = TOOLS[S.tab]; return T ? S.tab + '.' + (S.f[T.f] || T.list[0][0]) : S.tab; };
+const FB_KINDS = [['erro', 'Deu erro'], ['ideia', 'Tive uma ideia'], ['duvida', 'Dúvida'], ['elogio', 'Elogio']];
+const FB_ST = { novo: 'Enviada', vendo: 'A Naomi está vendo', resolvido: 'Resolvido' };
+let FB = { kind: 'erro', list: null, busy: false };
+const fbApi = () => window.criahubSupabase;
+const fbSeen = () => { try { return JSON.parse(localStorage.getItem('criahub:fbseen') || '[]'); } catch (_) { return []; } };
+const fbMarkSeen = ids => { try { localStorage.setItem('criahub:fbseen', JSON.stringify([...new Set([...fbSeen(), ...ids])].slice(-200))); } catch (_) {} };
+async function fbLoad() { const sb = fbApi(); if (!sb) return []; const { data, error } = await sb.from('feedback').select('id,created_at,kind,message,status,reply,replied_at').order('created_at', { ascending: false }).limit(30); return error ? [] : data || []; }
+function fbRender() {
+  if (!sheet || sheet.col !== 'feedback') return;
+  const L = FB.list;
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="feedback" role="dialog" aria-modal="true" aria-label="Fale com o CriaHub">
+    <div class="sh"><h2>Fale com o CriaHub</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">A Naomi, fundadora do CriaHub, lê todas as mensagens. A resposta aparece aqui embaixo.</div>
+    <div class="field"><label>Sobre o quê?</label><div class="chips">${FB_KINDS.map(([k, l]) => `<button type="button" class="chip" data-fbk="${k}" aria-pressed="${FB.kind === k}">${l}</button>`).join('')}</div></div>
+    <div class="field"><label for="fb_msg">Sua mensagem</label><textarea id="fb_msg" name="msg" maxlength="2000" placeholder="${FB.kind === 'erro' ? 'Conta o que aconteceu e em qual tela. Ex.: tentei salvar uma entrega e apareceu um erro.' : FB.kind === 'ideia' ? 'O que você queria que o CriaHub fizesse?' : FB.kind === 'duvida' ? 'Qual é a sua dúvida?' : 'Conta o que você mais gosta 💗'}"></textarea></div>
+    <div class="foot"><div class="r"><button class="btn" ${FB.busy ? 'disabled' : ''}>${FB.busy ? 'Enviando…' : 'Enviar'}</button></div></div>
+    <div class="section" style="gap:8px"><b>Suas mensagens</b>${L === null ? '<span class="sub">Carregando…</span>' : L.length ? L.map(m => `<div class="card" style="display:flex;flex-direction:column;gap:6px;padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="pill">${esc((FB_KINDS.find(k => k[0] === m.kind) || [, ''])[1])}</span><span class="sub" style="font-size:12px">${esc(new Date(m.created_at).toLocaleDateString('pt-BR'))} · ${esc(FB_ST[m.status] || '')}</span></div>
+      <div style="white-space:pre-wrap">${esc(m.message)}</div>
+      ${m.reply ? `<div style="background:color-mix(in oklab, var(--accent, #420725) 8%, transparent);border-radius:10px;padding:10px;white-space:pre-wrap"><b>Naomi respondeu:</b><br>${esc(m.reply)}</div>` : ''}</div>`).join('') : '<span class="sub">Você ainda não mandou nenhuma mensagem.</span>'}</div>
+  </form></div>`;
+}
+async function openFeedback() {
+  if (!fbApi() || S.mode !== 'remote') { toast('Entre na sua conta pra mandar mensagem'); return; }
+  sheet = { col: 'feedback' }; FB.list = null; fbRender(); setTimeout(() => $('#fb_msg')?.focus(), 30);
+  FB.list = await fbLoad(); fbMarkSeen(FB.list.filter(m => m.reply).map(m => m.id));
+  const keep = $('#fb_msg')?.value || ''; fbRender(); if ($('#fb_msg')) $('#fb_msg').value = keep;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-act=feedback],[data-fbk]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.act === 'feedback') { closeForm(); openFeedback(); return; }
+  const keep = $('#fb_msg')?.value || ''; FB.kind = t.dataset.fbk; fbRender(); if ($('#fb_msg')) { $('#fb_msg').value = keep; $('#fb_msg').focus(); }
+}, true);
+document.addEventListener('submit', async e => {
+  if (!e.target.dataset || e.target.dataset.form !== 'feedback') return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const msg = (e.target.elements.msg.value || '').trim(); if (msg.length < 3) { toast('Escreve um pouquinho mais'); return; }
+  const sb = fbApi(); const { data: ss } = await sb.auth.getSession(); const uid = ss && ss.session && ss.session.user.id; if (!uid) return;
+  FB.busy = true; fbRender(); $('#fb_msg').value = msg;
+  const { error } = await sb.from('feedback').insert({ user_id: uid, kind: FB.kind, message: msg.slice(0, 2000), screen: (window.criahubScreen() || '').slice(0, 40), ua: navigator.userAgent.slice(0, 200) });
+  FB.busy = false;
+  if (error) { fbRender(); $('#fb_msg').value = msg; toast('Não deu pra enviar agora. Tenta de novo.'); return; }
+  toast('Mensagem enviada! A Naomi vai ler 💗'); FB.list = await fbLoad(); fbRender();
+}, true);
+/* avisa quando a Naomi responde */
+setTimeout(async () => { if (S.mode !== 'remote' || !fbApi()) return; const L = await fbLoad(), seen = fbSeen(), n = L.filter(m => m.reply && !seen.includes(m.id)); if (n.length) toastAct(n.length === 1 ? 'A Naomi respondeu sua mensagem' : `A Naomi respondeu ${n.length} mensagens`, 'Ver', 'data-act="feedback"'); }, 6000);
 connect();
 })();
 </script>

@@ -147,6 +147,24 @@ select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;paddi
 .toast.on{opacity:1;transform:translateX(-50%)}
 body.disc .pv{filter:blur(6px);user-select:none}
 .loading{color:var(--muted);padding:40px 0;text-align:center}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--rec);color:#fff;font-size:11px;font-weight:800;margin-left:6px;vertical-align:1px}
+.att{display:grid;gap:8px;margin-top:16px}
+@media (min-width:760px){.att{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.att button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:700;font-size:14px}
+.att button:focus-visible{outline:2px solid var(--vinho)}
+.att .dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+.att .hot .dot{background:var(--rec)}
+.att b{font:800 20px/1 var(--display);margin-left:auto}
+textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;resize:vertical}
+.fgrid{display:grid;gap:10px}
+@media (min-width:760px){.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fgrid label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+.fgrid input,.fgrid select{min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;font-weight:600}
+.msg{white-space:pre-wrap;font-size:15px;margin-top:8px}
+.reply{background:#F3EEFF;border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px;white-space:pre-wrap}
+.err-row{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;word-break:break-word}
+.pay{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px 14px}
+.pay b.v{font:800 17px/1 var(--display);white-space:nowrap}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
 </style>
 </head>
@@ -162,6 +180,8 @@ body.disc .pv{filter:blur(6px);user-select:none}
   <div class="wrap"><nav class="tabs" id="tabs">
     <button data-tab="geral" aria-current="page">Visão geral</button>
     <button data-tab="creators">Creators</button>
+    <button data-tab="feedback">Feedback<span class="badge" id="fbBadge" hidden></span></button>
+    <button data-tab="financas">Finanças</button>
     <button data-tab="lista">Lista de espera</button>
   </nav></div>
 </header>
@@ -192,10 +212,12 @@ body.disc .pv{filter:blur(6px);user-select:none}
   };
   const scr = k => SCREENS[k] || k || '—';
   const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
+  const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', rendas: 'tem outras rendas', comecando: 'está começando' };
+  const waNum = v => { const w = String(v || '').replace(/\D/g, ''); return w ? (w.length <= 11 ? '55' + w : w) : ''; };
   const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
 
   const dur = secsOrMins => { const m = Math.round(secsOrMins); if (m < 1) return '0 min'; if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + String(r).padStart(2, '0') : ''); };
-  const dt = d => d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' }) : '—';
+  const dt = d => !d ? '—' : /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? String(d).slice(8, 10) + '/' + String(d).slice(5, 7) + '/' + String(d).slice(2, 4) : new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' });
   const dtt = d => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : '—';
   const dayLbl = d => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return dd + '/' + m; };
   const todayStr = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
@@ -204,7 +226,8 @@ body.disc .pv{filter:blur(6px);user-select:none}
   const initials = s => (String(s || '?').trim()[0] || '?').toUpperCase();
 
   const st = { tab: 'geral', ov: null, daily: [], screens: [], users: null, wl: null, metric: 'active', sel: -1,
-    uq: '', uf: 'todas', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {} };
+    uq: '', uf: 'todas', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {},
+    fb: [], errs: [], rev: [], ff: 'novo', fopen: null, showErr: false };
   try { const t = sessionStorage.getItem('criahub:admtab'); if (t) st.tab = t; } catch (_) {}
   try { if (localStorage.getItem('criahub:admdisc') === '1') { document.body.classList.add('disc'); $('disc').setAttribute('aria-pressed', 'true'); } } catch (_) {}
 
@@ -228,7 +251,7 @@ body.disc .pv{filter:blur(6px);user-select:none}
     $('top').hidden = true;
     const setup = kind === 'setup';
     main.innerHTML = `<div class="state"><div class="box"><h1>${setup ? 'Falta um passo' : 'Esse espaço é só da fundadora'}</h1>
-      <p class="sub">${setup ? 'O painel ainda não foi ligado no banco. Rode o arquivo <b>supabase/admin.sql</b> no SQL Editor do Supabase e atualize esta página.' : 'Você entrou com uma conta que não é de admin.'}</p>
+      <p class="sub">${setup ? 'O painel ainda não está ligado no banco (ou ganhou partes novas). Rode a versão mais nova do arquivo <b>supabase/admin.sql</b> no SQL Editor do Supabase e atualize esta página.' : 'Você entrou com uma conta que não é de admin.'}</p>
       <div class="links" style="justify-content:center;margin-top:18px"><a href="/">Voltar ao CriaHub</a>${setup ? '' : '<a href="#" id="out">Entrar com outra conta</a>'}</div></div></div>`;
     $('out') && $('out').addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); showLogin(); });
   }
@@ -246,12 +269,15 @@ body.disc .pv{filter:blur(6px);user-select:none}
 
   async function loadAll() {
     main.innerHTML = '<div class="loading">Carregando…</div>';
-    const [ov, daily, screens, users, wl] = await Promise.all([
-      sb.rpc('admin_overview'), sb.rpc('admin_daily', { p_days: 30 }), sb.rpc('admin_screens', { p_days: 30 }), sb.rpc('admin_users'), sb.rpc('admin_waitlist')
+    const [ov, daily, screens, users, wl, fb, errs, rev] = await Promise.all([
+      sb.rpc('admin_overview'), sb.rpc('admin_daily', { p_days: 30 }), sb.rpc('admin_screens', { p_days: 30 }), sb.rpc('admin_users'), sb.rpc('admin_waitlist'),
+      sb.rpc('admin_feedback'), sb.rpc('admin_errors'), sb.rpc('admin_revenue')
     ]);
-    const bad = [ov, daily, screens, users, wl].find(x => x.error);
+    if ([fb, errs, rev].some(x => x.error && /admin_feedback|admin_errors|admin_revenue|function|schema cache/i.test(x.error.message))) { showBlocked('setup'); return; }
+    const bad = [ov, daily, screens, users, wl, fb, errs, rev].find(x => x.error);
     if (bad) { main.innerHTML = `<div class="empty">Não consegui carregar agora (${esc(bad.error.message)}). Tenta atualizar.</div>`; return; }
     st.ov = ov.data; st.daily = daily.data || []; st.screens = screens.data || []; st.users = users.data || []; st.wl = wl.data || [];
+    st.fb = fb.data || []; st.errs = errs.data || []; st.rev = rev.data || [];
     st.sel = st.daily.length - 1;
     render();
   }
@@ -259,7 +285,9 @@ body.disc .pv{filter:blur(6px);user-select:none}
   /* ---------- telas ---------- */
   function render() {
     document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === st.tab ? 'page' : 'false'));
-    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : vGeral();
+    const nNew = (st.fb || []).filter(f => f.status === 'novo').length, bd = $('fbBadge');
+    if (bd) { bd.hidden = !nNew; bd.textContent = nNew; }
+    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : st.tab === 'feedback' ? vFeedback() : st.tab === 'financas' ? vFin() : vGeral();
   }
 
   const METRICS = { active: ['Creators ativas', 'creators usaram o app'], signups: ['Cadastros', 'cadastros novos'], mins: ['Minutos no app', 'minutos no app'], waitlist: ['Lista de espera', 'entraram na lista'] };
@@ -275,6 +303,7 @@ body.disc .pv{filter:blur(6px);user-select:none}
     const low = Object.keys(SCREENS).map(k => st.screens.find(s => s.screen === k) || { screen: k, mins: 0, users: 0 }).sort((a, b) => a.users - b.users || a.mins - b.mins).slice(0, 8);
     return `
       <h1>${hello}, fundadora 🍒</h1><p class="sub">Tudo que acontece no CriaHub, num lugar só. Sua conta não entra nesses números.</p>
+      ${attention()}
       <div class="kpis">
         ${kp('Creators cadastradas', nf(users), `+${nf(o.new7)} nos últimos 7 dias`, true)}
         ${kp('Ativas hoje', nf(o.activeToday), pct(o.activeToday))}
@@ -284,6 +313,8 @@ body.disc .pv{filter:blur(6px);user-select:none}
         ${kp('Lista de espera', nf(o.waitlist), `+${nf(o.waitlist7)} nos últimos 7 dias`)}
         ${kp('Horas no app', dur((o.secs30 || 0) / 60), 'somando todas, últimos 30 dias')}
         ${kp('Tempo médio por dia', dur((o.avgDaySecs || 0) / 60), 'por creator, nos dias que ela abre')}
+        ${kp('Recebido no mês', brl(finStats().month), 'pagamentos registrados', true)}
+        ${kp('Receita recorrente', brl(finStats().mrr), 'por mês, com as Pro ativas')}
       </div>
       <section class="sec card">
         <div class="sec-h"><div><h2>Últimos 30 dias</h2><p class="sub">Toque numa barra pra ver o dia.</p></div>
@@ -302,23 +333,46 @@ body.disc .pv{filter:blur(6px);user-select:none}
       </div>`;
   }
 
+  function finStats() {
+    const today = todayStr(), mk = d => String(d).slice(0, 7), thisM = today.slice(0, 7);
+    const pm = new Date(today); pm.setDate(1); pm.setMonth(pm.getMonth() - 1); const lastM = pm.toISOString().slice(0, 7);
+    const R = st.rev || [], sum = L => L.reduce((a, r) => a + Number(r.amount || 0), 0);
+    const pros = (st.users || []).filter(u => u.plan === 'pro' && !u.is_admin);
+    const active = pros.filter(u => !u.plan_until || String(u.plan_until).slice(0, 10) >= today);
+    const overdue = pros.filter(u => u.plan_until && String(u.plan_until).slice(0, 10) < today);
+    const soon = active.filter(u => u.plan_until && daysUntil(u.plan_until) <= 7);
+    const mrr = active.reduce((a, u) => { const last = R.find(r => r.user_id === u.user_id && r.period !== 'avulso'); return a + (last ? Number(last.amount) / (last.period === 'anual' ? 12 : 1) : 0); }, 0);
+    return { month: sum(R.filter(r => mk(r.paid_at) === thisM)), last: sum(R.filter(r => mk(r.paid_at) === lastM)), total: sum(R), mrr, active, overdue, soon, thisM };
+  }
+  const daysUntil = d => Math.round((new Date(String(d).slice(0, 10)) - new Date(todayStr())) / 864e5);
+  const brl = n => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  function attention() {
+    const nNew = (st.fb || []).filter(f => f.status === 'novo').length, nErr = (st.errs || []).filter(e => new Date(e.last_at) > Date.now() - 7 * 864e5).length;
+    const F = finStats(), venc = F.soon.length + F.overdue.length;
+    const sumidas = (st.users || []).filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length;
+    const it = (go, n, l, hot) => `<button data-go="${go}" class="${hot ? 'hot' : ''}"><span class="dot"></span>${l}<b>${n}</b></button>`;
+    return `<h2 class="sec" style="margin-top:22px">Precisa da sua atenção</h2><div class="att">
+      ${it('feedback', nf(nNew), 'Feedbacks novos', nNew)}${it('feedback:erros', nf(nErr), 'Erros do app (7 dias)', nErr)}
+      ${it('financas', nf(venc), 'Pro vencendo ou vencido', venc)}${it('creators:sumidas', nf(sumidas), 'Sumidas há 7+ dias', sumidas)}</div>`;
+  }
   function userList() {
     const q = st.uq.trim().toLowerCase();
-    let L = (st.users || []).filter(u => !q || (u.name + ' ' + u.email).toLowerCase().includes(q));
+    let L = (st.users || []).filter(u => !q || [u.name, u.email, u.instagram, u.whatsapp].join(' ').toLowerCase().includes(q));
     if (st.uf === 'gratis') L = L.filter(u => u.plan !== 'pro');
     if (st.uf === 'pro') L = L.filter(u => u.plan === 'pro');
     if (st.uf === 'sumidas') L = L.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7);
+    if (st.uf === 'vencendo') L = L.filter(u => u.plan === 'pro' && u.plan_until && daysUntil(u.plan_until) <= 7);
     const by = { recentes: (a, b) => new Date(b.created_at) - new Date(a.created_at), tempo: (a, b) => b.mins_30 - a.mins_30, ultima: (a, b) => daysSince(a.last_seen) - daysSince(b.last_seen) }[st.us];
     return L.sort(by);
   }
   function vCreators() {
     const all = st.users || [], L = userList();
-    const n = { todas: all.length, gratis: all.filter(u => u.plan !== 'pro').length, pro: all.filter(u => u.plan === 'pro').length, sumidas: all.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length };
+    const n = { todas: all.length, gratis: all.filter(u => u.plan !== 'pro').length, pro: all.filter(u => u.plan === 'pro').length, sumidas: all.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length, vencendo: all.filter(u => u.plan === 'pro' && u.plan_until && daysUntil(u.plan_until) <= 7).length };
     return `<div class="sec-h"><div><h1>Creators</h1><p class="sub">${nf(all.length)} contas no CriaHub. Toque numa creator pra ver os detalhes e mudar o plano.</p></div>
       <button class="btn ghost sm" data-csv="users">Baixar planilha</button></div>
-      <div class="tools"><input class="search" type="search" placeholder="Buscar por nome ou e-mail" value="${esc(st.uq)}" data-q="u" aria-label="Buscar creator">
+      <div class="tools"><input class="search" type="search" placeholder="Buscar por nome, e-mail, @ ou WhatsApp" value="${esc(st.uq)}" data-q="u" aria-label="Buscar creator">
         <select class="sel" data-sort aria-label="Ordenar"><option value="recentes"${st.us === 'recentes' ? ' selected' : ''}>Mais recentes</option><option value="tempo"${st.us === 'tempo' ? ' selected' : ''}>Mais tempo no app</option><option value="ultima"${st.us === 'ultima' ? ' selected' : ''}>Usou por último</option></select></div>
-      <div class="chips" style="margin-bottom:14px">${[['todas', 'Todas'], ['gratis', 'Grátis'], ['pro', 'Pro'], ['sumidas', 'Sumidas há 7+ dias']].map(([k, l]) => `<button class="chip" data-uf="${k}" aria-pressed="${st.uf === k}">${l} · ${nf(n[k])}</button>`).join('')}</div>
+      <div class="chips" style="margin-bottom:14px">${[['todas', 'Todas'], ['gratis', 'Grátis'], ['pro', 'Pro'], ['vencendo', 'Pro vencendo'], ['sumidas', 'Sumidas há 7+ dias']].map(([k, l]) => `<button class="chip" data-uf="${k}" aria-pressed="${st.uf === k}">${l} · ${nf(n[k])}</button>`).join('')}</div>
       <div class="list" id="ulist">${L.length ? L.map(personCard).join('') : '<div class="empty">Nenhuma creator encontrada.</div>'}</div>`;
   }
   function personCard(u) {
@@ -326,11 +380,16 @@ body.disc .pv{filter:blur(6px);user-select:none}
     const p = st.plan[u.user_id] || u.plan;
     return `<article class="person"><button class="head" data-open="${u.user_id}" aria-expanded="${open}">
       <span class="av">${esc(initials(u.name || u.email))}</span>
-      <span style="min-width:0"><span class="nm">${esc(u.name || 'Sem nome')} <span class="pill${u.plan === 'pro' ? ' pro' : ''}">${u.plan === 'pro' ? 'Pro' : 'Grátis'}</span>${u.is_admin ? '<span class="pill me">você</span>' : ''}${u.confirmed ? '' : '<span class="pill warn">e-mail não confirmado</span>'}</span>
-        <span class="em pv">${esc(u.email)}</span>
+      <span style="min-width:0"><span class="nm">${esc(u.name || 'Sem nome')} <span class="pill${u.plan === 'pro' ? ' pro' : ''}">${u.plan === 'pro' ? 'Pro' : 'Grátis'}</span>${u.plan === 'pro' && u.plan_until ? (daysUntil(u.plan_until) < 0 ? '<span class="pill warn">vencido</span>' : daysUntil(u.plan_until) <= 7 ? '<span class="pill warn">vence ' + dt(u.plan_until) + '</span>' : '') : ''}${u.is_admin ? '<span class="pill me">você</span>' : ''}${u.confirmed ? '' : '<span class="pill warn">e-mail não confirmado</span>'}</span>
+        <span class="em pv">${esc(u.email)}${u.instagram ? ' · @' + esc(u.instagram) : ''}</span>
         <span class="meta">Entrou ${dt(u.created_at)} · usou ${ago(u.last_seen)}${u.top_screen ? ' · mais usa: ' + esc(scr(u.top_screen)) : ''}</span></span>
       <span class="right"><b>${dur(u.mins_30)}</b>${nf(u.days_30)} ${u.days_30 === 1 ? 'dia' : 'dias'}/30</span></button>
       ${open ? `<div class="det">
+        <div><h3>Contato</h3><div class="links" style="margin-top:0">
+          <a class="pv" href="mailto:${esc(u.email)}">${esc(u.email)}</a>
+          ${u.instagram ? `<a class="pv" href="https://instagram.com/${encodeURIComponent(u.instagram)}" target="_blank" rel="noopener">@${esc(u.instagram)}</a>` : ''}
+          ${u.whatsapp ? `<a class="pv" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
+          <p class="note">${[(u.kinds || []).map(k => KIND_APP[k] || k).join(', '), u.from_waitlist ? 'veio da lista de espera' : '', Number(u.paid_total) ? 'já pagou ' + brl(u.paid_total) : '', u.feedbacks ? u.feedbacks + (u.feedbacks === 1 ? ' mensagem enviada' : ' mensagens enviadas') : ''].filter(Boolean).join(' · ') || (u.instagram ? '' : 'Sem @ ainda. Ela pode colocar em Ajustes › Seu @ do Instagram.')}</p></div>
         <div><h3>No app (não abre o conteúdo, só conta)</h3>${total ? `<div class="counts">${Object.entries(u.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span><b>${nf(v)}</b> ${esc(COLS[k] || k)}</span>`).join('')}</div>` : '<p class="sub">Ainda não cadastrou nada (sem contar os exemplos).</p>'}</div>
         <div><h3>Onde passa o tempo · últimos 30 dias</h3>${uscreens(u.user_id)}</div>
         <div class="meta">Abriu o app ${nf(u.opens_30)} ${u.opens_30 === 1 ? 'vez' : 'vezes'} em 30 dias · ${dur(u.mins_total)} no total · último login ${dtt(u.last_sign_in_at)}</div>
@@ -338,7 +397,7 @@ body.disc .pv{filter:blur(6px);user-select:none}
           <span class="seg" role="group" aria-label="Plano"><button data-plan="free" aria-pressed="${p !== 'pro'}">Grátis</button><button data-plan="pro" aria-pressed="${p === 'pro'}">Pro</button></span>
           <input id="pnote" placeholder="Anotação (ex.: testadora, cortesia, pagou via Pix)" value="${esc(u.plan_note || '')}" maxlength="200">
           <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
-          ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
+          ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}${u.plan_until ? ' · pago até ' + dt(u.plan_until) : ''}. Pagamento novo? Registre em Finanças que a data se atualiza sozinha.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
       </div>` : ''}</article>`;
   }
   function uscreens(id) {
@@ -381,16 +440,84 @@ body.disc .pv{filter:blur(6px);user-select:none}
       ${ig || waNum ? `<div class="links">${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="pv">@${esc(ig)}</a>` : ''}${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="pv">WhatsApp</a>` : ''}</div>` : ''}</article>`;
   }
 
+  const FBK = { erro: 'Deu erro', ideia: 'Ideia', duvida: 'Dúvida', elogio: 'Elogio' };
+  const FBS = { novo: 'Novo', vendo: 'Vendo', resolvido: 'Resolvido' };
+  function vFeedback() {
+    const all = st.fb || [], n = k => all.filter(f => k === 'todos' || f.status === k).length;
+    const L = all.filter(f => st.ff === 'todos' || f.status === st.ff);
+    const byKind = Object.keys(FBK).map(k => [k, all.filter(f => f.kind === k).length]);
+    return `<div class="sec-h"><div><h1>Feedback</h1><p class="sub">O que as creators mandam em Ajustes › Fale com o CriaHub. A sua resposta aparece pra ela dentro do app.</p></div></div>
+      <div class="chips" style="margin-bottom:10px">${[['novo', 'Novos'], ['vendo', 'Vendo'], ['resolvido', 'Resolvidos'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip" data-ff="${k}" aria-pressed="${st.ff === k}">${l} · ${nf(n(k))}</button>`).join('')}</div>
+      <p class="sub" style="margin-bottom:14px">${byKind.map(([k, v]) => `${FBK[k]}: <b>${nf(v)}</b>`).join(' · ')}</p>
+      <div class="list">${L.length ? L.map(fbCard).join('') : `<div class="empty">${st.ff === 'novo' ? 'Nenhuma mensagem nova. Tudo em dia ✨' : 'Nada por aqui.'}</div>`}</div>
+      <section class="sec card" id="erros"><div class="sec-h"><div><h2>Erros do app</h2><p class="sub">O app avisa sozinho quando alguma coisa quebra pra uma creator. Últimos 30 dias.</p></div></div>
+        ${(st.errs || []).length ? `<div class="list">${st.errs.map(e => `<div class="person wl"><div class="row1"><div style="min-width:0"><div class="err-row">${esc(e.msg)}</div>
+          <div class="meta">${nf(e.n)} ${e.n === 1 ? 'vez' : 'vezes'} · ${nf(e.users)} ${e.users === 1 ? 'creator' : 'creators'} · último ${dtt(e.last_at)}${e.screens ? ' · tela: ' + esc(String(e.screens).split(', ').map(scr).join(', ')) : ''}</div></div></div></div>`).join('')}</div>
+          <p class="note">Se um erro se repete, me manda print dessa lista que eu corrijo no app.</p>` : '<div class="empty">Nenhum erro registrado. 🎉</div>'}
+      </section>`;
+  }
+  function fbCard(f) {
+    const open = st.fopen === f.id;
+    return `<article class="person wl"><div class="row1"><div style="min-width:0">
+      <div class="nm">${esc(f.name || 'Sem nome')} <span class="pill${f.kind === 'erro' ? ' warn' : ''}">${FBK[f.kind] || f.kind}</span><span class="pill${f.status === 'resolvido' ? ' ok' : f.status === 'vendo' ? ' me' : ''}">${FBS[f.status]}</span></div>
+      <div class="em pv">${esc(f.email || '')}</div><div class="meta">${dtt(f.created_at)}${f.screen ? ' · estava em: ' + esc(scr(f.screen)) : ''}${f.ua ? ' · ' + (/iPhone|iPad/.test(f.ua) ? 'iPhone' : /Android/.test(f.ua) ? 'Android' : 'computador') : ''}</div></div>
+      <button class="btn ghost sm" data-fopen="${f.id}">${open ? 'Fechar' : f.reply ? 'Ver' : 'Responder'}</button></div>
+      <div class="msg">${esc(f.message)}</div>
+      ${f.reply ? `<div class="reply"><b>Sua resposta</b> · ${dtt(f.replied_at)}<br>${esc(f.reply)}</div>` : ''}
+      ${open ? `<div style="margin-top:12px;display:grid;gap:8px"><textarea class="ta" id="freply" maxlength="2000" placeholder="Escreva sua resposta. Ela aparece pra creator em Ajustes › Fale com o CriaHub.">${esc(f.reply || '')}</textarea>
+        <div class="planbox"><span class="seg" role="group" aria-label="Status">${Object.entries(FBS).map(([k, l]) => `<button data-fst="${k}" aria-pressed="${(st.fst || f.status) === k}">${l}</button>`).join('')}</span>
+        <button class="btn sm" data-fsave="${f.id}">Salvar</button></div></div>` : ''}</article>`;
+  }
+
+  const METHODS = { pix: 'Pix', cartao: 'Cartão', google_play: 'Google Play', app_store: 'App Store', boleto: 'Boleto', outro: 'Outro' };
+  const PERIODS = { mensal: 'Mensal', anual: 'Anual', avulso: 'Avulso' };
+  function vFin() {
+    const F = finStats(), R = st.rev || [];
+    const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(todayStr()); d.setDate(1); d.setMonth(d.getMonth() - (5 - i)); return d.toISOString().slice(0, 7); });
+    const byM = months.map(m => R.filter(r => String(r.paid_at).slice(0, 7) === m).reduce((a, r) => a + Number(r.amount), 0)), mx = Math.max(1, ...byM);
+    const mName = m => new Date(m + '-15').toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+    const byMethod = {}; R.forEach(r => { byMethod[r.method] = (byMethod[r.method] || 0) + Number(r.amount); });
+    const users = (st.users || []).filter(u => !u.is_admin).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+    const venc = [...F.overdue, ...F.soon].sort((a, b) => String(a.plan_until).localeCompare(String(b.plan_until)));
+    const kp = (l, v, d, hi) => `<div class="kpi${hi ? ' hi' : ''}"><div class="l">${l}</div><div class="v" style="font-size:24px">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+    return `<div class="sec-h"><div><h1>Finanças do CriaHub</h1><p class="sub">Quem está pagando, quanto entrou e quem vence. Registre aqui cada pagamento.</p></div>
+      <button class="btn ghost sm" data-csv="rev">Baixar planilha</button></div>
+      <div class="kpis">${kp('Recebido no mês', brl(F.month), '', true)}${kp('Mês passado', brl(F.last), F.last ? (F.month >= F.last ? '▲ ' : '▼ ') + Math.round(Math.abs(F.month - F.last) / F.last * 100) + '% este mês' : '')}
+        ${kp('Receita recorrente', brl(F.mrr), 'por mês, com as Pro ativas')}${kp('Pro ativas', nf(F.active.length), F.overdue.length ? nf(F.overdue.length) + ' com pagamento vencido' : 'nenhuma vencida')}</div>
+      <section class="sec card"><h2>Registrar pagamento</h2><p class="sub" style="margin-bottom:12px">Mensal ou anual de uma creator: ela vira Pro e a data de vencimento se ajusta sozinha.</p>
+        <form id="payf" class="fgrid">
+          <label>Creator<select name="user"><option value="">Outra pessoa (digitar nome)</option>${users.map(u => `<option value="${u.user_id}">${esc(u.name || u.email)}</option>`).join('')}</select></label>
+          <label>Nome (se não tiver conta)<input name="payer" maxlength="120" placeholder="Ex.: Fulana"></label>
+          <label>Valor (R$)<input name="amount" type="text" required placeholder="19,90" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?"></label>
+          <label>Data<input name="paid" type="date" required value="${todayStr()}"></label>
+          <label>Forma<select name="method">${Object.entries(METHODS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
+          <label>Período<select name="period">${Object.entries(PERIODS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
+          <label style="grid-column:1/-1">Anotação<input name="note" maxlength="200" placeholder="Opcional. Ex.: cupom de lançamento"></label>
+          <div><button class="btn" type="submit">Registrar</button></div></form></section>
+      ${venc.length ? `<section class="sec"><h2>Vencimentos</h2><p class="sub" style="margin-bottom:12px">Pro vencido ou vencendo nos próximos 7 dias. Bom momento pra mandar um lembrete.</p><div class="list">${venc.map(u => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(u.name || u.email)}</div><div class="meta">${daysUntil(u.plan_until) < 0 ? 'venceu ' + dt(u.plan_until) : 'vence ' + dt(u.plan_until)}</div></div>
+        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="mailto:${esc(u.email)}">E-mail</a>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
+      <div class="two sec">
+        <section class="card"><h2>Últimos 6 meses</h2><div class="bars" style="height:150px">${byM.map((v, i) => `<div class="b" title="${brl(v)}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div>
+          <div class="bars-x">${months.map(mName).map(m => `<span>${m}</span>`).join('')}</div><p class="note">Total desde o começo: <b>${brl(F.total)}</b></p></section>
+        <section class="card"><h2>Por forma de pagamento</h2><div class="rank" style="margin-top:12px">${Object.keys(byMethod).length ? Object.entries(byMethod).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r"><span class="n">${METHODS[k] || k}</span><span class="m">${brl(v)}</span><span class="t"><i style="width:${Math.round(v / Math.max(1, F.total) * 100)}%"></i></span></div>`).join('') : '<p class="sub">Ainda sem pagamentos.</p>'}</div></section>
+      </div>
+      <section class="sec"><h2>Pagamentos</h2><div class="list" style="margin-top:12px">${R.length ? R.slice(0, 200).map(r => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(r.payer || '—')}</div><div class="meta">${dt(r.paid_at)} · ${METHODS[r.method] || r.method} · ${PERIODS[r.period] || r.period}${r.note ? ' · ' + esc(r.note) : ''}</div></div>
+        <b class="v">${brl(r.amount)}</b><button class="btn danger sm${st.sure === r.id ? ' sure' : ''}" data-rmpay="${r.id}">${st.sure === r.id ? 'Confirmar' : 'Apagar'}</button></div>`).join('') : '<div class="empty">Nenhum pagamento registrado ainda. Quando a primeira creator pagar o Pro, registre aqui em cima.</div>'}</div></section>`;
+  }
+
   /* ---------- planilhas ---------- */
   function csv(rows, name) {
     const s = rows.map(r => r.map(v => { const t = String(v ?? ''); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }).join(';')).join('\r\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + s], { type: 'text/csv;charset=utf-8' }));
     a.download = name + '-' + todayStr() + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
-  const csvUsers = () => csv([['Nome', 'E-mail', 'Plano', 'Entrou em', 'Último uso', 'Minutos (30 dias)', 'Dias ativos (30)', 'Mais usa', ...Object.values(COLS)],
-    ...userList().map(u => [u.name, u.email, u.plan === 'pro' ? 'Pro' : 'Grátis', dt(u.created_at), u.last_seen ? dt(u.last_seen) : '', u.mins_30, u.days_30, scr(u.top_screen), ...Object.keys(COLS).map(k => (u.counts || {})[k] || 0)])], 'criahub-creators');
+  const csvUsers = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'Plano', 'Pago até', 'Já pagou', 'Entrou em', 'Último uso', 'Minutos (30 dias)', 'Dias ativos (30)', 'Mais usa', ...Object.values(COLS)],
+    ...userList().map(u => [u.name, u.email, u.instagram ? '@' + u.instagram : '', u.whatsapp || '', u.plan === 'pro' ? 'Pro' : 'Grátis', u.plan_until ? dt(u.plan_until) : '', Number(u.paid_total || 0).toFixed(2).replace('.', ','), dt(u.created_at), u.last_seen ? dt(u.last_seen) : '', u.mins_30, u.days_30, scr(u.top_screen), ...Object.keys(COLS).map(k => (u.counts || {})[k] || 0)])], 'criahub-creators');
   const csvWl = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'O que faz', 'O que mais atrapalha', 'Veio de', 'Entrou em', 'E-mail de boas-vindas'],
     ...wlList().map(w => [w.name, w.email, w.instagram, w.whatsapp, KINDS[w.kind] || '', w.pain, w.source, dtt(w.created_at), w.welcomed_at ? 'enviado' : ''])], 'criahub-lista-de-espera');
+
+  const csvRev = () => csv([['Quem pagou', 'E-mail', 'Valor', 'Data', 'Forma', 'Período', 'Anotação'],
+    ...(st.rev || []).map(r => [r.payer, r.email, Number(r.amount).toFixed(2).replace('.', ','), dt(r.paid_at), METHODS[r.method] || r.method, PERIODS[r.period] || r.period, r.note])], 'criahub-financas');
 
   /* ---------- ações ---------- */
   document.addEventListener('click', async e => {
@@ -402,7 +529,25 @@ body.disc .pv{filter:blur(6px);user-select:none}
     if (d.metric) { st.metric = d.metric; render(); return; }
     if (d.bar) { st.sel = +d.bar; render(); return; }
     if (d.uf) { st.uf = d.uf; render(); return; }
-    if (d.csv) { d.csv === 'users' ? csvUsers() : csvWl(); return; }
+    if (d.csv) { d.csv === 'users' ? csvUsers() : d.csv === 'rev' ? csvRev() : csvWl(); return; }
+    if (d.go) { const [tab, sub] = d.go.split(':'); st.tab = tab; if (tab === 'creators' && sub) st.uf = sub; if (tab === 'feedback') st.ff = 'novo'; render(); if (sub === 'erros') document.getElementById('erros')?.scrollIntoView(); else window.scrollTo(0, 0); return; }
+    if (d.ff) { st.ff = d.ff; st.fopen = null; render(); return; }
+    if (d.fopen) { st.fopen = st.fopen === d.fopen ? null : d.fopen; st.fst = null; render(); if (st.fopen) $('freply')?.focus(); return; }
+    if (d.fst) { st.fst = d.fst; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
+    if (d.fsave) {
+      const f = st.fb.find(x => x.id === d.fsave), reply = ($('freply') || {}).value?.trim() || '';
+      const status = st.fst || (reply && reply !== (f.reply || '') ? 'resolvido' : f.status);
+      t.disabled = true; const r = await sb.rpc('admin_feedback_update', { p_id: f.id, p_status: status, p_reply: reply || null }); t.disabled = false;
+      if (r.error) { toast('Não consegui salvar.'); return; }
+      f.status = status; if (reply && reply !== f.reply) { f.reply = reply; f.replied_at = new Date().toISOString(); }
+      st.fopen = null; st.fst = null; toast(reply ? 'Resposta enviada pra ela 💌' : 'Salvo'); render(); return;
+    }
+    if (d.rmpay) {
+      if (st.sure !== d.rmpay) { st.sure = d.rmpay; render(); setTimeout(() => { if (st.sure === d.rmpay) { st.sure = null; if (st.tab === 'financas') render(); } }, 4000); return; }
+      t.disabled = true; const r = await sb.rpc('admin_delete_payment', { p_id: d.rmpay });
+      if (r.error) { t.disabled = false; toast('Não consegui apagar.'); return; }
+      st.rev = st.rev.filter(x => x.id !== d.rmpay); st.sure = null; toast('Pagamento apagado'); render(); return;
+    }
     if (d.more !== undefined) { st.wlim += 50; render(); return; }
     if (d.open) {
       st.open = st.open === d.open ? null : d.open; render();
@@ -429,6 +574,18 @@ body.disc .pv{filter:blur(6px);user-select:none}
       st.wl = st.wl.filter(w => w.id !== d.rm); st.sure = null; if (st.ov) st.ov.waitlist = st.wl.length;
       toast('Removida da lista'); render(); return;
     }
+  });
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'payf') return; e.preventDefault();
+    const f = e.target, user = f.user.value || null, amount = Number(String(f.amount.value).replace(',', '.'));
+    if (!user && !f.payer.value.trim()) { toast('Escolha a creator ou digite o nome'); return; }
+    if (!(amount >= 0)) { toast('Confere o valor'); return; }
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
+    const r = await sb.rpc('admin_add_payment', { p_user: user, p_amount: amount, p_paid: f.paid.value, p_method: f.method.value, p_period: f.period.value, p_note: f.note.value.trim() || null, p_payer: f.payer.value.trim() || null });
+    if (r.error) { btn.disabled = false; toast('Não consegui registrar.'); return; }
+    const [rev, users] = await Promise.all([sb.rpc('admin_revenue'), sb.rpc('admin_users')]);
+    if (!rev.error) st.rev = rev.data || []; if (!users.error) st.users = users.data || [];
+    toast('Pagamento registrado 💸'); render();
   });
   document.addEventListener('input', e => {
     const q = e.target.dataset && e.target.dataset.q; if (!q) return;
