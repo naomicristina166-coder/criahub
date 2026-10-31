@@ -1690,6 +1690,7 @@ function vIdeas() {
   const list = [...S.data.ideas].filter(i => f === 'todas' || i.tag === f).sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
   return `
   <div class="head"><div><h1>Estúdio</h1><div class="sub">Ganchos, roteiros e referências antes que fujam da cabeça.</div></div><button class="btn ghost" data-new="ideas">${ic('plus')}Ideia completa</button></div>${studioSeg()}
+  ${niCard()}
   <form class="quick" data-form="quickidea"><input type="text" id="qi" name="title" placeholder="Anote um gancho rápido e aperte Enter" autocomplete="off" required><button class="btn">Salvar</button></form>
   <div class="chips">${['todas', ...ideaTags()].map(k => `<button class="chip" data-fidea="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
   ${list.length ? `<div class="ideas">${list.map(i => { const st = IDEA_STATUS[i.status || 'nova']; return `<article class="card idea">
@@ -2421,7 +2422,7 @@ const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
@@ -2539,7 +2540,7 @@ const HELP = {
   'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
-  'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto.'],
+  'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto. No topo, a IA cria ideias pro seu perfil a partir do seu nicho e do seu objetivo (Pro).'],
   'estudio.ganchos': ['Ganchos', 'Gancho é a frase dos primeiros segundos que prende a pessoa. Aqui você vê quais tipos deram mais views.'],
   'estudio.erros': ['Erros', 'Os feedbacks que as marcas te deram viram uma checklist pra você conferir antes de gravar e enviar.'],
   'financeiro.marcas': ['Pagamentos', 'Quanto cada marca te paga, o que já caiu e o que está atrasado, com botão pra cobrar.'],
@@ -4872,7 +4873,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
 const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
 const FREE_BRANDS = 10;
 const PRO_TOOLS = { 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
-const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
+const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
 window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
@@ -5179,7 +5180,7 @@ var STORIES_DATA = {
     ['🎬', 'Seu Estúdio', 'Onde o conteúdo nasce: do pedido da marca até o vídeo enviado.'],
     ['📋', 'Briefing', 'Cole o briefing da marca: a IA separa as regras, monta os roteiros e manda os vídeos pra sua semana.'],
     ['🎙️', 'Gravar e revisar', 'Leia o roteiro no teleprompter, grave vários vídeos de uma vez e, antes de enviar, o Revisor confere se nada ficou pra trás.'],
-    ['💡', 'Ideias e Em alta', 'Seu banco de ideias e as trends da semana pro seu nicho, pra nunca ficar sem assunto.']] },
+    ['💡', 'Ideias e Em alta', 'Seu banco de ideias, a IA criando ideias pro seu perfil e as trends da semana pro seu nicho, pra nunca ficar sem assunto.']] },
   financeiro: { name: 'Finanças', slides: [
     ['💸', 'Suas Finanças', 'Quanto você recebeu, quanto falta receber e de quem.'],
     ['🧾', 'Marcas e outras rendas', 'Pagamentos das marcas de um lado; afiliados, freelas e salário do outro. Tudo somado no mês.'],
@@ -5352,6 +5353,83 @@ document.addEventListener('click', async e => {
 .ow-p{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:99px;padding:3px 8px;white-space:nowrap;margin-top:1px}
 .ow-a{background:#FFE0EA;color:#A3123F}.ow-m{background:var(--soft,#F3EAED);color:var(--muted)}.ow-b{background:transparent;border:1px dashed var(--line);color:var(--muted)}
 `; document.head.appendChild(st); })();
+/* ================= Ideias pro seu nicho (IA, Pro): ideias pro perfil da creator, a partir do nicho, objetivo e do que já deu certo pra ela ================= */
+const NI_GOALS = [['crescer', 'Crescer seguidores'], ['marcas', 'Atrair marcas'], ['portfolio', 'Mostrar meu trabalho'], ['engajar', 'Engajar quem já me segue']];
+const NI_FMTS = [['misto', 'Misturar'], ['reels', 'Reels/TikTok'], ['carrossel', 'Carrossel'], ['stories', 'Stories']];
+const niSt = () => { const c = S.ct; c.ni = c.ni || { goal: S.profile.niGoal || 'crescer', fmt: 'misto', topic: '', res: null, saved: [], seen: [] }; return c.ni; };
+function niCard() {
+  const n = niSt(), mine = myNiches(), busy = S.ct.busy === 'niAi';
+  const chips = (L, cur, attr) => `<div class="chips">${L.map(([k, l]) => `<button type="button" class="chip" ${attr}="${k}" aria-pressed="${cur === k}">${l}</button>`).join('')}</div>`;
+  const res = Array.isArray(n.res) ? n.res : [];
+  return `<section class="card section ni" style="gap:10px"><div><b>Ideias pro seu nicho ✨</b>${window.criahubIsPro && !window.criahubIsPro() ? ' <span class="pill p-acc">Pro</span>' : ''}<div class="sub">A IA pensa em ideias pro <i>seu</i> perfil, com gancho e roteiro, a partir do seu nicho e do que já deu certo pra você.</div></div>
+    <div class="ni-q">Seu nicho ${mine.length ? `<small>${esc(mine.map(nicheName).join(', '))} · <button type="button" class="linkbtn" data-nipick="1">${n.pick ? 'pronto' : 'trocar'}</button></small>` : '<small>toque pra escolher</small>'}</div>
+    ${!mine.length || n.pick ? `<div class="chips">${NICHES.map(([k, l]) => `<button type="button" class="chip" data-niche="${k}" aria-pressed="${mine.includes(k)}">${l}</button>`).join('')}</div>` : ''}
+    <div class="ni-q">Seu objetivo agora</div>${chips(NI_GOALS, n.goal, 'data-nigoal')}
+    <div class="ni-q">Formato</div>${chips(NI_FMTS, n.fmt, 'data-nifmt')}
+    <div class="field"><label for="ni_topic">Algum assunto ou detalhe? <small class="sub">opcional</small></label><input type="text" id="ni_topic" value="${esc(n.topic)}" maxlength="160" placeholder="Ex.: skincare pra pele oleosa, rotina de mãe que trabalha fora"></div>
+    <div class="row-btns"><button type="button" class="btn" data-nigo="1" ${S.ct.busy ? 'disabled' : ''}>${busy ? 'Pensando nas ideias…' : res.length ? 'Me dá outras 6' : 'Me dá 6 ideias'}</button>${res.length && !busy ? `<button type="button" class="btn ghost" data-nisaveall="1">Salvar todas</button>` : ''}</div>
+    ${S.ct.err && S.f.sview === 'ideias' ? `<div class="err">${esc(S.ct.err)}</div>` : ''}
+    ${res.length ? `<div class="ni-list">${res.map((x, i) => { const ok = n.saved.includes(i); return `<article class="ni-i"><div class="ni-h"><span class="pill p-acc">${esc(x.formato)}</span><b>${esc(x.titulo)}</b></div>
+      ${x.gancho ? `<div class="ni-g">“${esc(x.gancho)}”</div>` : ''}
+      ${x.passos.length ? `<ol>${x.passos.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+      ${x.porque ? `<small>Por que funciona: ${esc(x.porque)}</small>` : ''}
+      <div class="row-btns"><button type="button" class="btn sm ${ok ? 'ghost' : 'soft'}" data-nisave="${i}" ${ok ? 'disabled' : ''}>${ok ? 'Salva nas Ideias ✓' : 'Salvar nas Ideias'}</button></div></article>`; }).join('')}</div>` : ''}
+  </section>`;
+}
+function niPrompt() {
+  const n = niSt(), mine = myNiches(), k = kit();
+  const fronts = arr(S.profile.fronts).join(', ') || 'UGC';
+  const vids = [...S.data.deliveries.filter(d => +d.views > 0 && (d.hook || d.title)).map(d => ({ t: d.title, h: d.hook, v: +d.views, ty: d.hookType })),
+    ...S.data.videos.filter(v => +v.views > 0).map(v => ({ t: vTitle(v), h: v.hook, v: +v.views, ty: v.hookType, f: v.format }))].sort((a, b) => b.v - a.v).slice(0, 5);
+  const ideas = [...S.data.ideas].sort((a, b) => String(b.created || '').localeCompare(String(a.created || ''))).slice(0, 25).map(i => i.title);
+  const brands = S.data.brands.filter(b => b.status !== 'encerrado').map(b => b.name).filter(Boolean).slice(0, 8);
+  const goal = (NI_GOALS.find(g => g[0] === n.goal) || NI_GOALS[0])[1], fmt = n.fmt === 'misto' ? 'misture Reels/TikTok, carrossel e stories' : 'todas em ' + (NI_FMTS.find(f => f[0] === n.fmt) || [])[1];
+  return `Você ajuda uma creator brasileira a ter ideias de conteúdo pro PRÓPRIO perfil dela (não é vídeo pra marca).
+Nicho: ${mine.length ? mine.map(nicheName).join(', ') : 'não informado'}${k.niches ? ` (ela se descreve assim: ${k.niches})` : ''}.
+Frentes de trabalho: ${fronts}. ${k.bio ? 'Bio dela: ' + String(k.bio).slice(0, 300) : ''}
+Objetivo agora: ${goal}.
+${n.topic.trim() ? `Assunto que ela quer explorar: ${n.topic.trim().slice(0, 160)}\n` : ''}${brands.length ? `Marcas com quem ela trabalha: ${brands.join(', ')}.\n` : ''}${vids.length ? `Os vídeos dela que mais deram views (use como pista do que o público dela gosta):\n${vids.map(v => `- ${v.t || ''}${v.h ? ` · gancho: "${v.h}"` : ''}${v.ty ? ' · tipo: ' + v.ty : ''} · ${v.v} views`).join('\n')}\n` : ''}${ideas.length || n.seen.length ? `Ideias que ela já tem (NÃO repita nem faça parecidas):\n${[...ideas, ...n.seen].slice(0, 40).map(t => '- ' + t).join('\n')}\n` : ''}
+Crie 6 ideias variadas e práticas pra ela gravar sozinha, com o celular. Formato: ${fmt}.
+Se o objetivo for atrair marcas ou mostrar o trabalho, pense em conteúdo que prova a habilidade dela como creator (bastidores, antes e depois, review honesto, "como eu faria o anúncio de…").
+Não invente números, dados, marcas ou trends específicas. Nada de música famosa: se citar áudio, diga só "áudio em alta" ou "áudio original".
+Responda APENAS com JSON, em português do Brasil:
+{"ideias":[{"titulo":"curto","formato":"Reels|Carrossel|Stories","gancho":"a primeira frase ou o texto da capa","passos":["passo 1","passo 2","passo 3"],"porque":"1 frase"}]}`;
+}
+async function niGenerate() {
+  const n = niSt(); let out = null;
+  await gated('studio', async () => { out = await askJson('niAi', niPrompt()); });
+  const L = out && Array.isArray(out.ideias) ? out.ideias : null; if (!L) return;
+  const clean = L.map(x => ({ titulo: String(x.titulo || '').trim().slice(0, 140), formato: String(x.formato || 'Reels').trim().slice(0, 20), gancho: String(x.gancho || '').trim().slice(0, 240), passos: arr(x.passos).map(p => String(p).trim()).filter(Boolean).slice(0, 5), porque: String(x.porque || '').trim().slice(0, 240) })).filter(x => x.titulo).slice(0, 8);
+  if (!clean.length) { S.ct.err = 'Não consegui montar as ideias. Tente de novo.'; render(); return; }
+  n.res = clean; n.saved = []; n.seen = [...n.seen, ...clean.map(x => x.titulo)].slice(-30); render();
+}
+async function niSave(i) {
+  const n = niSt(), x = (n.res || [])[i]; if (!x || n.saved.includes(i)) return;
+  const tags = ideaTags(), tag = tags.includes('Roteiro') ? 'Roteiro' : tags[0];
+  await put('ideas', { id: newId(), title: x.titulo, tag, status: 'nova', notes: [x.formato ? 'Formato: ' + x.formato : '', x.gancho ? 'Gancho: ' + x.gancho : '', x.passos.length ? x.passos.map((p, k) => `${k + 1}. ${p}`).join('\n') : '', x.porque ? 'Por que funciona: ' + x.porque : ''].filter(Boolean).join('\n'), created: new Date().toISOString() });
+  n.saved = [...n.saved, i];
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-nigo],[data-nisave],[data-nisaveall],[data-nigoal],[data-nifmt],[data-nipick]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const n = niSt(), d = t.dataset;
+  if (d.nigoal) { n.goal = d.nigoal; render(); saveProfile({ niGoal: d.nigoal }); return; }
+  if (d.nifmt) { n.fmt = d.nifmt; render(); return; }
+  if (d.nipick) { n.pick = !n.pick; render(); return; }
+  if (d.nisave) { await niSave(+d.nisave); render(); toast('Salvo nas Ideias'); return; }
+  if (d.nisaveall) { let k = 0; for (let i = 0; i < (n.res || []).length; i++) if (!n.saved.includes(i)) { await niSave(i); k++; } render(); toast(k ? `${k} ideia${k > 1 ? 's salvas' : ' salva'} nas Ideias` : 'Já estão todas salvas'); return; }
+  if (d.nigo) { if (S.ct.busy) return; n.topic = ($('#ni_topic') || {}).value || n.topic; await niGenerate(); }
+}, true);
+document.addEventListener('input', e => { if (e.target && e.target.id === 'ni_topic') niSt().topic = e.target.value; });
+document.head.insertAdjacentHTML('beforeend', `<style>
+.ni-q{font-weight:700;font-size:14px}.ni-q small{font-weight:500;color:var(--muted);margin-left:6px}
+.linkbtn{background:none;border:0;padding:0;color:var(--acc,inherit);font:inherit;text-decoration:underline;cursor:pointer}
+.ni-list{display:grid;gap:10px}
+.ni-i{border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:8px}
+.ni-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.ni-h b{font-size:15px}
+.ni-g{font-style:italic}
+.ni-i ol{margin:0;padding-left:20px;display:grid;gap:3px;font-size:14px}
+.ni-i small{color:var(--muted);font-size:12.5px}
+</style>`);
 connect();
 })();
 </script>
