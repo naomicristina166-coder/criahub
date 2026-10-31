@@ -4019,7 +4019,7 @@ const FORMS = {
     { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: PLATFORMS.map(x => [x, x]), d: 'TikTok' }, { k: 'handle', l: '@ da conta', t: 'text', req: 1, ph: '@perfil' }] },
     { k: 'brandId', l: 'Marca dessa conta', t: 'select', o: brandOpts },
     { row: [{ k: 'phase', l: 'Fase da conta', t: 'select', o: [['teste', 'Em teste (aquecendo)'], ['ativa', 'Ativa (postando)'], ['pausada', 'Pausada']], d: 'teste' }, { k: 'testStart', l: 'Início do teste', t: 'date', d: today }] },
-    { k: 'testDays', l: 'Dias de teste', t: 'select', o: [['3', '3 dias'], ['4', '4 dias'], ['5', '5 dias']], d: '5', hint: 'Em cada dia: 15 min de manhã, de tarde e de noite.' },
+    { k: 'testDays', l: 'Quantos dias dura o teste', t: 'number', d: 5, hint: 'Do jeito que a marca pediu: 3, 5, 15, 30 dias…' },
     { row: [{ k: 'goalWeek', l: 'Meta de posts por semana', t: 'number', d: 7 }, { k: 'goalViews', l: 'Meta de views no ciclo', t: 'number', hint: 'Opcional' }] },
     { k: 'url', l: 'Link do perfil (opcional)', t: 'text', ph: 'https://…' },
     { k: 'notes', l: 'Observações', t: 'textarea', ph: 'Login, horário que mais engaja, regras da marca…' },
@@ -4938,11 +4938,16 @@ function homePend() {
 /* ================= Tech Canvas: aquecimento das contas (Marcas › Contas) =================
    Fase de teste (3 a 5 dias) e conta ativa: 15 min de manhã, de tarde e de noite.
    No dia de post: 15 min antes e 5 a 15 min depois. Cada sessão vira um item em "warm". */
-const WSLOTS = { manha: ['Manhã', 15], tarde: ['Tarde', 15], noite: ['Noite', 15], pre: ['Antes do post', 15], pos: ['Depois do post', 10] };
-const wNow = () => { const h = new Date().getHours(); return h < 12 ? 'manha' : h < 18 ? 'tarde' : 'noite'; };
+const WDEF = [{ k: 'manha', name: 'Manhã', time: '09:00', mins: 15 }, { k: 'tarde', name: 'Tarde', time: '14:00', mins: 15 }, { k: 'noite', name: 'Noite', time: '20:00', mins: 15 }];
+const wPlan = () => { const p = S.profile.warmPlan || {}; const ss = Array.isArray(p.sessions) && p.sessions.length ? p.sessions : WDEF; return { sessions: [...ss].sort((a, b) => String(a.time).localeCompare(String(b.time))), pre: +p.pre || 15 }; };
+/* nome e minutos de cada horário; o "depois do post" não tem tempo fixo (0 = cronômetro aberto) */
+const wDef = k => { if (k === 'pre') return ['Antes do post', wPlan().pre]; if (k === 'pos') return ['Depois do post', 0]; const s = wPlan().sessions.find(x => x.k === k); return s ? [s.name, +s.mins || 15] : [k, 15]; };
+const WSLOTS = new Proxy({}, { get: (_, k) => wDef(String(k)) });
+const wNow = () => { const hm = `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`, ss = wPlan().sessions; let cur = ss[0]; ss.forEach(x => { if (x.time <= hm) cur = x; }); return cur.k; };
 const wLog = (aid, d, slot) => S.data.warm.find(x => x.id === `${aid}_${d}_${slot}`);
 const wPostDay = (aid, d) => !!wLog(aid, d, 'post');
-const wSlots = (a, d) => [...['manha', 'tarde', 'noite'], ...(wPostDay(a.id, d) ? ['pre', 'pos'] : [])];
+const wSesTime = k => (wPlan().sessions.find(x => x.k === k) || {}).time || '';
+const wSlots = (a, d) => [...wPlan().sessions.map(x => x.k), ...(wPostDay(a.id, d) ? ['pre', 'pos'] : [])];
 const wAccs = () => S.data.accounts.filter(a => (a.phase || 'ativa') !== 'pausada');
 function wPhase(a) {
   if ((a.phase || 'ativa') !== 'teste') return { txt: 'Ativa', done: false };
@@ -4959,14 +4964,15 @@ function warmPanel() {
   const rows = accs.map(a => {
     const ph = wPhase(a), sl = wSlots(a, t);
     const chips = sl.map(k => { const l = wLog(a.id, t, k), on = WT && WT.aid === a.id && WT.slot === k;
-      return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}</button>`; }).join('');
-    const dots = days.map(d => { const n = ['manha', 'tarde', 'noite', 'pre', 'pos'].filter(k => wLog(a.id, d, k)).length; return `<i class="${n >= 3 ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
+      return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}${!l && wSesTime(k) ? ` <small>${wSesTime(k)}</small>` : ''}</button>`; }).join('');
+    const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post').length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
     return `<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
       <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
       <div class="wchips">${chips}<button class="wchip post ${wPostDay(a.id, t) ? 'ok' : ''}" data-warmpost="${a.id}" aria-pressed="${wPostDay(a.id, t)}">${wPostDay(a.id, t) ? '📌 Posto hoje' : '+ Vou postar hoje'}</button></div>
       ${ph.done ? `<button class="link" data-warmactive="${a.id}" style="text-align:left">Teste acabou: marcar a conta como ativa</button>` : ''}</div>`;
   }).join('');
   return `<section class="card section warm" style="gap:12px"><div class="row-h"><h2>Aquecimento de hoje</h2><span class="sub num">${done} de ${tot}</span></div>
+    <button class="link" data-warmplan="1" style="text-align:left;align-self:flex-start">⏰ Minha rotina de aquecimento: ${wPlan().sessions.map(x => `${esc(x.name)} ${esc(x.time)}`).join(' · ')}</button>
     <div class="bar ${done === tot ? 'ok' : ''}"><span style="width:${tot ? Math.round(done / tot * 100) : 0}%"></span></div>
     <div class="sub">Toque num horário pra começar o cronômetro. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
     <div class="wlist">${rows}</div></section>`;
@@ -4975,21 +4981,52 @@ function warmBar() {
   let el = document.getElementById('warmBar');
   if (!WT) { el?.remove(); clearInterval(wTick); wTick = null; return; }
   const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { WT = null; wSave(); el?.remove(); return; }
-  const left = Math.max(0, WT.end - Date.now()), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
+  const open = !WT.end, left = open ? Date.now() - WT.start : Math.max(0, WT.end - Date.now()), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
   if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
-  if (!left) warmFinish(true);
+  el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
+  if (!open && !left) warmFinish(true);
 }
 async function warmFinish(auto) {
   if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
-  await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: Math.min(mins, WSLOTS[w.slot][1]), at: new Date().toISOString() });
+  await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
   try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {}
-  toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : 'Aquecimento salvo ✨');
+  toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : `Aquecimento salvo: ${mins} min ✨`);
 }
 function warmStart(aid, slot) {
-  WT = { aid, slot, start: Date.now(), end: Date.now() + WSLOTS[slot][1] * 60000 }; wSave(); warmBar();
+  const m = WSLOTS[slot][1]; WT = { aid, slot, start: Date.now(), end: m ? Date.now() + m * 60000 : null }; wSave(); warmBar();
   clearInterval(wTick); wTick = setInterval(warmBar, 1000); render();
 }
+function openWarmPlan() {
+  const p = wPlan(); WP = p.sessions.map(x => ({ ...x }));
+  sheet = { col: 'warmplan' };
+  const row = (x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`;
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="warmplan" role="dialog" aria-modal="true" aria-label="Minha rotina de aquecimento">
+    <div class="sh"><h2>Minha rotina de aquecimento</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">Os horários em que você aquece as contas todo dia, do seu jeito. Vale pra todas as contas.</div>
+    <div class="wp-list">${WP.map(row).join('')}</div>
+    <button type="button" class="btn sm ghost" data-wpadd="1" style="align-self:flex-start">${ic('plus')}Adicionar horário</button>
+    <div class="field"><label for="wp_pre">Antes do post (minutos)</label><input type="number" id="wp_pre" min="1" max="120" value="${p.pre}"></div>
+    <div class="sub">Depois do post, o cronômetro fica aberto: você para quando quiser (5, 10, 15 min…) e o app guarda quanto tempo foi.</div>
+    <div class="foot"><div class="r"><button class="btn">Salvar</button></div></div></form></div>`;
+}
+let WP = [];
+const wpRead = () => document.querySelectorAll('[data-wpf]').forEach(el => { const i = +el.dataset.i; if (WP[i]) WP[i][el.dataset.wpf] = el.dataset.wpf === 'mins' ? +el.value || 15 : el.value; });
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-warmplan],[data-wpadd],[data-wpdel]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.warmplan) { openWarmPlan(); return; }
+  wpRead(); const pre = $('#wp_pre')?.value;
+  if (t.dataset.wpadd) { if (WP.length >= 8) { toast('No máximo 8 horários por dia'); return; } WP.push({ k: 'w' + newId().slice(0, 6), name: 'Novo horário', time: '12:00', mins: 15 }); }
+  else { if (WP.length <= 1) { toast('Deixe pelo menos um horário'); return; } WP.splice(+t.dataset.wpdel, 1); }
+  const keep = WP; openWarmPlan(); WP = keep; document.querySelector('.wp-list').innerHTML = keep.map((x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`).join(''); if (pre) $('#wp_pre').value = pre;
+}, true);
+document.addEventListener('submit', async e => {
+  if (!e.target.dataset || e.target.dataset.form !== 'warmplan') return;
+  e.preventDefault(); e.stopImmediatePropagation(); wpRead();
+  const sessions = WP.map(x => ({ k: x.k, name: String(x.name || 'Horário').trim().slice(0, 20) || 'Horário', time: /^\d\d:\d\d$/.test(x.time) ? x.time : '12:00', mins: Math.min(120, Math.max(1, +x.mins || 15)) }));
+  const pre = Math.min(120, Math.max(1, +$('#wp_pre').value || 15));
+  closeForm(); await saveProfile({ warmPlan: { sessions, pre } }); toast('Rotina de aquecimento salva ⏰');
+}, true);
 document.addEventListener('click', async e => {
   const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
@@ -5021,6 +5058,12 @@ function warmPending() {
 .wchip.now{border-color:var(--accent,#420725);color:var(--accent,#420725);box-shadow:0 0 0 3px color-mix(in oklab, var(--accent,#420725) 14%, transparent)}
 .wchip.ok{background:var(--accent,#420725);border-color:var(--accent,#420725);color:#fff}
 .wchip.run{background:#FF5C8A;border-color:#FF5C8A;color:#fff}
+.wchip small{font-weight:600;opacity:.75}
+.wp-list{display:flex;flex-direction:column;gap:8px}
+.wp-row{display:grid;grid-template-columns:minmax(0,1fr) 104px 84px 40px;gap:6px;align-items:center}
+.wp-row input{min-width:0}
+.wp-min{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.wp-min input{width:56px}
 .wchip.post{border-style:dashed}.wchip.post.ok{border-style:solid;background:#FFF1DE;border-color:#FFD9A8;color:#8A4B00}
 .warmbar{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:120;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;background:#420725;color:#fff;border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgb(0 0 0 / .25);max-width:560px;margin:0 auto}
 @media (min-width:900px){.warmbar{bottom:20px}}
