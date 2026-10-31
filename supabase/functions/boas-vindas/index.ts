@@ -8,13 +8,13 @@
    3. Edge Functions › Secrets (Manage secrets), adicione:
         RESEND_API_KEY        a chave do Resend (começa com re_)
         WAITLIST_HOOK_SECRET  o código que aparece no fim do supabase/boas-vindas.sql
-        MAIL_FROM             (opcional) ex.: Naomi do CriaHub <oi@criahub.app.br>
+        MAIL_FROM             (opcional) ex.: CriaHub <oi@criahub.app.br>
         MAIL_REPLY_TO         (opcional) ex.: criahubb@gmail.com */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const env = (k: string) => Deno.env.get(k) || '';
 const sb = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'));
-const FROM = env('MAIL_FROM') || 'Naomi do CriaHub <oi@criahub.app.br>';
+const FROM = env('MAIL_FROM') || 'CriaHub <oi@criahub.app.br>';
 const REPLY_TO = env('MAIL_REPLY_TO') || 'criahubb@gmail.com';
 const LAUNCH = '23 de novembro';
 
