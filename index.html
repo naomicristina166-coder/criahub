@@ -1292,12 +1292,12 @@ function renderShell() {
   setHTML($('#side'), `${LOGO}<div class="tagline">quem cria, se organiza.</div>
     ${TABS.map(([k, l]) => `<button class="nav" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}${l}</button>`).join('')}
     <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar UGC${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
-    ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel</button>` : ''}
     <div class="spacer"></div>
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
+    ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel admin</button>` : ''}
     <div class="sync">${syncTxt}</div>`);
-  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px">${painelOn() ? `<button class="iconbtn" data-act="painel" aria-label="Painel da fundadora" style="width:auto;padding:0 10px;gap:5px;display:inline-flex;align-items:center;font-weight:800;font-size:13px">${ic('painel')}Painel</button>` : ''}<button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button></div>`);
+  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button></div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
 
@@ -4210,7 +4210,6 @@ function openSettings() {
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
       <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
     </div>
-    ${ADMIN ? `<div class="card section" style="gap:8px"><b>Painel da fundadora</b><span class="sub">Só aparece pra você. Desligue neste aparelho quando for gravar a tela.</span><label class="checkline"><input type="checkbox" id="s_painel" ${painelHidden() ? '' : 'checked'}>Mostrar o botão Painel no menu</label><div class="row-btns"><button type="button" class="btn sm ghost" data-act="painel">Abrir o Painel</button></div></div>` : ''}
     <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
     <div class="card section" style="gap:8px"><b>Seus dados</b><span class="sub">Baixe uma cópia de tudo ou traga dados de outra versão do CriaHub.</span>
       <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
@@ -4221,6 +4220,7 @@ function openSettings() {
     <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Dados de exemplo</b><span class="sub">Itens marcados como “exemplo” servem pra você ver o app funcionando.</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
     <div class="sub">${S.mode === 'remote' ? 'Seus dados ficam salvos na sua conta e aparecem igual no celular e no computador. Só você vê os seus dados.' : 'Neste modo, os dados ficam salvos só neste navegador.'}</div>
+    ${ADMIN ? `<div class="card section" style="gap:8px"><b>Painel admin</b><span class="sub">Só você vê. Aqui ficam as creators, o feedback, as finanças e a lista de espera.</span><div class="row-btns"><button type="button" class="btn sm" data-act="painel">${ic('painel')} Abrir o Painel admin</button></div><label class="checkline"><input type="checkbox" id="s_painel" ${painelHidden() ? '' : 'checked'}>Mostrar também no menu do computador, abaixo de Ajustes</label></div>` : ''}
     <div class="foot"><div class="r"><button class="btn">Salvar</button></div></div>
   </form></div>`;
 }
@@ -4668,7 +4668,7 @@ function openPainel() {
 .painel-bar button:focus-visible{outline:2px solid #FF5C8A;outline-offset:2px}
 .painel-layer iframe{flex:1;width:100%;border:0;background:#FAF6F7}`; document.head.appendChild(st); }
   const el = document.createElement('div'); el.id = 'painelLayer'; el.className = 'painel-layer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Painel da fundadora');
-  el.innerHTML = `<div class="painel-bar"><b>Painel da fundadora</b><button type="button" data-act="painelclose">Voltar ao app</button></div><iframe src="${location.origin}/admin/?embed=1" title="Painel da fundadora"></iframe>`;
+  el.innerHTML = `<div class="painel-bar"><b>Painel admin</b><button type="button" data-act="painelclose">Voltar ao app</button></div><iframe src="${location.origin}/admin/?embed=1" title="Painel da fundadora"></iframe>`;
   document.body.appendChild(el); document.body.style.overflow = 'hidden'; el.querySelector('button').focus();
 }
 function closePainel() { document.getElementById('painelLayer')?.remove(); document.body.style.overflow = ''; if (location.hash === '#painel') { try { history.replaceState(null, '', location.pathname); } catch (_) {} } }
