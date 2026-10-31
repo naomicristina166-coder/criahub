@@ -3096,7 +3096,7 @@ function acReport(bid) {
 }
 function vAccounts() {
   const accs = S.data.accounts;
-  if (accs.length) return warmPanel() + vAccountsGrid();
+  if (accs.length) return warmPanel() + top3Card('contas') + vAccountsGrid();
   if (!accs.length) return `<div class="empty"><strong>Cadastre as contas que você administra</strong>TikTok, Instagram, YouTube… cada perfil ligado à marca. Aí eu monto a grade da semana: qual vídeo foi postado em qual conta, a meta de posts e as views de cada perfil.<button class="btn sm" data-new="accounts">${ic('plus')}Nova conta</button></div>`;
   return vAccountsGrid();
 }
@@ -3408,7 +3408,7 @@ function kitText() {
 }
 function vKit() {
   const k = kit(), brands = S.data.brands.filter(b => !b.example || (k.brands || []).includes(b.id));
-  return `<section class="card section"><h2>Prévia</h2>${kitPreview()}
+  return `${top3Card('kit')}<section class="card section"><h2>Prévia</h2>${kitPreview()}
     <div class="row-btns"><button class="btn" data-act="kitdl">Baixar mídia kit</button><button class="btn ghost" data-act="kitcopy">Copiar texto</button></div><div class="sub">O arquivo baixado é uma página que você pode enviar para as marcas ou subir no seu site.</div></section>
   <form class="card section" data-form="kit"><h2>Editar</h2>
     <div class="grid2"><div class="field"><label for="k_role">Como você se apresenta</label><input type="text" id="k_role" name="role" value="${esc(k.role || '')}" placeholder="Creator de UGC e videomaker mobile"></div><div class="field"><label for="k_city">Cidade</label><input type="text" id="k_city" name="city" value="${esc(k.city || '')}"></div></div>
@@ -5070,6 +5070,62 @@ function warmPending() {
 .warmbar b{display:block;font-size:14px}.warmbar small{display:block;font-size:12px;color:#F4C9D8}
 .warmbar .wt{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
 .warmbar .btn{background:#F4C9D8;color:#420725;border:0}.warmbar .iconbtn{background:rgb(255 255 255 / .12);color:#fff;border:0}
+`; document.head.appendChild(st); })();
+/* ================= seus 3 melhores vídeos (mais views) pro portfólio ================= */
+function topVideos(days) {
+  const since = days ? addDays(today(), -days) : '', out = [];
+  S.data.videos.filter(v => +v.views > 0 && (!since || (v.date || '') >= since)).forEach(v => {
+    const d = v.deliveryId ? S.data.deliveries.find(x => x.id === v.deliveryId) : null, a = accOf(v.brandId, v.platform);
+    out.push({ title: (d && d.title) || v.hook || v.format || 'Vídeo', brand: brandName(v.brandId), platform: PLAT_LBL[v.platform] || v.platform || '', handle: a ? a.handle : '', views: +v.views, url: safeUrl(v.url), date: v.date || '', did: v.deliveryId || '', pk: v.platform });
+  });
+  S.data.deliveries.forEach(d => Object.entries(postsOf(d)).forEach(([aid, p]) => {
+    if (!(+p.views > 0) || (since && (p.date || '') < since)) return;
+    const a = S.data.accounts.find(x => x.id === aid), pk = a ? a.platform : '';
+    if (out.some(o => o.did === d.id && o.pk === pk)) return;
+    out.push({ title: d.title || 'Vídeo', brand: brandName(d.brandId), platform: PLAT_LBL[pk] || pk, handle: a ? a.handle : '', views: +p.views, url: safeUrl(p.url), date: p.date || '', did: d.id, pk });
+  }));
+  /* o mesmo vídeo postado em várias contas conta uma vez só (fica a conta com mais views) */
+  const best = new Map(); out.forEach((v, i) => { const k = v.did || 'x' + i; if (!best.has(k) || best.get(k).views < v.views) best.set(k, v); });
+  return [...best.values()].sort((a, b) => b.views - a.views).slice(0, 3);
+}
+const TOPP = [['30', '30 dias'], ['90', '3 meses'], ['0', 'Sempre']];
+function top3Card(where) {
+  const per = S.f.topP ?? '90', list = topVideos(+per);
+  const medal = ['🥇', '🥈', '🥉'];
+  return `<section class="card section top3" style="gap:12px"><div class="row-h"><h2>Seus 3 melhores vídeos</h2></div>
+    <div class="chips">${TOPP.map(([k, l]) => `<button class="chip" data-topp="${k}" aria-pressed="${per === k}">${l}</button>`).join('')}</div>
+    ${list.length ? `<div class="t3list">${list.map((v, i) => `<div class="t3"><span class="t3m" aria-hidden="true">${medal[i]}</span><div style="min-width:0"><b>${esc(v.title)}</b><small>${esc([v.brand, v.platform, v.handle, v.date ? fmtD(v.date) : ''].filter(Boolean).join(' · '))}</small>${v.url ? `<a href="${esc(v.url)}" target="_blank" rel="noopener" class="link" style="font-size:13px">Abrir vídeo ${ic('ext')}</a>` : '<small style="color:var(--warn)">Sem link: coloque o link pra usar no portfólio</small>'}</div><span class="t3v num">${nCompact(v.views)}<small>views</small></span></div>`).join('')}</div>
+      <div class="row-btns"><button class="btn sm" data-topcopy="1">Copiar pro portfólio</button>${where === 'contas' ? '<button class="btn sm ghost" data-topkit="1">Colocar no mídia kit</button>' : '<button class="btn sm ghost" data-topkit="1">Colocar nos vídeos do mídia kit</button>'}</div>`
+      : `<div class="sub">Registre as views dos seus vídeos (na grade de postagem das contas ou na página da marca) e eu mostro aqui os 3 que mais bombaram${+per ? ' no período' : ''}. É só copiar pro portfólio.</div>`}
+  </section>`;
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-topp],[data-topcopy],[data-topkit]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.topp !== undefined) { S.f.topP = t.dataset.topp; render(); return; }
+  const list = topVideos(+(S.f.topP ?? '90'));
+  if (t.dataset.topcopy) {
+    const txt = list.map((v, i) => `${i + 1}. ${v.title} (${v.brand}${v.platform ? ', ' + v.platform : ''}): ${nFull(v.views)} views${v.url ? '\n' + v.url : ''}`).join('\n\n');
+    try { await navigator.clipboard.writeText(txt); toast('Copiado! É só colar no seu portfólio'); } catch (_) { toast('Não consegui copiar. Tenta de novo.'); }
+    return;
+  }
+  if (t.dataset.topkit) {
+    const k = kit(), have = String(k.videos || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const add = list.filter(v => v.url && !have.some(l => l.includes(v.url))).map(v => `${v.title} · ${nCompact(v.views)} views | ${v.url}`);
+    if (!add.length) { toast(list.some(v => v.url) ? 'Esses vídeos já estão no seu mídia kit' : 'Coloque o link dos vídeos primeiro'); return; }
+    await saveProfile({ kit: { ...k, videos: [...add, ...have].join('\n') } }); toast(`${add.length} vídeo${add.length > 1 ? 's' : ''} no mídia kit ✨`);
+  }
+}, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.t3list{display:flex;flex-direction:column;gap:8px}
+.t3{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.t3m{font-size:22px;text-align:center}
+.t3 a{display:inline-flex;align-items:center;gap:4px;margin-top:2px}
+.t3 a svg{width:13px;height:13px;flex:none}
+.t3 b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t3 small{display:block;font-size:12.5px;color:var(--muted)}
+.t3v{font-family:var(--display);font-size:22px;font-weight:800;text-align:right;line-height:1}
+.t3v small{font-family:var(--body);font-size:11px;font-weight:700;text-align:right}
 `; document.head.appendChild(st); })();
 connect();
 })();
