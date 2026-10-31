@@ -2617,39 +2617,42 @@ function openBrief(id) {
 }
 const briefFor = d => d ? (S.data.briefs.find(b => b.id === d.briefId) || [...S.data.briefs].filter(b => d.brandId && b.brandId === d.brandId).sort((a, b) => String(b.created).localeCompare(String(a.created)))[0] || null) : null;
 const openDels = () => sortBy(S.data.deliveries.filter(d => (d.stage || 0) < 5), 'due');
-function delSelect(id, val, maxStage) {
+function delSelect(id, val, maxStage, none) {
   const list = S.data.deliveries.filter(d => (d.stage || 0) <= maxStage).sort((a, b) => String(a.due || '9').localeCompare(String(b.due || '9')));
-  return `<select id="${id}" aria-label="Entrega"><option value="">Escolha a entrega</option>${list.map(d => `<option value="${d.id}" ${val === d.id ? 'selected' : ''}>${esc(d.title)} · ${esc(brandName(d.brandId))}</option>`).join('')}</select>`;
+  return `<select id="${id}" aria-label="Entrega"><option value="">${none || 'Escolha a entrega'}</option>${list.map(d => `<option value="${d.id}" ${val === d.id ? 'selected' : ''}>${esc(d.title)} · ${esc(brandName(d.brandId))}</option>`).join('')}</select>`;
 }
 function vReview() {
-  const c = S.ct, d = S.data.deliveries.find(x => x.id === c.rDeliv), br = briefFor(d), rules = arr(S.profile.rules);
+  const c = S.ct, d = S.data.deliveries.find(x => x.id === c.rDeliv), br = briefFor(d), rules = arr(S.profile.rules), txt = (c.rMode || 'texto') === 'texto';
   return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Confira o vídeo antes de enviar e evite rodada de ajuste.</div></div></div>${studioSeg()}
   ${studioUsage()}
   <section class="card section"><h2>Revisor antes de enviar</h2>
-    <div class="field"><label for="r_deliv">Qual entrega?</label>${delSelect('r_deliv', c.rDeliv, 4)}</div>
-    ${d ? `<div class="sub">${br ? `Vou conferir com o briefing <b>${esc(br.title)}</b>` : 'Não há briefing salvo dessa marca. Vou usar boas práticas de UGC'}${rules.length ? ` e com a sua checklist (${rules.length} itens)` : ''}.</div>` : ''}
-    <div class="field"><label>Prints do vídeo</label><span class="hint">Mande 3 a 6 quadros: o primeiro segundo, o meio e o final.</span></div>
-    ${filesHtml('rImgs')}
-    <div class="field"><label for="r_txt">Falas, roteiro ou legenda</label><textarea id="r_txt" placeholder="Cole o que você fala no vídeo e o texto da legenda">${esc(c.rTxt)}</textarea></div>
-    <div class="field" style="max-width:220px"><label for="r_dur">Duração (segundos)</label><input type="number" id="r_dur" min="0" inputmode="numeric" value="${esc(c.rDur)}"></div>
-    <div class="row-btns"><button class="btn" data-act="review" ${c.busy ? 'disabled' : ''}>${c.busy === 'rvOut' ? 'Revisando…' : 'Revisar vídeo'}</button>${c.busy === 'rvOut' ? '<button class="btn ghost sm" data-act="stopai">Parar</button>' : ''}</div>
+    <div class="seg" role="group" aria-label="O que você quer revisar"><button data-rmode="texto" aria-pressed="${txt}">Escrever o vídeo</button><button data-rmode="video" aria-pressed="${!txt}">Vídeo pronto (prints)</button></div>
+    <div class="sub">${txt ? 'Escreva ou cole o roteiro, as falas e o que aparece em cada cena. Dá pra revisar antes mesmo de gravar.' : 'Mande prints do vídeo gravado e, se quiser, as falas e a legenda.'}</div>
+    <div class="field"><label for="r_deliv">Qual entrega? <span class="hint" style="display:inline;margin:0">(opcional)</span></label>${delSelect('r_deliv', c.rDeliv, 4, 'Nenhuma: vou escrever o que a marca pediu')}</div>
+    ${d ? `<div class="sub">${br ? `Vou conferir com o briefing <b>${esc(br.title)}</b>` : 'Não há briefing salvo dessa marca. Vou usar boas práticas de UGC'}${rules.length ? ` e com a sua checklist (${rules.length} itens)` : ''}.</div>`
+      : `<div class="grid2"><div class="field"><label for="r_brand">Marca <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="r_brand" value="${esc(c.rBrand || '')}" placeholder="Ex.: Lumi Skincare"></div><div class="field"><label for="r_dur">Duração (segundos)</label><input type="number" id="r_dur" min="0" inputmode="numeric" value="${esc(c.rDur)}"></div></div>
+        <div class="field"><label for="r_ask">O que a marca pediu <span class="hint" style="display:inline;margin:0">(opcional)</span></label><textarea id="r_ask" placeholder="Ex.: mostrar o produto nos 3 primeiros segundos, falar do preço, CTA pro link da bio, não citar concorrente">${esc(c.rAsk || '')}</textarea></div>`}
+    ${txt ? '' : `<div class="field"><label>Prints do vídeo</label><span class="hint">Mande 3 a 6 quadros: o primeiro segundo, o meio e o final.</span></div>${filesHtml('rImgs')}`}
+    <div class="field"><label for="r_txt">${txt ? 'Escreva o vídeo' : 'Falas, roteiro ou legenda'} ${txt ? '' : '<span class="hint" style="display:inline;margin:0">(opcional)</span>'}</label><textarea id="r_txt" style="min-height:${txt ? 180 : 90}px" placeholder="${txt ? 'Ex.:\nCena 1 (0-3s): eu com o sérum na mão: "Gente, achei o sérum que acabou com a minha oleosidade"\nCena 2: aplicando no rosto, close na textura\nCena 3: resultado + "o link tá na bio"\nLegenda: …' : 'Cole o que você fala no vídeo e o texto da legenda'}">${esc(c.rTxt)}</textarea></div>
+    ${d ? `<div class="field" style="max-width:220px"><label for="r_dur">Duração (segundos)</label><input type="number" id="r_dur" min="0" inputmode="numeric" value="${esc(c.rDur)}"></div>` : ''}
+    <div class="row-btns"><button class="btn" data-act="review" ${c.busy ? 'disabled' : ''}>${c.busy === 'rvOut' ? 'Revisando…' : txt ? 'Revisar roteiro' : 'Revisar vídeo'}</button>${c.busy === 'rvOut' ? '<button class="btn ghost sm" data-act="stopai">Parar</button>' : ''}</div>
     ${c.err && S.f.sview === 'revisor' ? `<div class="err">${esc(c.err)}</div>` : ''}${noAIStudio()}
     ${aiBox('rvOut')}
-    ${c.rvOut && !c.busy && d && (d.stage || 0) < 3 ? `<div class="row-btns"><button class="btn soft" data-act="rvsent">Marcar como enviado</button></div>` : ''}
+    ${c.rvOut && !c.busy && d && (d.stage || 0) < 3 && !txt ? `<div class="row-btns"><button class="btn soft" data-act="rvsent">Marcar como enviado</button></div>` : ''}
   </section>`;
 }
 function reviewPrompt(d, br, n) {
-  const r = br?.data || {}, rules = arr(S.profile.rules), ent = (r.entregas || []).find(e => e.titulo === d.title);
-  return `Você é uma revisora experiente de vídeos UGC. Revise o vídeo de uma creator ANTES de ela enviar para a marca.${n ? ` As ${n} imagens anexadas são quadros do vídeo, em ordem (do início ao fim).` : ' Não há imagens; avalie só pelo texto.'}
-Entrega: ${d.title} · formato ${d.format || 'não informado'} · marca ${brandName(d.brandId)}.
+  const r = br?.data || {}, rules = arr(S.profile.rules), ent = d ? (r.entregas || []).find(e => e.titulo === d.title) : null, txt = (S.ct.rMode || 'texto') === 'texto';
+  return `Você é uma revisora experiente de vídeos UGC. Revise ${txt ? 'o ROTEIRO de um vídeo que a creator escreveu (o vídeo pode nem ter sido gravado ainda)' : 'o vídeo de uma creator ANTES de ela enviar para a marca'}.${n ? ` As ${n} imagens anexadas são quadros do vídeo, em ordem (do início ao fim).` : ' Não há imagens; avalie só pelo texto.'}
+${d ? `Entrega: ${d.title} · formato ${d.format || 'não informado'} · marca ${brandName(d.brandId)}.` : `Marca: ${S.ct.rBrand || 'não informada'}.`}
 Duração informada: ${S.ct.rDur ? S.ct.rDur + ' segundos' : 'não informada'}${ent?.duracao ? ` (pedida: ${ent.duracao})` : ''}.
-${br ? `Exigências do briefing:\nObrigatório: ${arr(r.obrigatorio).join('; ') || 'não informado'}\nProibido: ${arr(r.proibido).join('; ') || 'não informado'}\nCTA: ${r.cta || 'não informado'}\nTom: ${r.tom || 'não informado'}` : 'Não há briefing salvo; use boas práticas de UGC.'}
+${!d && (S.ct.rAsk || '').trim() ? `O que a marca pediu (escrito pela creator):\n${S.ct.rAsk.slice(0, 4000)}\n` : ''}${br ? `Exigências do briefing:\nObrigatório: ${arr(r.obrigatorio).join('; ') || 'não informado'}\nProibido: ${arr(r.proibido).join('; ') || 'não informado'}\nCTA: ${r.cta || 'não informado'}\nTom: ${r.tom || 'não informado'}` : 'Não há briefing salvo; use boas práticas de UGC.'}
 ${rules.length ? `Checklist pessoal da creator (erros que ela não quer repetir):\n${rules.map(x => '- ' + x).join('\n')}` : ''}
 Roteiro, falas ou legenda (entre as linhas ${Q}):\n${Q}\n${S.ct.rTxt.slice(0, 20000) || '(não informado)'}\n${Q}
 Responda em português do Brasil, em texto simples, sem markdown e sem asteriscos, com estas seções (título em maiúsculas, uma linha em branco entre elas):
 
 VEREDITO
-(uma linha: "Pronto pra enviar" ou "Ajustar antes de enviar", e o motivo principal)
+(uma linha: ${txt ? '"Pronto pra gravar" ou "Ajustar o roteiro"' : '"Pronto pra enviar" ou "Ajustar antes de enviar"'}, e o motivo principal)
 
 CHECAGEM DO BRIEFING
 • cada exigência com ✓ (atendida), ✗ (faltando) ou ? (não dá pra confirmar)
@@ -4415,7 +4418,7 @@ document.addEventListener('click', async e => {
   if (d.bdiscard) { const b = S.data.briefs.find(x => x.id === d.bdiscard); if (!b) return; const ds = briefDels(b), tk = briefTasks(b);
     if (!confirmTap(t, 'discard' + b.id, `Toque de novo: apaga o briefing, ${ds.length} entrega${ds.length === 1 ? '' : 's'} e ${tk.length} tarefa${tk.length === 1 ? '' : 's'}`, 'Descartar briefing')) return;
     for (const x of tk) await del('tasks', x.id); for (const x of ds) await del('deliveries', x.id); await del('briefs', b.id); S.ct.bOpen = ''; render(); toast('Briefing descartado'); return; }
-  if (d.act === 'review') { const c = S.ct, dl = S.data.deliveries.find(x => x.id === c.rDeliv); if (!dl) { toast('Escolha a entrega'); return; } if (!c.rImgs.length && !c.rTxt.trim()) { toast('Envie prints ou cole o roteiro'); return; } await gated('studio', () => ask('rvOut', reviewPrompt(dl, briefFor(dl), c.rImgs.length), c.rImgs)); return; }
+  if (d.act === 'review') { const c = S.ct, dl = S.data.deliveries.find(x => x.id === c.rDeliv) || null, txt = (c.rMode || 'texto') === 'texto', imgs = txt ? [] : c.rImgs; if (txt ? c.rTxt.trim().length < 15 : !c.rImgs.length && !c.rTxt.trim()) { toast(txt ? 'Escreva o vídeo pra eu revisar' : 'Envie prints ou cole o roteiro'); return; } await gated('studio', () => ask('rvOut', reviewPrompt(dl, dl ? briefFor(dl) : null, imgs.length), imgs)); return; }
   if (d.act === 'rvsent') { const dl = S.data.deliveries.find(x => x.id === S.ct.rDeliv); if (dl) { await put('deliveries', { ...dl, stage: 3 }); toast('Marcado como enviado'); } return; }
   if (d.act === 'gsave') { const dl = S.data.deliveries.find(x => x.id === S.ct.gDeliv); if (dl) { await put('deliveries', { ...dl, script: $('#g_script')?.value || '' }); toast('Roteiro salvo'); } return; }
   if (d.act === 'prompter') { const dl = S.data.deliveries.find(x => x.id === S.ct.gDeliv); const txt = $('#g_script')?.value ?? dl?.script ?? ''; if (dl && txt !== (dl.script || '')) put('deliveries', { ...dl, script: txt }); openPrompter(txt); return; }
@@ -4518,7 +4521,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'fx_in') { FXC[S.f.cur || 'USD'] = e.target.value; const o = $('#fx_out'); if (o) o.innerHTML = fxOutHtml(); return; }
   if (e.target.id === 'fx_fee') { S.profile.fxFee = e.target.value; const o = $('#fx_out'); if (o) o.innerHTML = fxOutHtml(); clearTimeout(S.feeT); S.feeT = setTimeout(() => saveProfile({ fxFee: e.target.value }), 900); return; }
   if (e.target.id === 'rn_res') { TS.res = e.target.value.trim(); tsRefresh(); return; }
-  const map = { tpl: 'tpl', o_draft: 'draft', ct_adj: 'adj', ct_in: 'cIn', m_in: 'mIn', b_in: 'bIn', r_txt: 'rTxt', r_dur: 'rDur', sc_in: 'scIn' };
+  const map = { tpl: 'tpl', o_draft: 'draft', ct_adj: 'adj', ct_in: 'cIn', m_in: 'mIn', b_in: 'bIn', r_txt: 'rTxt', r_dur: 'rDur', r_ask: 'rAsk', r_brand: 'rBrand', sc_in: 'scIn' };
   if (map[e.target.id]) { S.ct[map[e.target.id]] = e.target.value; if (e.target.id === 'tpl') { const sb = $('[data-act=savetpl]'); if (sb) { sb.disabled = false; sb.style.opacity = ''; sb.textContent = 'Salvar modelo'; } } return; } if (e.target.id === 's_color') { document.documentElement.style.setProperty('--accent', e.target.value); document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', 'false')); const nm = $('#sw_name'); if (nm) nm.textContent = colorName(e.target.value); } });
 document.addEventListener('change', async e => {
   if (e.target.id === 'imp_file' && e.target.files[0]) { try { const j = JSON.parse(await e.target.files[0].text()); if (j.app !== 'criahub' || !j.data) throw 0; closeForm(); toast('Importando…');
@@ -5127,6 +5130,7 @@ document.addEventListener('click', async e => {
 .t3v{font-family:var(--display);font-size:22px;font-weight:800;text-align:right;line-height:1}
 .t3v small{font-family:var(--body);font-size:11px;font-weight:700;text-align:right}
 `; document.head.appendChild(st); })();
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-rmode]'); if (!t) return; e.stopImmediatePropagation(); e.preventDefault(); S.ct.rMode = t.dataset.rmode; S.ct.rvOut = ''; render(); }, true);
 connect();
 })();
 </script>
