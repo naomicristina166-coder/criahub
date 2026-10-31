@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>CriaHub · Painel</title>
+<meta name="theme-color" content="#420725">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --vinho:#420725; --vinho-2:#5A0F33; --rosa:#F4C9D8; --rosa-2:#FBE7EE; --rec:#FF5C8A;
+  --bg:#FAF6F7; --card:#fff; --ink:#22141A; --muted:#7A5A64; --line:#EEDFE4; --ok:#1F8A5B; --warn:#B25B00;
+  --display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; --body:Manrope, ui-sans-serif, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+
+/* topo */
+.top{background:var(--vinho);color:#fff;position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top,0)}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:60px}
+.logo{font:800 24px/1 var(--display);letter-spacing:-.035em;display:inline-flex;align-items:baseline;text-decoration:none;white-space:nowrap;flex:none}
+.logo .c{color:var(--rosa)} .logo .h{color:#fff}
+.ii{position:relative;display:inline-block}
+.ii b{position:absolute;left:50%;top:-.12em;width:.24em;height:.24em;margin-left:-.12em;border-radius:50%;background:var(--rec)}
+.top .tag{font:700 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--rosa);border:1px solid rgb(244 201 216 / .35);border-radius:999px;padding:5px 9px}
+.top .sp{flex:1}
+.ib{border:0;background:rgb(255 255 255 / .1);color:#fff;border-radius:10px;min-height:38px;padding:0 12px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.ib:hover{background:rgb(255 255 255 / .18)}
+.ib[aria-pressed=true]{background:var(--rosa);color:var(--vinho)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;color:rgb(255 255 255 / .75);font-weight:700;padding:9px 14px;border-radius:999px;white-space:nowrap}
+.tabs button[aria-current=page]{background:#fff;color:var(--vinho)}
+
+main{padding:20px 0 60px}
+h1{font:800 28px/1.1 var(--display);letter-spacing:-.02em;margin:0 0 4px}
+h2{font:800 19px/1.2 var(--display);letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);font-size:13.5px;margin:0}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+
+/* números */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (min-width:760px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.kpi .l{font-size:12.5px;font-weight:700;color:var(--muted)}
+.kpi .v{font:800 30px/1.05 var(--display);letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.hi{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.kpi.hi .l,.kpi.hi .d{color:var(--rosa)}
+
+/* gráfico de barras por dia */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.bars{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:22px;position:relative}
+.bars .b{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;position:relative;border:0;background:none;padding:0}
+.bars .b i{display:block;width:100%;background:var(--rosa);border-radius:5px 5px 2px 2px;min-height:2px}
+.bars .b:hover i,.bars .b.on i{background:var(--vinho)}
+.bars .b.today i{background:var(--rec)}
+.bars-x{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.tip{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
+.tip b{color:var(--ink)}
+
+/* ranking de telas */
+.rank{display:flex;flex-direction:column;gap:9px}
+.rank .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.rank .n{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .m{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rank .t{grid-column:1/-1;height:8px;border-radius:99px;background:var(--rosa-2);overflow:hidden}
+.rank .t i{display:block;height:100%;background:var(--vinho);border-radius:99px}
+.rank.low .t i{background:var(--rec)}
+.two{display:grid;gap:12px}
+@media (min-width:760px){.two{grid-template-columns:1fr 1fr}}
+
+/* filtros */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.search{flex:1 1 220px;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:#fff}
+select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;font-weight:600}
+.btn{border:0;border-radius:12px;min-height:42px;padding:0 16px;font-weight:800;background:var(--vinho);color:#fff}
+.btn.ghost{background:#fff;color:var(--vinho);border:1px solid var(--line)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.danger{background:#fff;color:#B4232C;border:1px solid #F1C6CA}
+.btn.danger.sure{background:#B4232C;color:#fff;border-color:#B4232C}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* lista de pessoas */
+.list{display:flex;flex-direction:column;gap:10px}
+.person{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.person > button.head{all:unset;box-sizing:border-box;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:14px;cursor:pointer}
+.person > button.head:focus-visible{outline:2px solid var(--vinho);outline-offset:-2px;border-radius:16px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--rosa-2);color:var(--vinho);display:grid;place-items:center;font:800 16px/1 var(--display)}
+.nm{font-weight:800;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.em{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.lg-only{display:none}@media (min-width:600px){.lg-only{display:inline}}
+@media (max-width:380px){.top .tag{display:none}}
+.right{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.right b{display:block;font:800 17px/1.1 var(--display);color:var(--ink)}
+.pill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--rosa-2);color:var(--vinho)}
+.pill.pro{background:var(--vinho);color:#fff}
+.pill.warn{background:#FFF1E0;color:var(--warn)}
+.pill.ok{background:#E3F5EC;color:var(--ok)}
+.pill.me{background:#EFE9FF;color:#4B2BA8}
+.det{border-top:1px solid var(--line);padding:14px;display:grid;gap:16px;background:#FFFCFD}
+.det h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.counts{display:flex;flex-wrap:wrap;gap:6px}
+.counts span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px}
+.counts b{font-variant-numeric:tabular-nums}
+.planbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.planbox input{flex:1 1 200px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+.seg{display:inline-flex;background:var(--rosa-2);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:7px 14px;font-weight:800;font-size:13px;color:var(--vinho)}
+.seg button[aria-pressed=true]{background:var(--vinho);color:#fff}
+.pain{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.links a{font-size:13px;font-weight:700;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.wl{padding:14px}
+.wl .row1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.more{display:block;margin:14px auto 0}
+
+/* respostas "o que mais atrapalha" */
+.quotes{display:grid;gap:8px}
+@media (min-width:760px){.quotes{grid-template-columns:1fr 1fr}}
+.quote{background:#fff;border:1px solid var(--line);border-left:4px solid var(--rosa);border-radius:12px;padding:10px 12px;font-size:14px}
+.quote small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+
+.empty{text-align:center;color:var(--muted);padding:30px 16px;background:#fff;border:1px dashed var(--line);border-radius:16px}
+.state{min-height:70vh;display:grid;place-items:center;padding:24px}
+.state .box{max-width:380px;width:100%;text-align:center}
+.state h1{color:var(--vinho)}
+.state form{display:flex;flex-direction:column;gap:10px;margin-top:18px;text-align:left}
+.state label{font-size:13px;font-weight:800;display:flex;flex-direction:column;gap:5px}
+.state input{min-height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;background:#fff}
+.err{color:#B4232C;font-weight:700;font-size:14px;min-height:20px}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.on{opacity:1;transform:translateX(-50%)}
+body.disc .pv{filter:blur(6px);user-select:none}
+.loading{color:var(--muted);padding:40px 0;text-align:center}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Abrir o CriaHub"><span class="c">cr<span class="ii">ı<b></b></span>a</span><span class="h">hub</span></a>
+    <span class="tag">Fundadora</span>
+    <span class="sp"></span>
+    <button class="ib" id="disc" aria-pressed="false" title="Borra e-mails e telefones, pra tirar print ou mostrar a tela"><span class="lg-only">Modo</span>discreto</button>
+    <button class="ib" id="reload" aria-label="Atualizar">↻</button>
+  </div>
+  <div class="wrap"><nav class="tabs" id="tabs">
+    <button data-tab="geral" aria-current="page">Visão geral</button>
+    <button data-tab="creators">Creators</button>
+    <button data-tab="lista">Lista de espera</button>
+  </nav></div>
+</header>
+<main id="main" class="wrap"><div class="loading">Carregando…</div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* CriaHub · painel da fundadora (criahub.app.br/admin)
+   Usa o mesmo login do app. Quem decide se a pessoa pode ver é o banco (supabase/admin.sql):
+   todas as funções conferem se ela está em private.admins. Pra qualquer outra conta, nada aparece. */
+(() => {
+  const CFG = window.CRIAHUB_ADMIN_CFG || { url: 'https://dvzfllqcgozecvhodygz.supabase.co', key: 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F' };
+  const sb = window.CRIAHUB_ADMIN_SB || (window.supabase && window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: true, autoRefreshToken: true } }));
+  const $ = id => document.getElementById(id);
+  const main = $('main');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nf = n => Number(n || 0).toLocaleString('pt-BR');
+  const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); };
+
+  const SCREENS = {
+    'inicio': 'Início', 'radar': 'Radar UGC',
+    'rotina.hoje': 'Rotina › Meu dia', 'rotina.metas': 'Rotina › Metas', 'rotina.habitos': 'Rotina › Hábitos', 'rotina.semana': 'Rotina › Semana', 'rotina.conquistas': 'Rotina › Conquistas',
+    'marcas.clientes': 'Marcas › Clientes', 'marcas.contas': 'Marcas › Contas', 'marcas.prospec': 'Marcas › Prospecção', 'marcas.permutas': 'Marcas › Permutas', 'marcas.contratos': 'Marcas › Contratos', 'marcas.licencas': 'Marcas › Licenças', 'marcas.kit': 'Marcas › Mídia kit',
+    'agenda.calendario': 'Agenda › Calendário', 'agenda.entregas': 'Agenda › Entregas', 'agenda.datas': 'Agenda › Datas comerciais',
+    'estudio.briefing': 'Estúdio › Briefing', 'estudio.alta': 'Estúdio › Em alta', 'estudio.revisor': 'Estúdio › Revisor', 'estudio.gravar': 'Estúdio › Gravar', 'estudio.lote': 'Estúdio › Em lote', 'estudio.ideias': 'Estúdio › Ideias', 'estudio.ganchos': 'Estúdio › Ganchos', 'estudio.erros': 'Estúdio › Erros',
+    'financeiro.marcas': 'Finanças › Marcas', 'financeiro.dolar': 'Finanças › US$ / €', 'financeiro.rendas': 'Finanças › Rendas', 'financeiro.gastos': 'Finanças › Gastos', 'financeiro.ano': 'Finanças › Ano', 'financeiro.meta': 'Finanças › Meta', 'financeiro.preco': 'Finanças › Preço', 'financeiro.notas': 'Finanças › Notas fiscais'
+  };
+  const scr = k => SCREENS[k] || k || '—';
+  const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
+  const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
+
+  const dur = secsOrMins => { const m = Math.round(secsOrMins); if (m < 1) return '0 min'; if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + String(r).padStart(2, '0') : ''); };
+  const dt = d => d ? new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' }) : '—';
+  const dtt = d => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : '—';
+  const dayLbl = d => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return dd + '/' + m; };
+  const todayStr = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const ago = day => { if (!day) return 'nunca usou'; const t = new Date(todayStr()), d = new Date(String(day).slice(0, 10)); const n = Math.round((t - d) / 864e5); return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : 'há ' + n + ' dias'; };
+  const daysSince = day => day ? Math.round((new Date(todayStr()) - new Date(String(day).slice(0, 10))) / 864e5) : Infinity;
+  const initials = s => (String(s || '?').trim()[0] || '?').toUpperCase();
+
+  const st = { tab: 'geral', ov: null, daily: [], screens: [], users: null, wl: null, metric: 'active', sel: -1,
+    uq: '', uf: 'todas', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {} };
+  try { const t = sessionStorage.getItem('criahub:admtab'); if (t) st.tab = t; } catch (_) {}
+  try { if (localStorage.getItem('criahub:admdisc') === '1') { document.body.classList.add('disc'); $('disc').setAttribute('aria-pressed', 'true'); } } catch (_) {}
+
+  /* ---------- entrada ---------- */
+  function showLogin(msg) {
+    $('top').hidden = true;
+    main.innerHTML = `<div class="state"><div class="box">
+      <span class="logo" style="font-size:48px"><span class="c">cr<span class="ii">ı<b></b></span>a</span><span class="h" style="color:var(--vinho)">hub</span></span>
+      <h1 style="margin-top:14px">Painel da fundadora</h1><p class="sub">Entre com a mesma conta que você usa no CriaHub.</p>
+      <form id="lf"><label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha<input name="pass" type="password" autocomplete="current-password" required></label>
+      <div class="err" id="lerr">${esc(msg || '')}</div><button class="btn" type="submit">Entrar</button></form></div></div>`;
+    $('lf').addEventListener('submit', async e => {
+      e.preventDefault(); const f = e.target; f.querySelector('button').disabled = true; $('lerr').textContent = '';
+      const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.pass.value });
+      if (error) { $('lerr').textContent = 'E-mail ou senha não conferem.'; f.querySelector('button').disabled = false; return; }
+      start();
+    });
+  }
+  function showBlocked(kind) {
+    $('top').hidden = true;
+    const setup = kind === 'setup';
+    main.innerHTML = `<div class="state"><div class="box"><h1>${setup ? 'Falta um passo' : 'Esse espaço é só da fundadora'}</h1>
+      <p class="sub">${setup ? 'O painel ainda não foi ligado no banco. Rode o arquivo <b>supabase/admin.sql</b> no SQL Editor do Supabase e atualize esta página.' : 'Você entrou com uma conta que não é de admin.'}</p>
+      <div class="links" style="justify-content:center;margin-top:18px"><a href="/">Voltar ao CriaHub</a>${setup ? '' : '<a href="#" id="out">Entrar com outra conta</a>'}</div></div></div>`;
+    $('out') && $('out').addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); showLogin(); });
+  }
+
+  async function start() {
+    if (!sb) { main.innerHTML = '<div class="empty">Sem conexão. Confere a internet e atualiza a página.</div>'; return; }
+    const { data } = await sb.auth.getSession();
+    if (!data || !data.session) return showLogin();
+    const r = await sb.rpc('is_admin');
+    if (r.error) return showBlocked(/is_admin|function|schema cache/i.test(r.error.message) ? 'setup' : 'no');
+    if (r.data !== true) return showBlocked('no');
+    $('top').hidden = false;
+    loadAll();
+  }
+
+  async function loadAll() {
+    main.innerHTML = '<div class="loading">Carregando…</div>';
+    const [ov, daily, screens, users, wl] = await Promise.all([
+      sb.rpc('admin_overview'), sb.rpc('admin_daily', { p_days: 30 }), sb.rpc('admin_screens', { p_days: 30 }), sb.rpc('admin_users'), sb.rpc('admin_waitlist')
+    ]);
+    const bad = [ov, daily, screens, users, wl].find(x => x.error);
+    if (bad) { main.innerHTML = `<div class="empty">Não consegui carregar agora (${esc(bad.error.message)}). Tenta atualizar.</div>`; return; }
+    st.ov = ov.data; st.daily = daily.data || []; st.screens = screens.data || []; st.users = users.data || []; st.wl = wl.data || [];
+    st.sel = st.daily.length - 1;
+    render();
+  }
+
+  /* ---------- telas ---------- */
+  function render() {
+    document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === st.tab ? 'page' : 'false'));
+    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : vGeral();
+  }
+
+  const METRICS = { active: ['Creators ativas', 'creators usaram o app'], signups: ['Cadastros', 'cadastros novos'], mins: ['Minutos no app', 'minutos no app'], waitlist: ['Lista de espera', 'entraram na lista'] };
+  function vGeral() {
+    const o = st.ov || {}, users = o.users || 0;
+    const hello = (() => { const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'America/Sao_Paulo' })); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; })();
+    const kp = (l, v, d, hi) => `<div class="kpi${hi ? ' hi' : ''}"><div class="l">${l}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+    const pct = n => users ? Math.round(n / users * 100) + '% das cadastradas' : '';
+    const D = st.daily, m = st.metric, max = Math.max(1, ...D.map(x => x[m] || 0)), today = todayStr();
+    const sel = D[st.sel];
+    const used = st.screens.filter(s => SCREENS[s.screen]), maxM = Math.max(1, ...used.map(s => s.mins));
+    const totUsers = Math.max(1, o.active30 || 0);
+    const low = Object.keys(SCREENS).map(k => st.screens.find(s => s.screen === k) || { screen: k, mins: 0, users: 0 }).sort((a, b) => a.users - b.users || a.mins - b.mins).slice(0, 8);
+    return `
+      <h1>${hello}, fundadora 🍒</h1><p class="sub">Tudo que acontece no CriaHub, num lugar só. Sua conta não entra nesses números.</p>
+      <div class="kpis">
+        ${kp('Creators cadastradas', nf(users), `+${nf(o.new7)} nos últimos 7 dias`, true)}
+        ${kp('Ativas hoje', nf(o.activeToday), pct(o.activeToday))}
+        ${kp('Ativas em 7 dias', nf(o.active7), pct(o.active7))}
+        ${kp('Ativas em 30 dias', nf(o.active30), pct(o.active30))}
+        ${kp('No plano Pro', nf(o.pro), users ? `${nf(users - (o.pro || 0))} no Grátis` : '')}
+        ${kp('Lista de espera', nf(o.waitlist), `+${nf(o.waitlist7)} nos últimos 7 dias`)}
+        ${kp('Horas no app', dur((o.secs30 || 0) / 60), 'somando todas, últimos 30 dias')}
+        ${kp('Tempo médio por dia', dur((o.avgDaySecs || 0) / 60), 'por creator, nos dias que ela abre')}
+      </div>
+      <section class="sec card">
+        <div class="sec-h"><div><h2>Últimos 30 dias</h2><p class="sub">Toque numa barra pra ver o dia.</p></div>
+          <div class="chips">${Object.entries(METRICS).map(([k, [l]]) => `<button class="chip" data-metric="${k}" aria-pressed="${k === m}">${l}</button>`).join('')}</div></div>
+        <div class="bars" role="group" aria-label="${METRICS[m][0]} por dia">${D.map((x, i) => `<button class="b${i === st.sel ? ' on' : ''}${String(x.day).slice(0, 10) === today ? ' today' : ''}" data-bar="${i}" aria-label="${dayLbl(x.day)}: ${nf(x[m])} ${METRICS[m][1]}"><i style="height:${Math.round((x[m] || 0) / max * 100)}%"></i></button>`).join('')}</div>
+        <div class="bars-x"><span>${D[0] ? dayLbl(D[0].day) : ''}</span><span>hoje</span></div>
+        <div class="tip">${sel ? `<b>${dayLbl(sel.day)}</b> · ${nf(sel.active)} ativas · ${nf(sel.signups)} cadastros · ${dur(sel.mins)} no app · ${nf(sel.waitlist)} na lista` : ''}</div>
+      </section>
+      <div class="two sec">
+        <section class="card"><h2>O que mais usam</h2><p class="sub" style="margin-bottom:14px">Tempo nas telas, últimos 30 dias</p>
+          ${used.length ? `<div class="rank">${used.slice(0, 10).map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${dur(s.mins)} · ${nf(s.users)} ${s.users === 1 ? 'creator' : 'creators'}</span><span class="t"><i style="width:${Math.max(2, Math.round(s.mins / maxM * 100))}%"></i></span></div>`).join('')}</div>` : '<div class="empty">Ainda sem uso registrado. Os números começam a aparecer quando as creators abrirem o app.</div>'}
+        </section>
+        <section class="card"><h2>O que menos usam</h2><p class="sub" style="margin-bottom:14px">Telas que quase ninguém abre: vale explicar melhor, mudar de lugar ou repensar</p>
+          <div class="rank low">${low.map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${s.users ? `${nf(s.users)} de ${nf(o.active30 || 0)} · ${dur(s.mins)}` : 'ninguém abriu'}</span><span class="t"><i style="width:${Math.round(s.users / totUsers * 100)}%"></i></span></div>`).join('')}</div>
+        </section>
+      </div>`;
+  }
+
+  function userList() {
+    const q = st.uq.trim().toLowerCase();
+    let L = (st.users || []).filter(u => !q || (u.name + ' ' + u.email).toLowerCase().includes(q));
+    if (st.uf === 'gratis') L = L.filter(u => u.plan !== 'pro');
+    if (st.uf === 'pro') L = L.filter(u => u.plan === 'pro');
+    if (st.uf === 'sumidas') L = L.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7);
+    const by = { recentes: (a, b) => new Date(b.created_at) - new Date(a.created_at), tempo: (a, b) => b.mins_30 - a.mins_30, ultima: (a, b) => daysSince(a.last_seen) - daysSince(b.last_seen) }[st.us];
+    return L.sort(by);
+  }
+  function vCreators() {
+    const all = st.users || [], L = userList();
+    const n = { todas: all.length, gratis: all.filter(u => u.plan !== 'pro').length, pro: all.filter(u => u.plan === 'pro').length, sumidas: all.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length };
+    return `<div class="sec-h"><div><h1>Creators</h1><p class="sub">${nf(all.length)} contas no CriaHub. Toque numa creator pra ver os detalhes e mudar o plano.</p></div>
+      <button class="btn ghost sm" data-csv="users">Baixar planilha</button></div>
+      <div class="tools"><input class="search" type="search" placeholder="Buscar por nome ou e-mail" value="${esc(st.uq)}" data-q="u" aria-label="Buscar creator">
+        <select class="sel" data-sort aria-label="Ordenar"><option value="recentes"${st.us === 'recentes' ? ' selected' : ''}>Mais recentes</option><option value="tempo"${st.us === 'tempo' ? ' selected' : ''}>Mais tempo no app</option><option value="ultima"${st.us === 'ultima' ? ' selected' : ''}>Usou por último</option></select></div>
+      <div class="chips" style="margin-bottom:14px">${[['todas', 'Todas'], ['gratis', 'Grátis'], ['pro', 'Pro'], ['sumidas', 'Sumidas há 7+ dias']].map(([k, l]) => `<button class="chip" data-uf="${k}" aria-pressed="${st.uf === k}">${l} · ${nf(n[k])}</button>`).join('')}</div>
+      <div class="list" id="ulist">${L.length ? L.map(personCard).join('') : '<div class="empty">Nenhuma creator encontrada.</div>'}</div>`;
+  }
+  function personCard(u) {
+    const open = st.open === u.user_id, total = Object.values(u.counts || {}).reduce((a, b) => a + b, 0);
+    const p = st.plan[u.user_id] || u.plan;
+    return `<article class="person"><button class="head" data-open="${u.user_id}" aria-expanded="${open}">
+      <span class="av">${esc(initials(u.name || u.email))}</span>
+      <span style="min-width:0"><span class="nm">${esc(u.name || 'Sem nome')} <span class="pill${u.plan === 'pro' ? ' pro' : ''}">${u.plan === 'pro' ? 'Pro' : 'Grátis'}</span>${u.is_admin ? '<span class="pill me">você</span>' : ''}${u.confirmed ? '' : '<span class="pill warn">e-mail não confirmado</span>'}</span>
+        <span class="em pv">${esc(u.email)}</span>
+        <span class="meta">Entrou ${dt(u.created_at)} · usou ${ago(u.last_seen)}${u.top_screen ? ' · mais usa: ' + esc(scr(u.top_screen)) : ''}</span></span>
+      <span class="right"><b>${dur(u.mins_30)}</b>${nf(u.days_30)} ${u.days_30 === 1 ? 'dia' : 'dias'}/30</span></button>
+      ${open ? `<div class="det">
+        <div><h3>No app (não abre o conteúdo, só conta)</h3>${total ? `<div class="counts">${Object.entries(u.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span><b>${nf(v)}</b> ${esc(COLS[k] || k)}</span>`).join('')}</div>` : '<p class="sub">Ainda não cadastrou nada (sem contar os exemplos).</p>'}</div>
+        <div><h3>Onde passa o tempo · últimos 30 dias</h3>${uscreens(u.user_id)}</div>
+        <div class="meta">Abriu o app ${nf(u.opens_30)} ${u.opens_30 === 1 ? 'vez' : 'vezes'} em 30 dias · ${dur(u.mins_total)} no total · último login ${dtt(u.last_sign_in_at)}</div>
+        <div><h3>Plano</h3><div class="planbox">
+          <span class="seg" role="group" aria-label="Plano"><button data-plan="free" aria-pressed="${p !== 'pro'}">Grátis</button><button data-plan="pro" aria-pressed="${p === 'pro'}">Pro</button></span>
+          <input id="pnote" placeholder="Anotação (ex.: testadora, cortesia, pagou via Pix)" value="${esc(u.plan_note || '')}" maxlength="200">
+          <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
+          ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
+      </div>` : ''}</article>`;
+  }
+  function uscreens(id) {
+    const L = st.uscr[id];
+    if (!L) return '<p class="sub">Carregando…</p>';
+    if (!L.length) return '<p class="sub">Sem uso registrado nos últimos 30 dias.</p>';
+    const mx = Math.max(1, ...L.map(s => s.mins));
+    return `<div class="rank">${L.slice(0, 8).map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${dur(s.mins)} · ${nf(s.days)} ${s.days === 1 ? 'dia' : 'dias'}</span><span class="t"><i style="width:${Math.max(2, Math.round(s.mins / mx * 100))}%"></i></span></div>`).join('')}</div>`;
+  }
+
+  function wlList() {
+    const q = st.wq.trim().toLowerCase();
+    return (st.wl || []).filter(w => (st.wk === 'todos' || w.kind === st.wk) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q)));
+  }
+  function vLista() {
+    const all = st.wl || [], L = wlList();
+    const byKind = Object.keys(KINDS).map(k => [k, all.filter(w => w.kind === k).length]);
+    const src = {}; all.forEach(w => { const s = w.source || 'site'; src[s] = (src[s] || 0) + 1; });
+    const pains = all.filter(w => w.pain).slice(0, 6);
+    return `<div class="sec-h"><div><h1>Lista de espera</h1><p class="sub">${nf(all.length)} ${all.length === 1 ? 'pessoa' : 'pessoas'} esperando o dia 23/11.</p></div>
+      <button class="btn ghost sm" data-csv="wl">Baixar planilha</button></div>
+      <div class="two">
+        <section class="card"><h2>Quem são</h2><div class="rank" style="margin-top:12px">${byKind.map(([k, v]) => `<div class="r"><span class="n">${KINDS[k]}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${all.length ? Math.round(v / all.length * 100) : 0}%"></i></span></div>`).join('')}</div></section>
+        <section class="card"><h2>De onde vieram</h2><p class="sub">Use links como criahub.app.br/lista?origem=bio</p><div class="rank" style="margin-top:12px">${Object.entries(src).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => `<div class="r"><span class="n">${esc(k)}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${Math.round(v / Math.max(1, all.length) * 100)}%"></i></span></div>`).join('') || '<p class="sub">Ainda ninguém.</p>'}</div></section>
+      </div>
+      ${pains.length ? `<section class="sec"><div class="sec-h"><div><h2>O que mais atrapalha</h2><p class="sub">As respostas mais recentes. Ideia de conteúdo pronta.</p></div></div><div class="quotes">${pains.map(w => `<div class="quote">“${esc(w.pain)}”<small>${esc((w.name || '').split(' ')[0])} · ${KINDS[w.kind] || ''}</small></div>`).join('')}</div></section>` : ''}
+      <section class="sec"><h2>Todas as inscrições</h2>
+      <div class="tools"><input class="search" type="search" placeholder="Buscar nome, e-mail, @ ou resposta" value="${esc(st.wq)}" data-q="w" aria-label="Buscar na lista">
+        <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="list">${L.length ? L.slice(0, st.wlim).map(wlCard).join('') : '<div class="empty">Ninguém por aqui com esse filtro.</div>'}</div>
+      ${L.length > st.wlim ? `<button class="btn ghost more" data-more>Ver mais (${nf(L.length - st.wlim)})</button>` : ''}</section>`;
+  }
+  function wlCard(w) {
+    const ig = (w.instagram || '').replace(/^@/, ''), wa = String(w.whatsapp || '').replace(/\D/g, '');
+    const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '';
+    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}</div>
+      <div class="em pv">${esc(w.email)}</div><div class="meta">${dtt(w.created_at)} · veio de: ${esc(w.source || 'site')}</div></div>
+      <button class="btn danger sm${st.sure === w.id ? ' sure' : ''}" data-rm="${w.id}">${st.sure === w.id ? 'Confirmar' : 'Remover'}</button></div>
+      ${w.pain ? `<div class="pain">“${esc(w.pain)}”</div>` : ''}
+      ${ig || waNum ? `<div class="links">${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="pv">@${esc(ig)}</a>` : ''}${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="pv">WhatsApp</a>` : ''}</div>` : ''}</article>`;
+  }
+
+  /* ---------- planilhas ---------- */
+  function csv(rows, name) {
+    const s = rows.map(r => r.map(v => { const t = String(v ?? ''); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + s], { type: 'text/csv;charset=utf-8' }));
+    a.download = name + '-' + todayStr() + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const csvUsers = () => csv([['Nome', 'E-mail', 'Plano', 'Entrou em', 'Último uso', 'Minutos (30 dias)', 'Dias ativos (30)', 'Mais usa', ...Object.values(COLS)],
+    ...userList().map(u => [u.name, u.email, u.plan === 'pro' ? 'Pro' : 'Grátis', dt(u.created_at), u.last_seen ? dt(u.last_seen) : '', u.mins_30, u.days_30, scr(u.top_screen), ...Object.keys(COLS).map(k => (u.counts || {})[k] || 0)])], 'criahub-creators');
+  const csvWl = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'O que faz', 'O que mais atrapalha', 'Veio de', 'Entrou em', 'E-mail de boas-vindas'],
+    ...wlList().map(w => [w.name, w.email, w.instagram, w.whatsapp, KINDS[w.kind] || '', w.pain, w.source, dtt(w.created_at), w.welcomed_at ? 'enviado' : ''])], 'criahub-lista-de-espera');
+
+  /* ---------- ações ---------- */
+  document.addEventListener('click', async e => {
+    const t = e.target.closest('button, a'); if (!t) return;
+    const d = t.dataset;
+    if (t.closest('#tabs') && d.tab) { st.tab = d.tab; st.sure = null; try { sessionStorage.setItem('criahub:admtab', st.tab); } catch (_) {} render(); window.scrollTo(0, 0); return; }
+    if (t.id === 'reload') { loadAll(); return; }
+    if (t.id === 'disc') { const on = !document.body.classList.toggle('disc') ? false : true; t.setAttribute('aria-pressed', String(on)); try { localStorage.setItem('criahub:admdisc', on ? '1' : ''); } catch (_) {} toast(on ? 'Modo discreto ligado' : 'Modo discreto desligado'); return; }
+    if (d.metric) { st.metric = d.metric; render(); return; }
+    if (d.bar) { st.sel = +d.bar; render(); return; }
+    if (d.uf) { st.uf = d.uf; render(); return; }
+    if (d.csv) { d.csv === 'users' ? csvUsers() : csvWl(); return; }
+    if (d.more !== undefined) { st.wlim += 50; render(); return; }
+    if (d.open) {
+      st.open = st.open === d.open ? null : d.open; render();
+      if (st.open && !st.uscr[st.open]) { const id = st.open; const r = await sb.rpc('admin_user_screens', { p_user: id }); st.uscr[id] = r.error ? [] : r.data || []; if (st.tab === 'creators') render(); }
+      return;
+    }
+    if (d.plan) { st.plan[st.open] = d.plan; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
+    if (d.saveplan) {
+      const id = d.saveplan, u = st.users.find(x => x.user_id === id), plan = st.plan[id] || u.plan, note = ($('pnote') || {}).value?.trim() || null;
+      t.disabled = true;
+      const r = await sb.rpc('admin_set_plan', { p_user: id, p_plan: plan, p_note: note });
+      t.disabled = false;
+      if (r.error) { toast('Não consegui salvar. Tenta de novo.'); return; }
+      if (u.plan !== plan) u.plan_since = new Date().toISOString();
+      u.plan = plan; u.plan_note = note; delete st.plan[id];
+      st.ov && (st.ov.pro = st.users.filter(x => x.plan === 'pro' && !x.is_admin).length);
+      toast(plan === 'pro' ? 'Agora ela é Pro ✨' : 'Plano Grátis salvo'); render(); return;
+    }
+    if (d.rm) {
+      if (st.sure !== d.rm) { st.sure = d.rm; render(); setTimeout(() => { if (st.sure === d.rm) { st.sure = null; if (st.tab === 'lista') render(); } }, 4000); return; }
+      t.disabled = true;
+      const r = await sb.rpc('admin_waitlist_remove', { p_id: d.rm });
+      if (r.error) { t.disabled = false; toast('Não consegui remover.'); return; }
+      st.wl = st.wl.filter(w => w.id !== d.rm); st.sure = null; if (st.ov) st.ov.waitlist = st.wl.length;
+      toast('Removida da lista'); render(); return;
+    }
+  });
+  document.addEventListener('input', e => {
+    const q = e.target.dataset && e.target.dataset.q; if (!q) return;
+    if (q === 'u') st.uq = e.target.value; else { st.wq = e.target.value; st.wlim = 50; }
+    const pos = e.target.selectionStart; render();
+    const el = document.querySelector(`[data-q="${q}"]`); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (_) {} }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.matches('[data-sort]')) { st.us = e.target.value; render(); }
+    if (e.target.matches('[data-wk]')) { st.wk = e.target.value; st.wlim = 50; render(); }
+  });
+  sb && sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin('Sua sessão terminou. Entre de novo.'); });
+
+  start();
+})();
+</script>
+</body>
+</html>

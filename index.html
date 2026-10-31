@@ -132,6 +132,20 @@ window.CRIAHUB_CONFIG = {
   window.addEventListener('online', () => { if (!session && hasStored()) boot(0); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { sb.auth.getSession().catch(() => {}); qFlush(); } });
 
+  /* ---------- uso do app: só quanto tempo fica em cada tela (nunca o conteúdo). Vai pro painel da fundadora ---------- */
+  (() => {
+    let acc = {}, last = Date.now(), opened = false;
+    const screen = () => { try { const T = TOOLS[S.tab]; return T ? S.tab + '.' + (S.f[T.f] || T.list[0][0]) : S.tab; } catch (_) { return 'inicio'; } };
+    const tick = () => { const now = Date.now(), d = Math.min(now - last, 60000); last = now; if (document.visibilityState !== 'visible' || !session || document.getElementById('auth')) return; const k = String(screen() || '').toLowerCase().replace(/[^a-z._]/g, '').slice(0, 40) || 'outro'; acc[k] = (acc[k] || 0) + d / 1000; };
+    const flush = () => { tick(); const p = {}; for (const [k, v] of Object.entries(acc)) if (v >= 1) p[k] = Math.round(v); acc = {}; if (!session) return; const open = !opened; if (!open && !Object.keys(p).length) return; opened = true; sb.rpc('track_usage', { p_secs: p, p_open: open }).then(() => {}, () => {}); };
+    ready.then(() => { last = Date.now(); setInterval(tick, 5000); setInterval(flush, 60000); setTimeout(flush, 3000); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); else last = Date.now(); });
+    window.addEventListener('pagehide', flush);
+    /* entrada escondida do painel: 5 toques rápidos no logo (só abre pra admin; pras outras não acontece nada) */
+    let taps = [];
+    document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('[data-logo]') || !session) return; const n = Date.now(); taps = taps.filter(t => n - t < 2500); taps.push(n); if (taps.length < 5) return; taps = []; sb.rpc('is_admin').then(({ data }) => { if (data === true) location.href = location.origin + '/admin/'; }, () => {}); });
+  })();
+
   /* ---------- dados ---------- */
   const cache = { profile: null, cols: {} }, subs = { profile: [], cols: {} };
   let loaded = null;
