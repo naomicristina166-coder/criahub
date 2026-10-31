@@ -1,21 +1,29 @@
 /* CriaHub · e-mail de boas-vindas da lista de espera
    Quem chama: o gatilho do banco (supabase/boas-vindas.sql) sempre que alguém entra em public.waitlist.
-   O que faz: busca a inscrição, manda o e-mail pelo Resend e marca welcomed_at (nunca manda duas vezes).
+   O que faz: busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
+
+   Por onde o e-mail sai:
+   • Gmail do CriaHub (criahubb@gmail.com), com a foto do perfil, se GMAIL_APP_PASSWORD estiver nos segredos
+   • senão, pelo Resend (oi@criahub.app.br)
 
    Como colocar no ar (uma vez):
-   1. Supabase › Edge Functions › Deploy a new function › Via Editor › nome: boas-vindas › cole este arquivo › Deploy
-   2. Na função boas-vindas › Details: desligue "Verify JWT with legacy secret" › Save
-   3. Edge Functions › Secrets (Manage secrets), adicione:
-        RESEND_API_KEY        a chave do Resend (começa com re_)
+   1. Supabase › Edge Functions › boas-vindas › Code › apague tudo, cole este arquivo › Deploy
+      ("Verify JWT with legacy secret" continua desligado)
+   2. Edge Functions › Secrets:
+        GMAIL_APP_PASSWORD    a senha de app do Google (16 letras) da conta criahubb@gmail.com
         WAITLIST_HOOK_SECRET  o código que aparece no fim do supabase/boas-vindas.sql
-        MAIL_FROM             (opcional) ex.: CriaHub <oi@criahub.app.br>
-        MAIL_REPLY_TO         (opcional) ex.: criahubb@gmail.com */
+        GMAIL_USER            (opcional) padrão: criahubb@gmail.com
+        MAIL_NAME             (opcional) nome do remetente, padrão: CriaHub
+        RESEND_API_KEY        (só se for usar o Resend) */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import nodemailer from 'npm:nodemailer@6.9.16';
 
 const env = (k: string) => Deno.env.get(k) || '';
 const sb = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'));
-const FROM = env('MAIL_FROM') || 'CriaHub <oi@criahub.app.br>';
-const REPLY_TO = env('MAIL_REPLY_TO') || 'criahubb@gmail.com';
+const NAME = env('MAIL_NAME') || 'CriaHub';
+const GMAIL = env('GMAIL_USER') || 'criahubb@gmail.com';
+const GPASS = env('GMAIL_APP_PASSWORD').replace(/\s+/g, '');
+const REPLY_TO = env('MAIL_REPLY_TO') || GMAIL;
 const LAUNCH = '23 de novembro';
 
 const esc = (s: string) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -93,16 +101,24 @@ Deno.serve(async req => {
   if (error || !row) return new Response('não achei', { status: 404 });
   if (row.welcomed_at) return new Response('já enviado');
 
-  const key = env('RESEND_API_KEY');
-  if (!key) return new Response('falta RESEND_API_KEY', { status: 500 });
-
   const mail = welcomeEmail(row);
-  const r = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to: [row.email], reply_to: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text }),
-  });
-  if (!r.ok) return new Response(`resend: ${r.status} ${await r.text()}`, { status: 502 });
+  try {
+    if (GPASS) {
+      const smtp = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: GMAIL, pass: GPASS } });
+      await smtp.sendMail({ from: { name: NAME, address: GMAIL }, to: row.email, replyTo: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text });
+    } else {
+      const key = env('RESEND_API_KEY');
+      if (!key) return new Response('falta GMAIL_APP_PASSWORD (ou RESEND_API_KEY)', { status: 500 });
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: env('MAIL_FROM') || `${NAME} <oi@criahub.app.br>`, to: [row.email], reply_to: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text }),
+      });
+      if (!r.ok) return new Response(`resend: ${r.status} ${await r.text()}`, { status: 502 });
+    }
+  } catch (e) {
+    return new Response(`gmail: ${(e as Error).message}`, { status: 502 });
+  }
 
   await sb.from('waitlist').update({ welcomed_at: new Date().toISOString() }).eq('id', id);
   return new Response('enviado');
