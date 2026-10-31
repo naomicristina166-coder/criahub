@@ -1120,7 +1120,7 @@ const COLOR_FAMS = [
 ];
 const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
 const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
-const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
+const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
@@ -1166,7 +1166,7 @@ const LEAD_NEXT = { contatada: 3, respondeu: 2, proposta: 4 };
 const CHANNELS = ['DM Instagram', 'E-mail', 'DM TikTok', 'LinkedIn', 'WhatsApp', 'Indicação', 'Plataforma de UGC'];
 
 /* ================= state & storage ================= */
-const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
+const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], warm: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
   f: { brand: 'todas', idea: 'todas', month: monthKey(today()), agBrand: '', front: '', mview: 'clientes', rview: 'hoje', day: today(), wk: 0, sview: 'briefing', fview: 'marcas', year: 0, cur: 'USD', aview: 'calendario', calM: today().slice(0, 7), calDay: today() },
   ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
   sample: null, imgLimits: null, news: [], newsReady: false };
@@ -3096,7 +3096,12 @@ function acReport(bid) {
 }
 function vAccounts() {
   const accs = S.data.accounts;
+  if (accs.length) return warmPanel() + vAccountsGrid();
   if (!accs.length) return `<div class="empty"><strong>Cadastre as contas que você administra</strong>TikTok, Instagram, YouTube… cada perfil ligado à marca. Aí eu monto a grade da semana: qual vídeo foi postado em qual conta, a meta de posts e as views de cada perfil.<button class="btn sm" data-new="accounts">${ic('plus')}Nova conta</button></div>`;
+  return vAccountsGrid();
+}
+function vAccountsGrid() {
+  const accs = S.data.accounts;
   const wk = S.f.pwk || 0, ws = addDays(weekStart(today()), wk * 7), we = addDays(ws, 6);
   const bids = [...new Set(accs.map(a => a.brandId || ''))];
   const nav = `<div class="calnav"><button class="iconbtn" data-pwk="-1" aria-label="Semana anterior">‹</button><h2 style="font-size:17px">Semana ${fmtD(ws)} a ${fmtD(we)}</h2><button class="iconbtn" data-pwk="1" aria-label="Próxima semana">›</button></div>${wk ? '<button class="link" data-pwk="0">Voltar para esta semana</button>' : ''}`;
@@ -4013,6 +4018,8 @@ const FORMS = {
   accounts: { title: 'conta', fields: [
     { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: PLATFORMS.map(x => [x, x]), d: 'TikTok' }, { k: 'handle', l: '@ da conta', t: 'text', req: 1, ph: '@perfil' }] },
     { k: 'brandId', l: 'Marca dessa conta', t: 'select', o: brandOpts },
+    { row: [{ k: 'phase', l: 'Fase da conta', t: 'select', o: [['teste', 'Em teste (aquecendo)'], ['ativa', 'Ativa (postando)'], ['pausada', 'Pausada']], d: 'teste' }, { k: 'testStart', l: 'Início do teste', t: 'date', d: today }] },
+    { k: 'testDays', l: 'Dias de teste', t: 'select', o: [['3', '3 dias'], ['4', '4 dias'], ['5', '5 dias']], d: '5', hint: 'Em cada dia: 15 min de manhã, de tarde e de noite.' },
     { row: [{ k: 'goalWeek', l: 'Meta de posts por semana', t: 'number', d: 7 }, { k: 'goalViews', l: 'Meta de views no ciclo', t: 'number', hint: 'Opcional' }] },
     { k: 'url', l: 'Link do perfil (opcional)', t: 'text', ph: 'https://…' },
     { k: 'notes', l: 'Observações', t: 'textarea', ph: 'Login, horário que mais engaja, regras da marca…' },
@@ -4910,6 +4917,7 @@ function homePend() {
   const day = +t.slice(8, 10);
   if (S.profile.mei && day >= 12 && day <= 20 && !dasPaid(monthKey(t)) && !proLocked('financeiro.notas')) add(1, 'DAS do MEI vence dia 20', brl(dasValue()), 'data-fview="notas"');
   const dw = datesWindow()[0]; if (dw) add(1, `Hora de prospectar: ${esc(dw.name)}`, 'As marcas já estão fechando campanhas', 'data-goag="datas"');
+  const wp = warmPending(); add(wp.length, `${wp.length} conta${wp.length > 1 ? 's' : ''} pra aquecer agora`, wp.slice(0, 3).map(a => a.handle).join(', ') + ' · ' + WSLOTS[wNow()][0].toLowerCase(), 'data-gomv="contas"');
   if (newsUnseen()) add(1, 'Radar UGC: notícias novas', S.news[0] && S.news[0].headline ? S.news[0].headline : 'O resumo do mercado de hoje', 'data-tab="radar"');
   return `<section class="section"><div class="row-h"><h2>${it.length ? 'Precisa de você' : 'Tudo em dia'}</h2>${it.length ? `<span class="sub num">${it.length}</span>` : ''}</div>
     ${it.length ? `<div class="pend-list">${it.join('')}</div>` : '<div class="card pend-ok">Nada pendente agora ✨ Aproveita pra criar.</div>'}</section>`;
@@ -4926,6 +4934,99 @@ function homePend() {
 .pd-t small{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pend svg{width:18px;height:18px;color:var(--muted)}
 .pend-ok{color:var(--muted);font-weight:600}
+`; document.head.appendChild(st); })();
+/* ================= Tech Canvas: aquecimento das contas (Marcas › Contas) =================
+   Fase de teste (3 a 5 dias) e conta ativa: 15 min de manhã, de tarde e de noite.
+   No dia de post: 15 min antes e 5 a 15 min depois. Cada sessão vira um item em "warm". */
+const WSLOTS = { manha: ['Manhã', 15], tarde: ['Tarde', 15], noite: ['Noite', 15], pre: ['Antes do post', 15], pos: ['Depois do post', 10] };
+const wNow = () => { const h = new Date().getHours(); return h < 12 ? 'manha' : h < 18 ? 'tarde' : 'noite'; };
+const wLog = (aid, d, slot) => S.data.warm.find(x => x.id === `${aid}_${d}_${slot}`);
+const wPostDay = (aid, d) => !!wLog(aid, d, 'post');
+const wSlots = (a, d) => [...['manha', 'tarde', 'noite'], ...(wPostDay(a.id, d) ? ['pre', 'pos'] : [])];
+const wAccs = () => S.data.accounts.filter(a => (a.phase || 'ativa') !== 'pausada');
+function wPhase(a) {
+  if ((a.phase || 'ativa') !== 'teste') return { txt: 'Ativa', done: false };
+  const n = a.testStart ? diff(a.testStart, today()) + 1 : 1, tot = +a.testDays || 5;
+  return n > tot ? { txt: `Teste concluído (${tot} dias)`, done: true } : { txt: `Em teste · dia ${Math.max(1, n)} de ${tot}`, done: false };
+}
+let WT = null; try { WT = JSON.parse(localStorage.getItem('criahub:warmT') || 'null'); } catch (_) {}
+let wTick = null;
+const wSave = () => { try { WT ? localStorage.setItem('criahub:warmT', JSON.stringify(WT)) : localStorage.removeItem('criahub:warmT'); } catch (_) {} };
+function warmPanel() {
+  const t = today(), accs = wAccs(); if (!accs.length) return '';
+  let tot = 0, done = 0; accs.forEach(a => wSlots(a, t).forEach(sl => { tot++; if (wLog(a.id, t, sl)) done++; }));
+  const cur = wNow(), days = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
+  const rows = accs.map(a => {
+    const ph = wPhase(a), sl = wSlots(a, t);
+    const chips = sl.map(k => { const l = wLog(a.id, t, k), on = WT && WT.aid === a.id && WT.slot === k;
+      return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}</button>`; }).join('');
+    const dots = days.map(d => { const n = ['manha', 'tarde', 'noite', 'pre', 'pos'].filter(k => wLog(a.id, d, k)).length; return `<i class="${n >= 3 ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
+    return `<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
+      <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
+      <div class="wchips">${chips}<button class="wchip post ${wPostDay(a.id, t) ? 'ok' : ''}" data-warmpost="${a.id}" aria-pressed="${wPostDay(a.id, t)}">${wPostDay(a.id, t) ? '📌 Posto hoje' : '+ Vou postar hoje'}</button></div>
+      ${ph.done ? `<button class="link" data-warmactive="${a.id}" style="text-align:left">Teste acabou: marcar a conta como ativa</button>` : ''}</div>`;
+  }).join('');
+  return `<section class="card section warm" style="gap:12px"><div class="row-h"><h2>Aquecimento de hoje</h2><span class="sub num">${done} de ${tot}</span></div>
+    <div class="bar ${done === tot ? 'ok' : ''}"><span style="width:${tot ? Math.round(done / tot * 100) : 0}%"></span></div>
+    <div class="sub">Toque num horário pra começar o cronômetro. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
+    <div class="wlist">${rows}</div></section>`;
+}
+function warmBar() {
+  let el = document.getElementById('warmBar');
+  if (!WT) { el?.remove(); clearInterval(wTick); wTick = null; return; }
+  const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { WT = null; wSave(); el?.remove(); return; }
+  const left = Math.max(0, WT.end - Date.now()), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
+  if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
+  if (!left) warmFinish(true);
+}
+async function warmFinish(auto) {
+  if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
+  await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: Math.min(mins, WSLOTS[w.slot][1]), at: new Date().toISOString() });
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {}
+  toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : 'Aquecimento salvo ✨');
+}
+function warmStart(aid, slot) {
+  WT = { aid, slot, start: Date.now(), end: Date.now() + WSLOTS[slot][1] * 60000 }; wSave(); warmBar();
+  clearInterval(wTick); wTick = setInterval(warmBar, 1000); render();
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.warmdone) { await warmFinish(false); return; }
+  if (d.warmstop) { WT = null; wSave(); warmBar(); render(); toast('Cronômetro cancelado'); return; }
+  if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
+  if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
+  if (d.warm) {
+    const [aid, slot] = d.warm.split('|'), l = wLog(aid, today(), slot);
+    if (l) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Desmarcar?'; setTimeout(() => render(), 3000); return; } await del('warm', l.id); return; }
+    if (WT && !(WT.aid === aid && WT.slot === slot)) { const o = S.data.accounts.find(x => x.id === WT.aid); toast(`Termine ou cancele o aquecimento de ${o ? o.handle : 'outra conta'} primeiro`); return; }
+    if (WT) return; warmStart(aid, slot); return;
+  }
+}, true);
+if (WT) { wTick = setInterval(warmBar, 1000); setTimeout(warmBar, 2000); }
+/* conta pra aquecer agora aparece no Precisa de você */
+function warmPending() {
+  if (!wAccs().length || proLocked('marcas.contas')) return [];
+  const t = today(), cur = wNow(); return wAccs().filter(a => !wLog(a.id, t, cur));
+}
+(() => { const st = document.createElement('style'); st.textContent = `
+.wlist{display:flex;flex-direction:column;gap:10px}
+.wrow{border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
+.wtop{display:flex;justify-content:space-between;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.wtop .dots{display:flex;flex-wrap:nowrap;flex:none}
+.wtop b{display:block;font-size:15px}.wtop small{display:block;font-size:12.5px;color:var(--muted)}
+.wchips{display:flex;gap:6px;flex-wrap:wrap}
+.wchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.wchip.now{border-color:var(--accent,#420725);color:var(--accent,#420725);box-shadow:0 0 0 3px color-mix(in oklab, var(--accent,#420725) 14%, transparent)}
+.wchip.ok{background:var(--accent,#420725);border-color:var(--accent,#420725);color:#fff}
+.wchip.run{background:#FF5C8A;border-color:#FF5C8A;color:#fff}
+.wchip.post{border-style:dashed}.wchip.post.ok{border-style:solid;background:#FFF1DE;border-color:#FFD9A8;color:#8A4B00}
+.warmbar{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:120;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;background:#420725;color:#fff;border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgb(0 0 0 / .25);max-width:560px;margin:0 auto}
+@media (min-width:900px){.warmbar{bottom:20px}}
+.warmbar b{display:block;font-size:14px}.warmbar small{display:block;font-size:12px;color:#F4C9D8}
+.warmbar .wt{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.warmbar .btn{background:#F4C9D8;color:#420725;border:0}.warmbar .iconbtn{background:rgb(255 255 255 / .12);color:#fff;border:0}
 `; document.head.appendChild(st); })();
 connect();
 })();
