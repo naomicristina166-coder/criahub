@@ -14,6 +14,7 @@
         WAITLIST_HOOK_SECRET  o código que aparece no fim do supabase/boas-vindas.sql
         GMAIL_USER            (opcional) padrão: criahubb@gmail.com
         MAIL_NAME             (opcional) nome do remetente, padrão: CriaHub
+        GROUP_URL             (opcional) link de convite do grupo VIP no WhatsApp
         RESEND_API_KEY        (só se for usar o Resend) */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import nodemailer from 'npm:nodemailer@6.9.16';
@@ -25,6 +26,7 @@ const GMAIL = env('GMAIL_USER') || 'criahubb@gmail.com';
 const GPASS = env('GMAIL_APP_PASSWORD').replace(/\s+/g, '');
 const REPLY_TO = env('MAIL_REPLY_TO') || GMAIL;
 const LAUNCH = '23 de novembro';
+const GROUP_URL = env('GROUP_URL');
 
 const esc = (s: string) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const firstName = (n: string) => (String(n || '').trim().split(/\s+/)[0] || 'cria').slice(0, 40);
@@ -42,6 +44,7 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
     `1. No dia ${LAUNCH}, você recebe o acesso antes de todo mundo.`,
     '2. O valor do Pro chega primeiro pra você, com uma condição especial de lançamento.',
     '3. Até lá, eu mostro os bastidores no Instagram: @criahubapp e @naomicristinna_',
+    ...(GROUP_URL ? ['', `Entra no grupo VIP das Crias no WhatsApp, onde saem os spoilers: ${GROUP_URL}`] : []),
     ...(row.pain ? ['', `Você me contou que o que mais te atrapalha é: "${String(row.pain).trim()}". Anotei. É exatamente pra isso que o CriaHub existe.`] : []),
     '',
     'Qualquer dúvida, é só responder este e-mail.',
@@ -75,6 +78,7 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
       ${step('2', 'O valor do Pro chega primeiro pra você, com uma condição especial de lançamento.')}
       ${step('3', 'Até lá, eu mostro os bastidores no Instagram.')}
     </table>
+    ${GROUP_URL ? `<div style="margin:6px 0 14px;padding:16px 18px;border-radius:16px;background:#E3F5EC;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218"><b>Grupo VIP das Crias</b><br>É lá que saem os spoilers do app e o aviso na hora que as portas abrirem.<div style="margin-top:10px">${btn(GROUP_URL, 'Entrar no grupo VIP', '#1F8A5B', '#FFFFFF')}</div></div>` : ''}
     <div style="margin:6px 0 4px">${btn('https://www.instagram.com/criahubapp/', 'Seguir @criahubapp', '#420725', '#F6EEE8')}${btn('https://www.instagram.com/naomicristinna_/', 'Seguir @naomicristinna_', '#F2C9CF', '#420725')}</div>
     ${pain ? `<div style="margin:26px 0 0;padding:18px 20px;border-radius:16px;background:#F7DDE1;font:400 15px/1.55 Arial,Helvetica,sans-serif;color:#2A1218">Você me contou que o que mais te atrapalha é:<br><i style="font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#420725">"${pain}"</i><br>Anotei. É exatamente pra isso que o CriaHub existe.</div>` : ''}
     <p style="margin:26px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Qualquer dúvida, é só responder este e-mail.</p>

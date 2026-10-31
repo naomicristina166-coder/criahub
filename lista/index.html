@@ -107,6 +107,32 @@ h2 em{font-style:italic}
 .who{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
 .chip{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;background:var(--vinho);color:var(--on-vinho);font-weight:700;font-size:15px}
 
+/* contagem regressiva */
+.countdown{margin-top:28px;display:grid;gap:10px}
+.countdown .lbl{font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--rosa)}
+.cd{display:flex;gap:10px;flex-wrap:wrap}
+.cd div{min-width:74px;padding:12px 10px 10px;border-radius:18px;background:rgba(242,201,207,.1);border:1px solid rgba(242,201,207,.22);text-align:center}
+.cd b{display:block;font:800 clamp(30px,7vw,42px)/1 var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.cd span{display:block;margin-top:6px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-vinho-muted)}
+.cd-open{font:800 24px/1.2 var(--display);color:var(--lima)}
+
+/* cofre de spoilers */
+.vault{display:grid;gap:14px;margin-top:36px}
+@media (min-width:640px){.vault{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:980px){.vault{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.spoiler{position:relative;border-radius:22px;padding:22px 20px;min-height:170px;display:flex;flex-direction:column;gap:8px;background:var(--vinho-2);border:2px solid rgba(242,201,207,.16);color:var(--on-vinho)}
+.spoiler .n{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--rosa)}
+.spoiler h3{margin:0;font:800 22px/1.15 var(--display);color:#fff}
+.spoiler p{margin:0;font-size:15px;color:var(--on-vinho-muted)}
+.spoiler.locked h3,.spoiler.locked p{filter:blur(7px);user-select:none}
+.spoiler .when{margin-top:auto;display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-weight:800;font-size:14px;background:rgba(242,201,207,.12);color:var(--rosa);border-radius:99px;padding:6px 12px}
+.spoiler.open{background:var(--rosa);color:var(--ink);border-color:transparent}
+.spoiler.open h3{color:var(--vinho)}.spoiler.open p{color:var(--ink)}.spoiler.open .n{color:var(--vinho)}
+.spoiler.new::after{content:"NOVO";position:absolute;top:16px;right:16px;font-size:11px;font-weight:800;letter-spacing:.08em;background:var(--lima);color:#1E0B10;border-radius:99px;padding:4px 9px}
+.group-cta{margin-top:18px;display:grid;gap:8px;padding:18px;border-radius:20px;background:var(--rosa-2)}
+.group-cta p{margin:0;font-size:15px}
+.btn-wa{background:#1F8A5B;color:#fff}
+
 /* planos */
 .plans{display:grid;gap:18px;margin-top:40px}
 @media (min-width:760px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -206,6 +232,10 @@ footer a:hover{color:#fff}
           <a class="btn btn-rosa" href="#lista">Quero entrar na lista</a>
           <span class="counter" id="counter" hidden><b id="countNum">0</b> crias já estão na lista</span>
         </div>
+        <div class="countdown" id="countdown" aria-live="off">
+          <span class="lbl">As portas abrem em</span>
+          <div class="cd" id="cd"><div><b id="cd-d">--</b><span>dias</span></div><div><b id="cd-h">--</b><span>horas</span></div><div><b id="cd-m">--</b><span>min</span></div><div><b id="cd-s">--</b><span>seg</span></div></div>
+        </div>
       </div>
       <div class="stickers" aria-hidden="true">
         <span class="sticker s1">organizada core</span>
@@ -233,6 +263,16 @@ footer a:hover{color:#fff}
         <p>Um dia eu cansei de procurar as coisas e comecei a construir um lugar onde tudo isso morasse junto. Usei primeiro na minha rotina. Agora quero que ele seja seu também.</p>
         <p class="quote">"Eu fiz o app que eu queria ter quando comecei."</p>
       </div>
+    </div>
+  </section>
+
+  <!-- 2b. Cofre de spoilers -->
+  <section class="on-vinho" id="spoilers">
+    <div class="wrap">
+      <span class="eyebrow">Cofre de spoilers</span>
+      <h2>Um segredo do app <em style="color:var(--rosa)">abre por vez</em>.</h2>
+      <p class="sub" style="color:var(--on-vinho-muted);max-width:40em">Até o lançamento, um pedacinho do CriaHub é revelado aqui em cada data. Quem está no grupo VIP fica sabendo primeiro.</p>
+      <div class="vault" id="vault"></div>
     </div>
   </section>
 
@@ -342,6 +382,7 @@ footer a:hover{color:#fff}
         <ul class="perks">
           <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Acesso ao CriaHub antes de todo mundo</span></li>
           <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Preço de Cria Fundadora: R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual</span></li>
+          <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Grupo VIP no WhatsApp com os spoilers e os bastidores até o dia</span></li>
           <li><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Sua resposta ajuda a decidir as próximas funções do app</span></li>
         </ul>
       </div>
@@ -361,8 +402,8 @@ footer a:hover{color:#fff}
             <input type="text" id="f-ig" name="instagram" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="@seuperfil">
           </div>
           <div class="field">
-            <label for="f-wa">WhatsApp <span class="opt">(opcional, pra te avisar no dia)</span></label>
-            <input type="tel" id="f-wa" name="whatsapp" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="(61) 90000-0000">
+            <label for="f-wa">WhatsApp <span class="opt">(pra entrar no grupo VIP das Crias)</span></label>
+            <input type="tel" id="f-wa" name="whatsapp" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="(61) 90000-0000" required>
           </div>
           <fieldset>
             <legend class="legend">Você faz</legend>
@@ -378,7 +419,7 @@ footer a:hover{color:#fff}
             <textarea id="f-pain" name="pain" maxlength="500" required placeholder="Ex.: esqueço prazo de marca, não sei o que postar, me perco no financeiro…"></textarea>
           </div>
           <div class="hp" aria-hidden="true"><label for="f-site">Não preencha</label><input type="text" id="f-site" name="site" tabindex="-1" autocomplete="off"></div>
-          <label class="consent"><input type="checkbox" id="f-ok" name="consent" required><span>Aceito receber e-mail e mensagem do CriaHub sobre o lançamento. Meus dados não são compartilhados e posso sair da lista quando quiser.</span></label>
+          <label class="consent"><input type="checkbox" id="f-ok" name="consent" required><span>Aceito receber e-mail e mensagens no WhatsApp do CriaHub sobre o lançamento. Meus dados não são compartilhados e posso sair quando quiser.</span></label>
           <button class="btn btn-vinho" type="submit" id="send">Quero entrar na lista</button>
           <p class="err" id="err" role="alert"></p>
         </form>
@@ -387,6 +428,10 @@ footer a:hover{color:#fff}
           <span class="logo" style="font-size:44px;justify-content:center"><span class="c" style="color:var(--vinho)">cr<span class="dotless">ı</span>a</span><span class="h" style="color:var(--vinho)">hub</span></span>
           <h3 id="doneTitle">Você está na lista, cria!</h3>
           <p id="doneText">No dia 23 de novembro você recebe o acesso antes de todo mundo. Enquanto isso, acompanha os bastidores no Instagram.</p>
+          <div class="group-cta" id="groupCta" hidden>
+            <p><b>Último passo:</b> entra no grupo VIP das Crias. É lá que saem os spoilers, os bastidores e o aviso na hora que as portas abrirem.</p>
+            <a class="btn btn-wa" id="groupBtn" href="#" target="_blank" rel="noopener">Entrar no grupo VIP no WhatsApp</a>
+          </div>
           <div class="links">
             <a class="btn btn-vinho btn-sm" href="https://www.instagram.com/criahubapp/" target="_blank" rel="noopener">Seguir @criahubapp</a>
             <a class="btn btn-rosa btn-sm" href="https://www.instagram.com/naomicristinna_/" target="_blank" rel="noopener" style="background:#fff">Seguir @naomicristinna_</a>
@@ -440,8 +485,49 @@ footer a:hover{color:#fff}
      Pode ser um arquivo .mp4 nesta pasta (ex.: 'naomi.mp4') ou um link do YouTube. */
   const VIDEO = '';
 
+  /* Grupo VIP no WhatsApp: cole aqui o link de convite do grupo (chat.whatsapp.com/...) */
+  const GROUP_URL = '';
+
+  /* Quando as portas abrem (horário de Brasília) */
+  const LAUNCH_AT = '2026-11-23T12:00:00-03:00';
+
+  /* Cofre de spoilers: cada um abre sozinho na sua data */
+  const SPOILERS = [
+    ['2026-11-02', 'Marcas sem bagunça', 'Cada marca com o ciclo, o pacote e as entregas por etapa. Nunca mais "era hoje?".'],
+    ['2026-11-05', 'Briefing vira roteiro', 'Cola o briefing da marca e a IA separa as regras, monta os roteiros e coloca tudo na sua semana.'],
+    ['2026-11-08', 'Seu dinheiro claro', 'Quanto entrou, quanto falta receber, em real, dólar ou euro, e o cofrinho do MEI.'],
+    ['2026-11-11', 'Radar UGC', 'As notícias do mercado de UGC todo dia, num resumo que você lê em 2 minutos.'],
+    ['2026-11-14', 'Quadro dos sonhos', 'Seus sonhos com imagem, pra baixar de papel de parede e lembrar por que você cria.'],
+    ['2026-11-17', 'Do seu jeito', 'Sua cor, suas categorias e só as ferramentas que você usa. Nada sobrando.'],
+    ['2026-11-20', 'Retrospectiva', 'O seu mês e o seu ano em números, prontos pro story.'],
+    ['2026-11-22', 'O último segredo', 'Amanhã, às 12h, as portas abrem. Fica de olho no grupo VIP e no seu e-mail.']
+  ];
+
   const $ = id => document.getElementById(id);
   const sb = window.supabase ? window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: false } }) : null;
+
+  // contagem regressiva
+  const launch = new Date(LAUNCH_AT).getTime(), pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const ms = launch - Date.now();
+    if (ms <= 0) { $('countdown').innerHTML = '<span class="cd-open">As portas abriram! 🍒</span><a class="btn btn-rosa" href="/" style="justify-self:start">Entrar no CriaHub</a>'; clearInterval(cdT); return; }
+    const s = Math.floor(ms / 1000);
+    $('cd-d').textContent = Math.floor(s / 86400); $('cd-h').textContent = pad(Math.floor(s % 86400 / 3600)); $('cd-m').textContent = pad(Math.floor(s % 3600 / 60)); $('cd-s').textContent = pad(s % 60);
+  };
+  const cdT = setInterval(tick, 1000); tick();
+
+  // cofre de spoilers
+  const hoje = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const dm = d => d.slice(8, 10) + '/' + d.slice(5, 7);
+  const lastOpen = SPOILERS.filter(x => x[0] <= hoje).map(x => x[0]).pop();
+  $('vault').innerHTML = SPOILERS.map(([d, t, txt], i) => {
+    const open = d <= hoje;
+    return `<article class="spoiler ${open ? 'open' : 'locked'}${open && d === lastOpen ? ' new' : ''}"><span class="n">Spoiler ${i + 1}</span>
+      ${open ? `<h3>${t}</h3><p>${txt}</p>` : `<h3 aria-hidden="true">Segredo guardado</h3><p aria-hidden="true">Esse pedaço do app ainda está trancado no cofre.</p><span class="when">🔒 Abre em ${dm(d)}</span>`}</article>`;
+  }).join('');
+
+  // grupo VIP
+  if (GROUP_URL) $('groupBtn').href = GROUP_URL;
 
   // vídeo
   if (VIDEO) {
@@ -467,6 +553,7 @@ footer a:hover{color:#fff}
   const fail = msg => { err.textContent = msg; err.classList.add('on'); send.disabled = false; send.textContent = 'Quero entrar na lista'; };
   const ok = (title, text) => {
     form.hidden = true; $('doneTitle').textContent = title; $('doneText').textContent = text;
+    if (GROUP_URL) $('groupCta').hidden = false;
     $('done').classList.add('on'); $('done').focus();
   };
 
@@ -480,6 +567,7 @@ footer a:hover{color:#fff}
     const kind = (form.querySelector('input[name=kind]:checked') || {}).value;
     if (!name) return fail('Coloca o seu nome.'), f.name.focus();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Confere o seu e-mail.'), f.email.focus();
+    if (whatsapp.replace(/\D/g, '').length < 10) return fail('Coloca o seu WhatsApp com DDD, pra entrar no grupo VIP.'), f.whatsapp.focus();
     if (!kind) return fail('Conta pra gente o que você faz.');
     if (pain.length < 3) return fail('Conta pra gente o que mais te atrapalha na rotina. Pode ser bem curtinho.'), f.pain.focus();
     if (!f.consent.checked) return fail('Pra entrar na lista, marque que aceita receber o aviso do lançamento.');
