@@ -21,10 +21,13 @@ create table if not exists private.admins (
 alter table private.admins enable row level security;
 revoke all on private.admins from anon, authenticated;
 
+-- a lista abaixo manda: quem estiver nela vira admin, quem não estiver deixa de ser
 insert into private.admins (user_id)
 select id from auth.users
-where lower(email) in ('naomicristina166@gmail.com', 'naomicristinacontato@gmail.com', 'criahubb@gmail.com')   -- 👉 seus e-mails de login
+where lower(email) in ('naomicristinacontato@gmail.com', 'criahubb@gmail.com')   -- 👉 seus e-mails de login
 on conflict (user_id) do nothing;
+delete from private.admins a using auth.users u
+where u.id = a.user_id and lower(u.email) not in ('naomicristinacontato@gmail.com', 'criahubb@gmail.com');
 
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = ''

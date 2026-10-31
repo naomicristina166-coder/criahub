@@ -25,6 +25,8 @@ a{color:inherit}
 
 /* topo */
 .top{background:var(--vinho);color:#fff;position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top,0)}
+.embed .top{padding-top:0}
+.embed .top .logo,.embed .top .tag{display:none}
 .top .wrap{display:flex;align-items:center;gap:12px;min-height:60px}
 .logo{font:800 24px/1 var(--display);letter-spacing:-.035em;display:inline-flex;align-items:baseline;text-decoration:none;white-space:nowrap;flex:none}
 .logo .c{color:var(--rosa)} .logo .h{color:#fff}
@@ -229,6 +231,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     uq: '', uf: 'todas', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {},
     fb: [], errs: [], rev: [], ff: 'novo', fopen: null, showErr: false };
   try { const t = sessionStorage.getItem('criahub:admtab'); if (t) st.tab = t; } catch (_) {}
+  /* dentro do app (aberto pelo botão Painel): links pro app abrem na janela do app, não dentro do painel */
+  const EMBED = window.top !== window.self;
+  if (EMBED) { document.documentElement.classList.add('embed'); document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="/"]'); if (a) { e.preventDefault(); try { window.top.document.querySelector('[data-act=painelclose]')?.click(); } catch (_) { window.top.location.href = '/'; } } }); }
   try { if (localStorage.getItem('criahub:admdisc') === '1') { document.body.classList.add('disc'); $('disc').setAttribute('aria-pressed', 'true'); } } catch (_) {}
 
   /* ---------- entrada ---------- */

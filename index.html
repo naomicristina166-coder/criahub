@@ -153,7 +153,7 @@ window.CRIAHUB_CONFIG = {
     window.addEventListener('unhandledrejection', e => { const r = e.reason; logErr('Promise: ' + (r && (r.message || r.code) || String(r)), ''); });
     /* entrada escondida do painel: 5 toques rápidos no logo (só abre pra admin; pras outras não acontece nada) */
     let taps = [];
-    document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('[data-logo]') || !session) return; const n = Date.now(); taps = taps.filter(t => n - t < 2500); taps.push(n); if (taps.length < 5) return; taps = []; sb.rpc('is_admin').then(({ data }) => { if (data === true) location.href = location.origin + '/admin/'; }, () => {}); });
+    document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('[data-logo]') || !session) return; const n = Date.now(); taps = taps.filter(t => n - t < 2500); taps.push(n); if (taps.length < 5) return; taps = []; sb.rpc('is_admin').then(({ data }) => { if (data === true) { if (window.criahubOpenPainel) window.criahubOpenPainel(); else location.href = location.origin + '/admin/'; } }, () => {}); });
   })();
 
   /* ---------- dados ---------- */
@@ -1070,6 +1070,7 @@ const money = o => isFx(o) ? `${fmtCur(o.amount, o.currency)}<small class="conv"
 const fxFmt = r => 'R$ ' + (+r || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 const moneyV = (v, c) => CURS[c] ? fmtCur(v, c) : brl(v);
 const ICON = {
+  painel: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   inicio: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
   marcas: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
   agenda: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -1291,11 +1292,12 @@ function renderShell() {
   setHTML($('#side'), `${LOGO}<div class="tagline">quem cria, se organiza.</div>
     ${TABS.map(([k, l]) => `<button class="nav" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}${l}</button>`).join('')}
     <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar UGC${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
+    ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel</button>` : ''}
     <div class="spacer"></div>
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
     <div class="sync">${syncTxt}</div>`);
-  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button></div>`);
+  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px">${painelOn() ? `<button class="iconbtn" data-act="painel" aria-label="Painel da fundadora" style="width:auto;padding:0 10px;gap:5px;display:inline-flex;align-items:center;font-weight:800;font-size:13px">${ic('painel')}Painel</button>` : ''}<button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button></div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
 
@@ -4208,6 +4210,7 @@ function openSettings() {
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
       <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
     </div>
+    ${ADMIN ? `<div class="card section" style="gap:8px"><b>Painel da fundadora</b><span class="sub">Só aparece pra você. Desligue neste aparelho quando for gravar a tela.</span><label class="checkline"><input type="checkbox" id="s_painel" ${painelHidden() ? '' : 'checked'}>Mostrar o botão Painel no menu</label><div class="row-btns"><button type="button" class="btn sm ghost" data-act="painel">Abrir o Painel</button></div></div>` : ''}
     <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
     <div class="card section" style="gap:8px"><b>Seus dados</b><span class="sub">Baixe uma cópia de tudo ou traga dados de outra versão do CriaHub.</span>
       <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
@@ -4647,6 +4650,38 @@ document.addEventListener('submit', async e => {
 }, true);
 /* avisa quando a Naomi responde */
 setTimeout(async () => { if (S.mode !== 'remote' || !fbApi()) return; const L = await fbLoad(), seen = fbSeen(), n = L.filter(m => m.reply && !seen.includes(m.id)); if (n.length) toastAct(n.length === 1 ? 'A Naomi respondeu sua mensagem' : `A Naomi respondeu ${n.length} mensagens`, 'Ver', 'data-act="feedback"'); }, 6000);
+/* ================= painel da fundadora dentro do app (só pra quem está em private.admins) ================= */
+var ADMIN = false;
+const painelHidden = () => { try { return localStorage.getItem('criahub:hidepainel') === '1'; } catch (_) { return false; } };
+function painelOn() { return ADMIN && !painelHidden(); }
+async function adminCheck() {
+  const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  try { const { data, error } = await sb.rpc('is_admin'); ADMIN = !error && data === true; } catch (_) { ADMIN = false; }
+  if (ADMIN) { renderShell(); if (location.hash === '#painel') openPainel(); }
+}
+function openPainel() {
+  if (!ADMIN || document.getElementById('painelLayer')) return;
+  if (!document.getElementById('painelCss')) { const st = document.createElement('style'); st.id = 'painelCss'; st.textContent = `.painel-layer{position:fixed;inset:0;z-index:300;background:#420725;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.painel-bar{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px max(12px,env(safe-area-inset-left,0px)) 6px max(12px,env(safe-area-inset-right,0px));color:#fff}
+.painel-bar b{font-family:var(--display);font-size:17px;letter-spacing:-.01em;flex:1}
+.painel-bar button{border:0;background:rgb(255 255 255 / .14);color:#fff;border-radius:10px;min-height:38px;padding:0 14px;font-weight:800;cursor:pointer}
+.painel-bar button:focus-visible{outline:2px solid #FF5C8A;outline-offset:2px}
+.painel-layer iframe{flex:1;width:100%;border:0;background:#FAF6F7}`; document.head.appendChild(st); }
+  const el = document.createElement('div'); el.id = 'painelLayer'; el.className = 'painel-layer'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Painel da fundadora');
+  el.innerHTML = `<div class="painel-bar"><b>Painel da fundadora</b><button type="button" data-act="painelclose">Voltar ao app</button></div><iframe src="${location.origin}/admin/?embed=1" title="Painel da fundadora"></iframe>`;
+  document.body.appendChild(el); document.body.style.overflow = 'hidden'; el.querySelector('button').focus();
+}
+function closePainel() { document.getElementById('painelLayer')?.remove(); document.body.style.overflow = ''; if (location.hash === '#painel') { try { history.replaceState(null, '', location.pathname); } catch (_) {} } }
+window.criahubOpenPainel = () => { if (ADMIN) openPainel(); };
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-act=painel],[data-act=painelclose]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.act === 'painelclose') { closePainel(); return; }
+  if (sheet) closeForm(); openPainel();
+}, true);
+document.addEventListener('change', e => { if (e.target && e.target.id === 's_painel') { try { localStorage.setItem('criahub:hidepainel', e.target.checked ? '' : '1'); } catch (_) {} renderShell(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('painelLayer')) closePainel(); });
+setTimeout(adminCheck, 1500);
 connect();
 })();
 </script>
