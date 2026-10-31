@@ -1887,6 +1887,7 @@ function vDay() {
   return `
   <div class="day-nav"><button class="iconbtn" data-day="-1" aria-label="Dia anterior">${ic('left')}</button><b>${esc(dayLabel(d))}</b><button class="iconbtn" data-day="1" aria-label="Próximo dia">${ic('right')}</button>${d !== t ? `<button class="link" data-day="0">voltar pra hoje</button>` : ''}</div>
   ${workBanner(d)}
+  ${d === t && (list.filter(x => !x.done).length >= 5 || late.length >= 2) ? `<button class="link" data-owgo="1" style="text-align:left;align-self:flex-start;margin:-4px 0 8px">✨ Muita coisa? Deixa a IA organizar a sua semana</button>` : ''}
   <form class="quick-t" data-form="quicktask"><div class="quick"><input type="text" name="title" id="qt" placeholder="Nova tarefa" autocomplete="off" required><input type="time" name="time" aria-label="Horário (opcional)" style="width:108px;flex:none;min-height:44px;border:1px solid var(--line);border-radius:11px;padding:0 8px;background:var(--surface)"><button class="btn">Salvar</button></div>${ttChips(S.ct.qtype || 'pessoal', S.ct.qcat, true)}</form>
   ${late.length ? `<div class="card carry section"><div class="row-h"><h2 style="font-size:16px">${late.length} tarefa${late.length > 1 ? 's ficaram' : ' ficou'} pra trás</h2><button class="btn sm soft" data-act="carry">Trazer pra hoje</button></div><div class="list">${late.slice(0, 5).map(x => tkRow(x, true)).join('')}</div>${late.length > 5 ? `<div class="sub">e mais ${late.length - 5}</div>` : ''}</div>` : ''}
   <section class="section">
@@ -1977,6 +1978,7 @@ function vWeek() {
   const pc = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
   return `
   <div class="day-nav"><button class="iconbtn" data-wk="-1" aria-label="Semana anterior">${ic('left')}</button><b>${S.f.wk === 0 ? 'Esta semana' : S.f.wk === -1 ? 'Semana passada' : esc(label)}</b><button class="iconbtn" data-wk="1" aria-label="Próxima semana" ${S.f.wk >= 0 ? 'disabled style="opacity:.4"' : ''}>${ic('right')}</button><span class="sub">${esc(label)}</span></div>
+  ${owCard()}
   ${ttFilter()}
   <div class="stats">
     <div class="stat"><div class="l">Tarefas feitas</div><div class="v">${w.tDone.length}/${w.tasks.length}</div></div>
@@ -1988,7 +1990,7 @@ function vWeek() {
   <section class="section"><div class="row-h"><h2>O que deu certo</h2></div>
     ${w.tDone.length || w.dOk.length || w.goalsDone.length ? `<div class="card"><ul class="tips">${[w.tDone.length ? `${w.tDone.length} tarefa${w.tDone.length > 1 ? 's' : ''} concluída${w.tDone.length > 1 ? 's' : ''}` : '', w.dOk.length ? `${w.dOk.length} entrega${w.dOk.length > 1 ? 's' : ''} enviada${w.dOk.length > 1 ? 's' : ''}: ${w.dOk.slice(0, 3).map(x => esc(x.title)).join(', ')}${w.dOk.length > 3 ? '…' : ''}` : '', ...w.goalsDone.map(g => `Meta concluída: ${esc(g.title)}`), ...w.hs.filter(h => w.days.filter(d => d <= t && hDone(h, d)).length >= 5).map(h => `${esc(h.name)} em ${w.days.filter(d => d <= t && hDone(h, d)).length} dias`)].filter(Boolean).map(x => `<li><span>${x}</span></li>`).join('')}</ul></div>` : `<div class="empty">Ainda não há nada concluído ${w.past ? 'nessa semana' : 'esta semana'}. Cada check conta!</div>`}
   </section>
-  <section class="section"><div class="row-h"><h2>O que não deu pra fazer</h2>${w.tOpen.length ? `<button class="btn sm soft" data-act="replan">Replanejar na próxima semana</button>` : ''}</div>
+  <section class="section"><div class="row-h"><h2>O que não deu pra fazer</h2>${w.tOpen.length ? `<div class="row-btns" style="margin:0"><button class="btn sm soft" data-owgo="1">Encaixar com IA</button><button class="btn sm ghost" data-act="replan">Jogar pra próxima semana</button></div>` : ''}</div>
     ${pend.length ? `<div class="list">${pend.map(p => p.k === 't' ? tkRow(p.x, true) : dvRow(p.x)).join('')}</div>` : `<div class="empty">${w.tasks.length || w.dels.length ? 'Nada ficou pendente. Semana fechada!' : 'Sem tarefas planejadas nessa semana.'}</div>`}
   </section>
   <section class="section"><div class="row-h"><h2>Dicas para a próxima semana</h2></div>
@@ -5275,6 +5277,81 @@ document.addEventListener('keydown', e => {
 `; document.head.appendChild(st); })();
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-pkmode],[data-pktone]'); if (!t) return; e.stopImmediatePropagation(); e.preventDefault(); if (t.dataset.pkmode) PKM.mode = t.dataset.pkmode; else PKM.tone = t.dataset.pktone; render(); }, true);
 document.addEventListener('input', e => { const id = e.target && e.target.id; if (id === 'pk_brand') { PKM.brand = e.target.value; if (PKM.mode === 'eu') { const t = $('#pk_txt'); if (t) t.value = pkText(); } } else if (id === 'pk_about') PKM.about = e.target.value; else if (id === 'o_pkAi') S.ct.pkAi = e.target.value; });
+/* ================= IA organiza a semana: prioriza, encaixa e replaneja o que ficou pra trás ================= */
+var OW = null;
+function owOpen() { const t = today(), end = addDays(t, 6); return S.data.tasks.filter(x => !x.done && x.date && x.date <= end); }
+function owCard() {
+  const n = owOpen().length, late = owOpen().filter(x => x.date < today()).length;
+  return `<div class="card section ow" style="gap:8px"><div><b>${n >= 8 || late ? 'Semana cheia? Deixa a IA organizar' : 'Organizar a semana com IA'}</b><div class="sub">${n ? `${n} tarefa${n > 1 ? 's' : ''} em aberto nos próximos 7 dias${late ? `, ${late} atrasada${late > 1 ? 's' : ''}` : ''}. A IA prioriza o que é importante e encaixa o resto nos seus dias, sem esquecer nada.` : 'Quando a semana encher, a IA prioriza e encaixa tudo pra você.'}</div></div>
+    ${n ? `<div class="row-btns"><button class="btn soft" data-owgo="1" ${S.ct.busy ? 'disabled' : ''}>${S.ct.busy === 'owAi' ? 'Organizando…' : 'Organizar minha semana'}</button></div>` : ''}</div>`;
+}
+async function organizeWeek() {
+  const t = today(), days = Array.from({ length: 7 }, (_, i) => addDays(t, i)), open = owOpen();
+  if (!open.length) { toast('Nenhuma tarefa em aberto nos próximos 7 dias'); return; }
+  const dels = S.data.deliveries.filter(d => (d.stage || 0) < 3 && d.due && d.due <= addDays(t, 10));
+  const past = Array.from({ length: 14 }, (_, i) => addDays(t, -14 + i)), doneAvg = Math.round(past.reduce((n, d) => n + S.data.tasks.filter(x => x.date === d && x.done).length, 0) / 14 * 10) / 10;
+  const tline = x => { const dl = (Array.isArray(x.delIds) ? x.delIds : []).map(id => S.data.deliveries.find(d => d.id === id)).filter(Boolean).map(d => d.due).filter(Boolean).sort()[0];
+    return `- id=${x.id} | "${String(x.title).slice(0, 120)}" | tipo ${x.ttype || 'pessoal'}${x.cat ? '/' + x.cat : ''} | data atual ${x.date}${x.date < t ? ' (ATRASADA)' : ''}${x.time ? ` | horário marcado ${x.time}` : ''}${dl ? ` | precisa ficar pronta antes de ${dl}` : ''}${x.moved ? ` | já foi adiada ${x.moved}x` : ''}`; };
+  const prompt = `Você ajuda uma creator de UGC brasileira a organizar a semana. Ela tem tarefas demais e quer priorizar o que é importante sem deixar o resto pra trás.
+Hoje é ${t} (${WD_LONG[parse(t).getDay()]}).
+DIAS DISPONÍVEIS (só use estas datas):
+${days.map(d => `- ${d} (${WD_LONG[parse(d).getDay()]})${isWorkDay(d) ? ' · dia em que ela trabalha fora: pouco tempo, no máximo 2 ou 3 tarefas leves' : ''}${dels.filter(x => x.due === d).length ? ` · prazo de entrega: ${dels.filter(x => x.due === d).map(x => x.title).join(', ')}` : ''}`).join('\n')}
+Nas últimas 2 semanas ela concluiu em média ${doneAvg} tarefas por dia (use isso pra não sobrecarregar).
+TAREFAS EM ABERTO:
+${open.map(tline).join('\n')}
+${dels.length ? `ENTREGAS COM PRAZO (fixas, não mude):\n${dels.map(x => `- ${x.title} (${brandName(x.brandId)}): prazo ${x.due}, etapa ${STAGES[x.stage || 0]}`).join('\n')}\n` : ''}
+REGRAS:
+- Toda tarefa da lista recebe uma data dentre os dias disponíveis. Nenhuma fica de fora.
+- Prioridade: "alta" (prazo de marca, dinheiro, compromisso), "media" ou "baixa" (pode esperar).
+- Alta primeiro na semana; tarefa com "precisa ficar pronta antes de" fica antes dessa data.
+- Tarefa com horário marcado e data a partir de hoje continua no mesmo dia.
+- Espalhe pra nenhum dia passar muito da média dela; dias de trabalho fora ficam mais leves.
+- "motivo" é bem curto (até 8 palavras), em português.
+Responda só com JSON neste formato:
+{"resumo":"2 frases curtas e acolhedoras sobre como ficou a semana","foco":{"YYYY-MM-DD":"foco do dia em até 6 palavras"},"tarefas":[{"id":"...","data":"YYYY-MM-DD","prioridade":"alta","motivo":"..."}]}`;
+  let out = null; await gated('msg', async () => { out = await askJson('owAi', prompt); });
+  const res = out || null; if (!res || !Array.isArray(res.tarefas)) { if (!S.ct.err) toast('Não consegui organizar agora. Tenta de novo.'); return; }
+  const plan = [];
+  open.forEach(x => { const r = res.tarefas.find(y => String(y.id) === x.id); const dt = r && days.includes(String(r.data)) ? String(r.data) : (x.date < t ? t : x.date); plan.push({ id: x.id, from: x.date, date: dt, prio: ['alta', 'media', 'baixa'].includes(r && r.prioridade) ? r.prioridade : 'media', why: r ? String(r.motivo || '').slice(0, 80) : '' }); });
+  OW = { days, plan, resumo: String(res.resumo || '').slice(0, 400), foco: res.foco && typeof res.foco === 'object' ? res.foco : {} };
+  openOW();
+}
+function openOW() {
+  if (!OW) return; sheet = { col: 'organize' };
+  const P = { alta: ['Alta', 'ow-a'], media: ['Média', 'ow-m'], baixa: ['Pode esperar', 'ow-b'] }, order = { alta: 0, media: 1, baixa: 2 };
+  const moved = OW.plan.filter(p => p.date !== p.from).length;
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Sua semana organizada">
+    <div class="sh"><h2>Sua semana organizada ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    ${OW.resumo ? `<div class="sub" style="font-size:15px">${esc(OW.resumo)}</div>` : ''}
+    <div class="sub">${moved ? `${moved} tarefa${moved > 1 ? 's mudam' : ' muda'} de dia. Confira e toque em Aplicar.` : 'Nada precisa mudar de dia: só as prioridades.'}</div>
+    <div class="ow-days">${OW.days.map(d => { const L = OW.plan.filter(p => p.date === d).sort((a, b) => order[a.prio] - order[b.prio]);
+      return `<div class="ow-day"><div class="ow-dh"><b>${esc(dayLabel(d))}</b>${isWorkDay(d) ? `<i class="wtag">${esc(workLabel().slice(0, 10))}</i>` : ''}${OW.foco[d] ? `<small>${esc(String(OW.foco[d]).slice(0, 60))}</small>` : ''}</div>
+        ${L.length ? L.map(p => { const x = S.data.tasks.find(t => t.id === p.id) || {}; return `<div class="ow-t"><span class="ow-p ${P[p.prio][1]}">${P[p.prio][0]}</span><span style="min-width:0"><b>${esc(x.title || '')}</b>${p.why || p.date !== p.from ? `<small>${esc(p.why)}${p.date !== p.from ? `${p.why ? ' · ' : ''}era ${fmtD(p.from)}` : ''}</small>` : ''}</span></div>`; }).join('') : '<div class="sub">Dia livre 🌿</div>'}</div>`; }).join('')}</div>
+    <div class="foot"><div class="r"><button type="button" class="btn ghost" data-act="close">Agora não</button><button type="button" class="btn" data-owapply="1">Aplicar na minha rotina</button></div></div>
+  </div></div>`;
+}
+async function applyOW() {
+  if (!OW) return; const plan = OW.plan; OW = null; closeForm(); let n = 0;
+  for (const p of plan) { const x = S.data.tasks.find(t => t.id === p.id); if (!x) continue; const chg = p.date !== x.date || p.prio !== x.prio; if (!chg) continue; n++;
+    await put('tasks', { ...x, date: p.date, prio: p.prio, ...(p.date > x.date ? { moved: (+x.moved || 0) + 1 } : {}) }); }
+  toast(n ? 'Semana organizada! Bora 💪' : 'Tudo certo, nada mudou');
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-owgo],[data-owapply]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.owapply) { await applyOW(); return; }
+  if (S.ct.busy) return; await organizeWeek();
+}, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.ow-days{display:flex;flex-direction:column;gap:10px}
+.ow-day{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:8px}
+.ow-dh{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.ow-dh small{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.ow-t{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:start}
+.ow-t b{display:block;font-size:14px;font-weight:700}.ow-t small{display:block;font-size:12px;color:var(--muted)}
+.ow-p{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:99px;padding:3px 8px;white-space:nowrap;margin-top:1px}
+.ow-a{background:#FFE0EA;color:#A3123F}.ow-m{background:var(--soft,#F3EAED);color:var(--muted)}.ow-b{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+`; document.head.appendChild(st); })();
 connect();
 })();
 </script>
