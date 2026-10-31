@@ -1293,6 +1293,7 @@ function renderShell() {
   setHTML($('#side'), `${LOGO}<div class="tagline">quem cria, se organiza.</div>
     ${TABS.map(([k, l]) => `<button class="nav" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}${l}</button>`).join('')}
     <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar UGC${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
+    <button class="nav" data-learn="1">${ic('book')}Aprenda o CriaHub</button>
     <div class="spacer"></div>
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
@@ -1314,7 +1315,7 @@ function render() {
   proDecorate(v);
   if (armKey && armSel && Date.now() - armAt < 5000) { const ab = v.querySelector(armSel); if (ab) { ab.classList.add('armed'); ab.textContent = armMsg; } }
   { const h1 = v.querySelector('.head h1'); if (h1 && !h1.querySelector('.helpq')) h1.insertAdjacentHTML('beforeend', `<button class="helpq" data-help="${helpKey()}" aria-label="O que é essa tela?">?</button>`); }
-  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); checkBday(); }
+  segFix(subK !== S.animKey); timerChip(); if (!S.loading) { checkBadges(); checkRetro(); checkGrowth(); migrateTaskTypes(); checkOnboard(); checkSteps(); checkBday(); checkStories(); }
   if (S.animKey !== subK) { S.animKey = subK; v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter'); clearTimeout(S.animT); S.animT = setTimeout(() => v.classList.remove('enter'), 700); }
 }
 
@@ -1388,6 +1389,7 @@ function vHome() {
   ${idea ? `<section class="section"><div class="row-h"><h2>Ideia do dia</h2><button class="link" data-tab="ideias">Banco de ideias</button></div>
     <div class="card idea-day"><div class="q">${esc(idea.title)}</div>${idea.notes ? `<div class="sub" style="margin-top:6px">${esc(idea.notes)}</div>` : ''}</div></section>` : ''}
   ${homeWhatsNew()}
+  <button class="learn-link" data-learn="1">${ic('book')}<span><b>Aprenda o CriaHub</b><small>Ficou com dúvida em alguma aba? Revê os stories aqui.</small></span></button>
   `}`;
 }
 
@@ -2555,6 +2557,7 @@ function openHelp(key) {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="O que é ${esc(h[0])}"><div class="sh"><h2>${esc(h[0])}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <p style="margin:0;font-size:16px">${esc(h[1])}</p>
     <details class="gl"><summary>Palavras do mundo UGC</summary><dl>${GLOSS.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></details>
+    ${STORIES_DATA && STORIES_DATA[key.split('.')[0]] ? `<button type="button" class="btn soft" data-story="${esc(key.split('.')[0])}">Ver os stories dessa aba</button>` : ''}
     <div class="sub">Quer esconder telas que você não usa? Ajustes › Ferramentas que eu uso.</div></div></div>`;
 }
 /* ================= briefing em 3 passos: regras → roteiros → mandar pra minha semana ================= */
@@ -4218,6 +4221,7 @@ function openSettings() {
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
       <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
     </div>
+    <div class="card section" style="gap:8px"><b>Aprenda o CriaHub</b><span class="sub">Os stories que explicam cada aba, pra rever quando quiser.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-learn="1">Ver os stories</button></div></div>
     <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
     <div class="card section" style="gap:8px"><b>Seus dados</b><span class="sub">Baixe uma cópia de tudo ou traga dados de outra versão do CriaHub.</span>
       <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
@@ -5131,6 +5135,127 @@ document.addEventListener('click', async e => {
 .t3v small{font-family:var(--body);font-size:11px;font-weight:700;text-align:right}
 `; document.head.appendChild(st); })();
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-rmode]'); if (!t) return; e.stopImmediatePropagation(); e.preventDefault(); S.ct.rMode = t.dataset.rmode; S.ct.rvOut = ''; render(); }, true);
+/* ================= stories de boas-vindas em cada aba + Aprenda o CriaHub ================= */
+var STORIES_DATA = {
+  inicio: { name: 'Início', slides: [
+    ['🏠', 'Essa é a sua Início', 'O resumo do seu dia de creator: o que precisa de você, suas tarefas, as próximas entregas e o dinheiro do mês.'],
+    ['🔴', 'A bolinha rosa avisa', 'Entrega atrasada, pagamento que não caiu, follow-up do dia… tudo que está pendente aparece em "Precisa de você". Toque pra resolver.'],
+    ['☕', 'Dica de ouro', 'Abra a Início toda manhã. Em 1 minuto você sabe o que fazer primeiro.'],
+    ['✨', 'Bora começar?', 'Cadastre sua primeira marca ou escreva a prioridade de hoje.']] },
+  rotina: { name: 'Rotina', slides: [
+    ['✅', 'Sua Rotina', 'Seu dia, suas metas, seus hábitos e o balanço da semana. Organiza a sua vida, não só o trabalho.'],
+    ['📝', 'Meu dia', 'Escreva até 3 prioridades. Lista curta é lista que fecha. Dá pra colocar horário e tipo: trabalho, pessoal, saúde…'],
+    ['🎯', 'Metas, hábitos e sonhos', 'Metas com número, hábitos como beber água e o Quadro dos sonhos com as suas imagens.'],
+    ['🗓️', 'Semana', 'No fim da semana, veja o que deu certo e replaneje o que ficou pra trás.']] },
+  marcas: { name: 'Marcas', slides: [
+    ['💼', 'Suas Marcas', 'Cada marca com quem você trabalha: contato, tipo de contrato (ciclo, pacote ou avulso) e quanto ela paga.'],
+    ['🔁', 'Ciclos e pacotes', 'Coloque o início e o fim. O app avisa quando o ciclo está acabando, pra você renovar a tempo.'],
+    ['🎯', 'Prospecção', 'As marcas que você quer conquistar, com lembrete de follow-up pra nenhuma conversa esfriar.'],
+    ['📱', 'Faz Tech Canvas?', 'Em Contas ficam os perfis de marca que você posta, o aquecimento de cada um e os seus 3 melhores vídeos.']] },
+  agenda: { name: 'Agenda', slides: [
+    ['📅', 'Sua Agenda', 'Todas as entregas e prazos num calendário só.'],
+    ['🎬', 'Entregas por etapa', 'Cada vídeo anda pelas etapas: roteiro, gravação, edição, enviado, aprovado e publicado. Você sempre sabe onde cada um está.'],
+    ['🛍️', 'Datas comerciais', 'Black Friday, Dia das Mães, Natal… o app avisa quando é hora de prospectar pra cada data.']] },
+  estudio: { name: 'Estúdio', slides: [
+    ['🎬', 'Seu Estúdio', 'Onde o conteúdo nasce: do pedido da marca até o vídeo enviado.'],
+    ['📋', 'Briefing', 'Cole o briefing da marca: a IA separa as regras, monta os roteiros e manda os vídeos pra sua semana.'],
+    ['🎙️', 'Gravar e revisar', 'Leia o roteiro no teleprompter, grave vários vídeos de uma vez e, antes de enviar, o Revisor confere se nada ficou pra trás.'],
+    ['💡', 'Ideias e Em alta', 'Seu banco de ideias e as trends da semana pro seu nicho, pra nunca ficar sem assunto.']] },
+  financeiro: { name: 'Finanças', slides: [
+    ['💸', 'Suas Finanças', 'Quanto você recebeu, quanto falta receber e de quem.'],
+    ['🧾', 'Marcas e outras rendas', 'Pagamentos das marcas de um lado; afiliados, freelas e salário do outro. Tudo somado no mês.'],
+    ['🐷', 'Cofrinho e MEI', 'O app sugere quanto separar de cada ganho pra reserva, equipamento e impostos, e lembra do DAS.'],
+    ['📈', 'Seu ano', 'Veja o seu ano em números e descubra quanto cobrar por vídeo.']] },
+  radar: { name: 'Radar UGC', slides: [
+    ['📰', 'Radar UGC', 'As notícias do mercado de UGC todo dia, num resumo que você lê em 2 minutos.'],
+    ['🧭', 'O que muda pra você', 'Cada notícia vem com o que ela muda na sua rotina de creator.'],
+    ['🔴', 'Bolinha = novidade', 'Quando sai notícia nova, aparece a bolinha. Leu, ela some.']] }
+};
+var STY = null;
+function checkStories() {
+  if (!STORIES_DATA || S.loading || !S.profile.onboarded || document.getElementById('ob') || document.getElementById('storyLayer') || document.getElementById('painelLayer') || sheet) return;
+  const k = S.tab; if (!STORIES_DATA[k]) return;
+  const seen = Array.isArray(S.profile.storiesSeen) ? S.profile.storiesSeen : [];
+  if (seen.includes(k)) return;
+  openStory(k, true);
+  saveProfile({ storiesSeen: [...seen, k] });
+}
+function openStory(k, first) {
+  const st = STORIES_DATA[k]; if (!st) return;
+  STY = { k, i: 0, first };
+  let el = document.getElementById('storyLayer');
+  if (!el) { el = document.createElement('div'); el.id = 'storyLayer'; el.className = 'story'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); document.body.style.overflow = 'hidden'; }
+  el.setAttribute('aria-label', 'Como funciona: ' + st.name);
+  storyRender();
+}
+function storyRender() {
+  const el = document.getElementById('storyLayer'); if (!el || !STY) return;
+  const st = STORIES_DATA[STY.k], n = st.slides.length, [emo, title, body] = st.slides[STY.i], last = STY.i === n - 1;
+  el.innerHTML = `<div class="st-box">
+    <div class="st-bars" aria-hidden="true">${st.slides.map((_, i) => `<i class="${i < STY.i ? 'done' : i === STY.i ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="st-top"><span class="st-tab">${esc(st.name)} · ${STY.i + 1} de ${n}</span><button type="button" class="st-x" data-stclose="1" aria-label="Fechar">${ic('x')}</button></div>
+    <button type="button" class="st-zone st-prev" data-stprev="1" aria-label="Anterior" ${STY.i ? '' : 'tabindex="-1"'}></button><button type="button" class="st-zone st-next" data-stnext="1" aria-label="Próximo"></button>
+    <div class="st-body" aria-live="polite"><div class="st-emo" aria-hidden="true">${emo}</div><h2>${esc(title)}</h2><p>${esc(body)}</p></div>
+    <div class="st-foot">${STY.i ? '<button type="button" class="st-btn ghost" data-stprev="1">Voltar</button>' : '<span></span>'}<button type="button" class="st-btn" data-stnext="1">${last ? (STY.first ? 'Bora começar' : 'Entendi') : 'Próximo'}</button></div>
+  </div>`;
+  el.querySelector('.st-foot .st-btn:last-child').focus();
+}
+function storyClose() { document.getElementById('storyLayer')?.remove(); document.body.style.overflow = ''; STY = null; }
+function openLearn() {
+  sheet = { col: 'learn' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Aprenda o CriaHub">
+    <div class="sh"><h2>Aprenda o CriaHub</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">Os stories de cada aba, pra rever quando quiser. É muita coisa mesmo, vai no seu tempo 💗</div>
+    <div class="learn-list">${Object.entries(STORIES_DATA).map(([k, st]) => `<button type="button" class="learn-it" data-story="${k}"><span class="st-emo sm" aria-hidden="true">${st.slides[0][0]}</span><span><b>${esc(st.name)}</b><small>${esc(st.slides[0][2])}</small></span>${ic('right')}</button>`).join('')}</div>
+  </div></div>`;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-stnext],[data-stprev],[data-stclose],[data-story],[data-learn]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.learn) { if (sheet) closeForm(); openLearn(); return; }
+  if (d.story) { if (sheet) closeForm(); openStory(d.story, false); return; }
+  if (d.stclose) { storyClose(); return; }
+  if (d.stprev) { if (STY && STY.i) { STY.i--; storyRender(); } return; }
+  if (d.stnext) { if (!STY) return; if (STY.i < STORIES_DATA[STY.k].slides.length - 1) { STY.i++; storyRender(); } else storyClose(); return; }
+}, true);
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('storyLayer')) return;
+  if (e.key === 'Escape') storyClose();
+  else if (e.key === 'ArrowRight') document.querySelector('.st-next')?.click();
+  else if (e.key === 'ArrowLeft') document.querySelector('.st-prev')?.click();
+});
+(() => { const st = document.createElement('style'); st.textContent = `
+.story{position:fixed;inset:0;z-index:260;background:rgb(20 6 12 / .72);display:flex;align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top,0px)) 10px max(10px,env(safe-area-inset-bottom,0px))}
+.st-box{position:relative;width:100%;max-width:420px;height:min(92vh,760px);border-radius:24px;overflow:hidden;color:#fff;background:radial-gradient(120% 80% at 20% 0%,#7A1E48 0%,#420725 55%,#2A0417 100%);display:flex;flex-direction:column;padding:14px 18px 18px;box-shadow:0 20px 60px rgb(0 0 0 / .4)}
+.st-bars{display:flex;gap:4px;position:relative;z-index:3}
+.st-bars i{flex:1;height:3px;border-radius:3px;background:rgb(255 255 255 / .28)}
+.st-bars i.done,.st-bars i.on{background:#fff}
+.st-top{display:flex;justify-content:space-between;align-items:center;margin-top:10px;position:relative;z-index:3}
+.st-tab{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#F4C9D8}
+.st-x{border:0;background:rgb(255 255 255 / .14);color:#fff;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.st-x svg{width:18px;height:18px}
+.st-zone{position:absolute;top:70px;bottom:90px;width:38%;border:0;background:none;z-index:1;cursor:pointer;padding:0}
+.st-prev{left:0}.st-next{right:0;width:62%}
+.st-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;position:relative;z-index:0;padding:0 6px}
+.st-emo{font-size:64px;line-height:1}
+.st-emo.sm{font-size:28px}
+.st-body h2{margin:0;font-family:var(--display);font-size:clamp(30px,8vw,38px);line-height:1.05;letter-spacing:-.02em;text-wrap:balance;color:#fff}
+.st-body p{margin:0;font-size:18px;line-height:1.5;color:#F6E3EA;max-width:30ch}
+.st-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:3}
+.st-btn{border:0;border-radius:999px;min-height:48px;padding:0 24px;font-weight:800;font-size:16px;background:#F4C9D8;color:#420725;cursor:pointer}
+.st-btn.ghost{background:rgb(255 255 255 / .12);color:#fff}
+.st-btn:focus-visible,.st-x:focus-visible{outline:3px solid #FF5C8A;outline-offset:2px}
+@media (prefers-reduced-motion: no-preference){.st-body{animation:stIn .35s ease both}@keyframes stIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
+.learn-list{display:flex;flex-direction:column;gap:8px}
+.learn-it{all:unset;box-sizing:border-box;display:grid;grid-template-columns:40px minmax(0,1fr) 18px;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;cursor:pointer}
+.learn-it:focus-visible{outline:2px solid var(--accent,#420725)}
+.learn-it b{display:block;font-size:15px}.learn-it small{display:block;font-size:12.5px;color:var(--muted)}
+.learn-it svg{width:18px;height:18px;color:var(--muted)}
+.learn-link{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;margin-top:18px;padding:14px;border:1px dashed var(--line);border-radius:16px;cursor:pointer;color:var(--fg)}
+.learn-link:focus-visible{outline:2px solid var(--accent,#420725)}
+.learn-link svg{width:22px;height:22px;flex:none;color:var(--accent,#420725)}
+.learn-link b{display:block}.learn-link small{display:block;font-size:12.5px;color:var(--muted)}
+`; document.head.appendChild(st); })();
 connect();
 })();
 </script>
