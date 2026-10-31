@@ -1346,13 +1346,9 @@ function vHome() {
   const t = today(), wk = addDays(t, 7), name = S.profile.name;
   const dateTxt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const open = sortBy(fDeliv().filter(d => (d.stage || 0) < 5), 'due');
-  const week = open.filter(d => d.due && d.due <= wk);
-  const late = open.filter(d => d.due && d.due < t);
+  const upcoming = open.filter(d => !d.due || d.due >= t);
   const toReceive = fPays().filter(p => !p.paid).reduce((s, p) => s + brlOf(p), 0);
-  const active = fBrands().filter(b => b.status === 'ativo');
-  const mk = monthKey(t), extraMonth = S.data.extras.filter(x => monthKey(x.date) === mk).reduce((s, x) => s + brlOf(x), 0);
-  const ending = active.filter(b => { if (ctypeOf(b) !== 'ciclo') return false; const c = cycleInfo(b); return c && c.left <= 7; });
-  const fu = sortBy(fLeads().filter(l => isOpenLead(l) && l.next && l.next <= t), 'next');
+  const mk = monthKey(t), gotMonth = fPays().filter(p => p.paid && monthKey(p.paidAt || p.due || '') === mk).reduce((s, p) => s + brlOf(p), 0), extraMonth = S.data.extras.filter(x => monthKey(x.date) === mk).reduce((s, x) => s + brlOf(x), 0);
   const fresh = S.data.ideas.filter(i => (i.status || 'nova') === 'nova' && !ideaPast(i));
   const idea = fresh.length ? fresh[(new Date().getDate()) % fresh.length] : null;
 
@@ -1373,27 +1369,25 @@ function vHome() {
       <p>Cadastre as marcas com que você trabalha, os ciclos de cada contrato, suas entregas e quanto falta receber. Tudo num lugar só.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-new="brands">${ic('plus')}Adicionar primeira marca</button><button class="btn ghost" data-act="examples">Ver com exemplos</button></div>
     </div>${homeWhatsNew()}${homeNews()}` : `
-  ${frontBar()}
-  <div class="stats">
-    <div class="stat hero"><div class="l">A receber${S.f.front ? ' · ' + esc(S.f.front) : ''}</div><div class="v">${brl(toReceive)}</div></div>
-    <div class="stat"><div class="l">Entregas em 7 dias</div><div class="v">${week.length}${late.length ? ` <span class="pill p-bad" style="font-size:11px;vertical-align:middle">${late.length} atrasada${late.length > 1 ? 's' : ''}</span>` : ''}</div></div>
-    <div class="stat"><div class="l">Marcas ativas</div><div class="v">${active.length}</div></div>
-    <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas do mês</div><div class="v">${brl(extraMonth)}</div><div class="sub" style="font-size:11px">recebidas + a receber</div></button>
-  </div>
+  ${fronts().length > 1 ? frontBar() : ''}
   ${nudgeHtml()}
-  ${homeWhatsNew()}
-  ${homeAlerts()}
-  ${homeNews()}
+  ${homePend()}
   ${homeDay()}
   <section class="section">
     <div class="row-h"><h2>Próximas entregas</h2><button class="link" data-tab="agenda">Ver agenda</button></div>
-    ${open.length ? `<div class="list">${open.slice(0, 5).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries">${ic('plus')}Nova entrega</button></div>`}
+    ${upcoming.length ? `<div class="list">${upcoming.slice(0, 3).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries" style="margin-top:10px">${ic('plus')}Nova entrega</button></div>`}
   </section>
-  ${ending.length ? `<section class="section"><div class="row-h"><h2>Ciclos terminando</h2></div><div class="list">${ending.map(b => { const c = cycleInfo(b); return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b>${esc(b.name)}</b>${exTag(b)}<div class="sub">${c.left < 0 ? `Terminou há ${-c.left} dia${c.left < -1 ? 's' : ''}` : c.left === 0 ? 'Termina hoje' : `Termina em ${c.left} dia${c.left > 1 ? 's' : ''}`} · ${fmtD(b.end)}</div></div><div class="row-btns"><button class="btn sm" data-renprop="${b.id}">Proposta</button><button class="btn sm soft" data-renew="${b.id}">Renovar ciclo</button></div></div>`; }).join('')}</div></section>` : ''}
-  ${licSoon().length ? `<section class="section"><div class="row-h"><h2>Licenças de uso vencendo</h2><button class="link" data-golic>Ver todas</button></div><div class="list">${licSoon().slice(0, 3).map(licRow).join('')}</div></section>` : ''}
-  ${fu.length ? `<section class="section"><div class="row-h"><h2>Follow-ups pra hoje</h2><button class="link" data-goprospec>Ver prospecção</button></div><div class="list">${fu.slice(0, 4).map(leadRow).join('')}</div></section>` : ''}
+  <section class="section">
+    <div class="row-h"><h2>Dinheiro do mês${S.f.front ? ' · ' + esc(S.f.front) : ''}</h2><button class="link" data-fview="marcas">Ver finanças</button></div>
+    <div class="stats">
+      <button class="stat hero" data-fview="marcas" style="text-align:left;cursor:pointer"><div class="l">A receber</div><div class="v">${brl(toReceive)}</div></button>
+      <button class="stat" data-fview="marcas" style="text-align:left;cursor:pointer"><div class="l">Recebido no mês</div><div class="v">${brl(gotMonth)}</div></button>
+      <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas</div><div class="v">${brl(extraMonth)}</div></button>
+    </div>
+  </section>
   ${idea ? `<section class="section"><div class="row-h"><h2>Ideia do dia</h2><button class="link" data-tab="ideias">Banco de ideias</button></div>
     <div class="card idea-day"><div class="q">${esc(idea.title)}</div>${idea.notes ? `<div class="sub" style="margin-top:6px">${esc(idea.notes)}</div>` : ''}</div></section>` : ''}
+  ${homeWhatsNew()}
   `}`;
 }
 
@@ -4897,6 +4891,42 @@ document.addEventListener('click', e => {
   e.stopImmediatePropagation(); e.preventDefault(); if (sheet) closeForm(); openPro(t.dataset.pro);
 }, true);
 ADMIN_P.then(planLoad);
+/* ================= Início = painel da creator: o que está pendente, com bolinha ================= */
+function homePend() {
+  const t = today(), it = [];
+  const add = (n, txt, sub, attrs) => { if (n) it.push(`<button class="pend" ${attrs}><span class="pd-dot" aria-hidden="true"></span><span class="pd-t"><b>${txt}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${ic('right')}</button>`); };
+  const lateD = fDeliv().filter(d => (d.stage || 0) < 5 && d.due && d.due < t);
+  add(lateD.length, `${lateD.length} entrega${lateD.length > 1 ? 's' : ''} atrasada${lateD.length > 1 ? 's' : ''}`, lateD.slice(0, 2).map(d => d.title).join(', '), 'data-goag="entregas"');
+  const ch = toCharge().filter(p => inFront(p.brandId));
+  add(ch.length, `${ch.length} pagamento${ch.length > 1 ? 's' : ''} atrasado${ch.length > 1 ? 's' : ''}`, ch.slice(0, 2).map(p => p.desc || brandName(p.brandId)).join(', '), 'data-fview="marcas"');
+  const lt = lateTasks();
+  add(lt.length, `${lt.length} tarefa${lt.length > 1 ? 's' : ''} ficou${lt.length > 1 ? 'aram' : ''} pra trás`, 'Traga pra hoje ou replaneje', 'data-rview="hoje"');
+  const fu = fLeads().filter(l => isOpenLead(l) && l.next && l.next <= t);
+  add(fu.length, `${fu.length} follow-up${fu.length > 1 ? 's' : ''} pra hoje`, fu.slice(0, 2).map(l => l.name).join(', '), 'data-goprospec');
+  const ending = fBrands().filter(b => b.status === 'ativo' && ctypeOf(b) === 'ciclo').filter(b => { const c = cycleInfo(b); return c && c.left <= 7; });
+  add(ending.length, `${ending.length} ciclo${ending.length > 1 ? 's' : ''} terminando`, ending.slice(0, 2).map(b => b.name).join(', ') + ' · hora de renovar', 'data-gomv="clientes"');
+  const lic = licSoon().length; add(lic, `${lic} licença${lic > 1 ? 's' : ''} de uso vencendo`, 'Renovar é renda sem gravar', 'data-golic');
+  const pd = permDue().length; add(pd, `${pd} permuta${pd > 1 ? 's' : ''} pra postar`, '', 'data-gomv="permutas"');
+  const day = +t.slice(8, 10);
+  if (S.profile.mei && day >= 12 && day <= 20 && !dasPaid(monthKey(t)) && !proLocked('financeiro.notas')) add(1, 'DAS do MEI vence dia 20', brl(dasValue()), 'data-fview="notas"');
+  const dw = datesWindow()[0]; if (dw) add(1, `Hora de prospectar: ${esc(dw.name)}`, 'As marcas já estão fechando campanhas', 'data-goag="datas"');
+  if (newsUnseen()) add(1, 'Radar UGC: notícias novas', S.news[0] && S.news[0].headline ? S.news[0].headline : 'O resumo do mercado de hoje', 'data-tab="radar"');
+  return `<section class="section"><div class="row-h"><h2>${it.length ? 'Precisa de você' : 'Tudo em dia'}</h2>${it.length ? `<span class="sub num">${it.length}</span>` : ''}</div>
+    ${it.length ? `<div class="pend-list">${it.join('')}</div>` : '<div class="card pend-ok">Nada pendente agora ✨ Aproveita pra criar.</div>'}</section>`;
+}
+(() => { const st = document.createElement('style'); st.textContent = `
+.pend-list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.pend{all:unset;box-sizing:border-box;display:grid;grid-template-columns:12px minmax(0,1fr) 18px;gap:12px;align-items:center;padding:13px 14px;border-top:1px solid var(--line);cursor:pointer;color:var(--fg)}
+.pend:first-child{border-top:0}
+.pend:hover{background:color-mix(in oklab, var(--accent,#420725) 5%, transparent)}
+.pend:focus-visible{outline:2px solid var(--accent,#420725);outline-offset:-2px}
+.pd-dot{width:10px;height:10px;border-radius:50%;background:#FF5C8A;box-shadow:0 0 0 4px color-mix(in oklab, #FF5C8A 18%, transparent)}
+.pd-t{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pd-t b{font-size:15px}
+.pd-t small{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pend svg{width:18px;height:18px;color:var(--muted)}
+.pend-ok{color:var(--muted);font-weight:600}
+`; document.head.appendChild(st); })();
 connect();
 })();
 </script>
