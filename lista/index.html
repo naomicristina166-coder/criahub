@@ -367,7 +367,6 @@ footer a:hover{color:#fff}
           <span class="logo" style="font-size:44px;justify-content:center"><span class="c" style="color:var(--vinho)">cr<span class="dotless">ı</span>a</span><span class="h" style="color:var(--vinho)">hub</span></span>
           <h3 id="doneTitle">Você está na lista, cria!</h3>
           <p id="doneText">No dia 23 de novembro você recebe o acesso antes de todo mundo. Enquanto isso, acompanha os bastidores no Instagram.</p>
-          <span class="num" id="doneNum" hidden></span>
           <div class="links">
             <a class="btn btn-vinho btn-sm" href="https://www.instagram.com/criahubapp/" target="_blank" rel="noopener">Seguir @criahubapp</a>
             <a class="btn btn-rosa btn-sm" href="https://www.instagram.com/naomicristinna_/" target="_blank" rel="noopener" style="background:#fff">Seguir @naomicristinna_</a>
@@ -443,9 +442,8 @@ footer a:hover{color:#fff}
 
   const form = $('form'), err = $('err'), send = $('send');
   const fail = msg => { err.textContent = msg; err.classList.add('on'); send.disabled = false; send.textContent = 'Quero entrar na lista'; };
-  const ok = (title, text, n) => {
+  const ok = (title, text) => {
     form.hidden = true; $('doneTitle').textContent = title; $('doneText').textContent = text;
-    if (n) { $('doneNum').textContent = `Você é a cria nº ${n.toLocaleString('pt-BR')} da lista`; $('doneNum').hidden = false; }
     $('done').classList.add('on'); $('done').focus();
   };
 
@@ -472,7 +470,7 @@ footer a:hover{color:#fff}
       if (error.code === '23505') return ok('Você já está na lista!', 'Esse e-mail já entrou. No dia 23 de novembro você recebe o acesso antes de todo mundo.');
       return fail('Não deu certo agora. Tenta de novo em alguns segundos.');
     }
-    ok('Você está na lista, cria!', $('doneText').textContent, await count());
+    ok('Você está na lista, cria!', $('doneText').textContent);
   });
 })();
 </script>
