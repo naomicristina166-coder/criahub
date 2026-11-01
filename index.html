@@ -1343,6 +1343,35 @@ function dvRow(d) {
   </div>`;
 }
 
+/* ================= painel do Início: 4 números do dia, sem excesso ================= */
+function homePanel(upcoming, toReceive, gotMonth) {
+  const t = today(), list = tasksOn(t), done = list.filter(x => x.done).length, wk = addDays(t, 7);
+  const week = upcoming.filter(d => d.due && d.due <= wk), next = upcoming[0];
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  let four = null;
+  try { const accs = wAccs(); if (accs.length && !proLocked('marcas.contas')) { let tot = 0, ok = 0; accs.forEach(a => wSlots(a, t).forEach(sl => { tot++; if (wLog(a.id, t, sl)) ok++; })); four = { l: 'Aquecimento', v: `${ok}<small> de ${tot}</small>`, sub: ok === tot ? 'tudo aquecido ✨' : `agora: ${WSLOTS[wNow()][0].toLowerCase()}`, bar: pct(ok, tot), a: 'data-gomv="contas"' }; } } catch (_) {}
+  if (!four) { const hs = activeHabits(); if (hs.length) { const ok = hs.filter(h => hDone(h, t)).length; four = { l: 'Hábitos', v: `${ok}<small> de ${hs.length}</small>`, sub: ok === hs.length ? 'todos feitos ✨' : 'cuidar de você também conta', bar: pct(ok, hs.length), a: 'data-rview="habitos"' }; } }
+  if (!four) { const n = S.data.ideas.filter(i => (i.status || 'nova') === 'nova').length; four = { l: 'Ideias novas', v: String(n), sub: n ? 'esperando pra virar vídeo' : 'anote a próxima', a: 'data-tab="ideias"' }; }
+  const tile = x => `<button class="ph-t" ${x.a}><span class="ph-l">${x.l}</span><span class="ph-v num">${x.v}</span>${x.bar != null ? `<span class="ph-bar"><i style="width:${x.bar}%"></i></span>` : ''}<span class="ph-s">${esc(x.sub)}</span></button>`;
+  const T = [
+    { l: 'Tarefas de hoje', v: list.length ? `${done}<small> de ${list.length}</small>` : '0', sub: !list.length ? 'anote a prioridade' : done === list.length ? 'tudo feito ✨' : `${list.length - done} pra fazer`, bar: list.length ? pct(done, list.length) : null, a: 'data-rview="hoje"' },
+    { l: 'Entregas da semana', v: String(week.length), sub: next ? `próxima${next.due ? ' ' + fmtD(next.due) : ''}: ${String(next.title || '').slice(0, 30)}` : 'nenhuma pendente', a: 'data-tab="agenda"' },
+    { l: 'A receber', v: brl(toReceive).replace(/,00$/, ''), sub: `${brl(gotMonth).replace(/,00$/, '')} recebido no mês`, a: 'data-fview="marcas"' },
+    four];
+  return `<section class="ph" aria-label="Seu painel de hoje"><div class="ph-h"><span>Seu painel de hoje</span></div><div class="ph-g">${T.map(tile).join('')}</div></section>`;
+}
+(() => { const st = document.createElement('style'); st.textContent = `
+.ph{background:linear-gradient(150deg, var(--accent,#420725), color-mix(in oklab, var(--accent,#420725) 70%, #FF5C8A));color:#fff;border-radius:24px;padding:16px;display:grid;gap:12px;box-shadow:0 14px 32px color-mix(in oklab, var(--accent,#420725) 28%, transparent)}
+.ph-h{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#FBD3E1}
+.ph-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph-t{all:unset;box-sizing:border-box;cursor:pointer;background:rgb(255 255 255 / .1);border:1px solid rgb(255 255 255 / .14);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ph-t:hover{background:rgb(255 255 255 / .16)}.ph-t:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.ph-l{font-size:12.5px;font-weight:700;color:#FBD3E1}
+.ph-v{font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ph-v small{font-size:14px;font-weight:700;opacity:.75}
+.ph-s{font-size:12px;color:rgb(255 255 255 / .78);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-bar{height:5px;border-radius:9px;background:rgb(255 255 255 / .2);overflow:hidden}.ph-bar i{display:block;height:100%;background:#FF8FB1;border-radius:9px}
+@media (min-width:700px){.ph-g{grid-template-columns:repeat(4,1fr)}}
+`; document.head.appendChild(st); })();
 function vHome() {
   const t = today(), wk = addDays(t, 7), name = S.profile.name;
   const dateTxt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -1358,6 +1387,7 @@ function vHome() {
     <div class="eyebrow">${esc(dateTxt)}</div>
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
+  ${!isEmpty() ? `${fronts().length > 1 ? frontBar() : ''}${homePanel(upcoming, toReceive, gotMonth)}` : ''}
   ${homeBday()}
   ${homeRetro()}
   ${homeMail()}
@@ -1370,21 +1400,12 @@ function vHome() {
       <p>Cadastre as marcas com que você trabalha, os ciclos de cada contrato, suas entregas e quanto falta receber. Tudo num lugar só.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-new="brands">${ic('plus')}Adicionar primeira marca</button><button class="btn ghost" data-act="examples">Ver com exemplos</button></div>
     </div>${homeWhatsNew()}${homeNews()}` : `
-  ${fronts().length > 1 ? frontBar() : ''}
   ${nudgeHtml()}
   ${homePend()}
   ${homeDay()}
   <section class="section">
     <div class="row-h"><h2>Próximas entregas</h2><button class="link" data-tab="agenda">Ver agenda</button></div>
-    ${upcoming.length ? `<div class="list">${upcoming.slice(0, 3).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries" style="margin-top:10px">${ic('plus')}Nova entrega</button></div>`}
-  </section>
-  <section class="section">
-    <div class="row-h"><h2>Dinheiro do mês${S.f.front ? ' · ' + esc(S.f.front) : ''}</h2><button class="link" data-fview="marcas">Ver finanças</button></div>
-    <div class="stats">
-      <button class="stat hero" data-fview="marcas" style="text-align:left;cursor:pointer"><div class="l">A receber</div><div class="v">${brl(toReceive)}</div></button>
-      <button class="stat" data-fview="marcas" style="text-align:left;cursor:pointer"><div class="l">Recebido no mês</div><div class="v">${brl(gotMonth)}</div></button>
-      <button class="stat" data-tab="rendas" style="text-align:left;cursor:pointer"><div class="l">Outras rendas</div><div class="v">${brl(extraMonth)}</div></button>
-    </div>
+    ${upcoming.length ? `<div class="list">${upcoming.slice(0, 2).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries" style="margin-top:10px">${ic('plus')}Nova entrega</button></div>`}
   </section>
   ${idea ? `<section class="section"><div class="row-h"><h2>Ideia do dia</h2><button class="link" data-tab="ideias">Banco de ideias</button></div>
     <div class="card idea-day"><div class="q">${esc(idea.title)}</div>${idea.notes ? `<div class="sub" style="margin-top:6px">${esc(idea.notes)}</div>` : ''}</div></section>` : ''}
@@ -3947,6 +3968,7 @@ const NEWS_V = 'v18';
 function homeWhatsNew() {
   if (S.profile.seenWhatsNew === NEWS_V) return '';
   const it = [['Gastos e lucro', 'Finanças › Gastos', 'data-fview="gastos"'], ['Cofrinho e DAS do MEI', 'Finanças › Marcas', 'data-fview="marcas"'], ['Valor da sua hora', 'Finanças › Ano', 'data-fview="ano"'], ['Cobrar atrasados', 'botão Cobrar nos pagamentos vencidos', 'data-fview="marcas"'], ['É golpe?', 'Marcas › Contratos', 'data-gogolpe="1"'], ['Permutas', 'Marcas › Permutas', 'data-gomv="permutas"'], ['Mídia kit', 'Marcas › Mídia kit', 'data-gomv="kit"'], ['Datas comerciais', 'Agenda › Datas comerciais', 'data-goag="datas"'], ['Ganchos que funcionam', 'Estúdio › Ganchos', 'data-sview="ganchos"'], ['Conquistas', 'Rotina › Conquistas', 'data-rview="conquistas"']];
+  if (!S.f.wnOpen) return `<button class="wn-mini" data-wnopen="1"><span aria-hidden="true">✨</span>Novidades no CriaHub<small>${it.length} novidades ›</small></button>`;
   return `<section class="card section wn"><div class="row-h"><h2>Novidades no CriaHub</h2><button class="link" data-act="wnclose">Fechar</button></div><div class="wn-grid">${it.map(([t, w, a]) => `<button class="wn-it" ${a}><b>${t}</b><span>${w}</span></button>`).join('')}</div></section>`;
 }
 function homeAlerts() {
@@ -4947,7 +4969,7 @@ function homePend() {
   const wp = warmPending(); add(wp.length, `${wp.length} conta${wp.length > 1 ? 's' : ''} pra aquecer agora`, wp.slice(0, 3).map(a => a.handle).join(', ') + ' · ' + WSLOTS[wNow()][0].toLowerCase(), 'data-gomv="contas"');
   if (newsUnseen()) add(1, 'Radar UGC: notícias novas', S.news[0] && S.news[0].headline ? S.news[0].headline : 'O resumo do mercado de hoje', 'data-tab="radar"');
   return `<section class="section"><div class="row-h"><h2>${it.length ? 'Precisa de você' : 'Tudo em dia'}</h2>${it.length ? `<span class="sub num">${it.length}</span>` : ''}</div>
-    ${it.length ? `<div class="pend-list">${it.join('')}</div>` : '<div class="card pend-ok">Nada pendente agora ✨ Aproveita pra criar.</div>'}</section>`;
+    ${it.length ? `<div class="pend-list">${(S.f.pendAll ? it : it.slice(0, 3)).join('')}${it.length > 3 ? `<button class="pend-more" data-pendall="1">${S.f.pendAll ? 'Mostrar menos' : `Ver mais ${it.length - 3}`}</button>` : ''}</div>` : '<div class="card pend-ok">Nada pendente agora ✨ Aproveita pra criar.</div>'}</section>`;
 }
 (() => { const st = document.createElement('style'); st.textContent = `
 .pend-list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
@@ -4961,6 +4983,9 @@ function homePend() {
 .pd-t small{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pend svg{width:18px;height:18px;color:var(--muted)}
 .pend-ok{color:var(--muted);font-weight:600}
+.pend-more{all:unset;box-sizing:border-box;cursor:pointer;padding:11px 14px;border-top:1px solid var(--line);font-size:13.5px;font-weight:700;color:var(--accent,#420725);text-align:center}
+.wn-mini{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--surface);font-weight:700;font-size:14px}
+.wn-mini small{margin-left:auto;color:var(--muted);font-weight:600;font-size:12.5px}
 `; document.head.appendChild(st); })();
 /* ================= Tech Canvas: aquecimento das contas (Marcas › Contas) =================
    Fase de teste (3 a 5 dias) e conta ativa: 15 min de manhã, de tarde e de noite.
@@ -4995,13 +5020,14 @@ function warmPanel() {
     const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post').length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
     return `<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
       <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
+      ${(() => { const nx = sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); const on = WT && WT.aid === a.id; if (on) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[WT.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
       <div class="wchips">${chips}<button class="wchip post ${wPostDay(a.id, t) ? 'ok' : ''}" data-warmpost="${a.id}" aria-pressed="${wPostDay(a.id, t)}">${wPostDay(a.id, t) ? '📌 Posto hoje' : '+ Vou postar hoje'}</button></div>
       ${ph.done ? `<button class="link" data-warmactive="${a.id}" style="text-align:left">Teste acabou: marcar a conta como ativa</button>` : ''}</div>`;
   }).join('');
   return `<section class="card section warm" style="gap:12px"><div class="row-h"><h2>Aquecimento de hoje</h2><span class="sub num">${done} de ${tot}</span></div>
     <button class="link" data-warmplan="1" style="text-align:left;align-self:flex-start">⏰ Minha rotina de aquecimento: ${wPlan().sessions.map(x => `${esc(x.name)} ${esc(x.time)}`).join(' · ')}</button>
     <div class="bar ${done === tot ? 'ok' : ''}"><span style="width:${tot ? Math.round(done / tot * 100) : 0}%"></span></div>
-    <div class="sub">Toque num horário pra começar o cronômetro. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
+    <div class="sub">Toque em <b>Começar aquecimento</b> (ou em qualquer horário) e o cronômetro roda sozinho. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
     <div class="wlist">${rows}</div></section>`;
 }
 function warmBar() {
@@ -5029,7 +5055,7 @@ function openWarmPlan() {
   const row = (x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`;
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="warmplan" role="dialog" aria-modal="true" aria-label="Minha rotina de aquecimento">
     <div class="sh"><h2>Minha rotina de aquecimento</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
-    <div class="sub">Os horários em que você aquece as contas todo dia, do seu jeito. Vale pra todas as contas.</div>
+    <div class="sub">Os horários em que você aquece as contas todo dia, do seu jeito. Vale pra todas as contas. Na hora de aquecer, é só tocar em <b>Começar aquecimento</b> na conta.</div>
     <div class="wp-list">${WP.map(row).join('')}</div>
     <button type="button" class="btn sm ghost" data-wpadd="1" style="align-self:flex-start">${ic('plus')}Adicionar horário</button>
     <div class="field"><label for="wp_pre">Antes do post (minutos)</label><input type="number" id="wp_pre" min="1" max="120" value="${p.pre}"></div>
@@ -5081,6 +5107,7 @@ function warmPending() {
 .wtop .dots{display:flex;flex-wrap:nowrap;flex:none}
 .wtop b{display:block;font-size:15px}.wtop small{display:block;font-size:12.5px;color:var(--muted)}
 .wchips{display:flex;gap:6px;flex-wrap:wrap}
+.wgo{width:100%;justify-content:center}.wgo.run{font-size:13.5px;font-weight:700;color:#B0124F;background:#FFE0EA;border-radius:12px;padding:10px 12px}
 .wchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
 .wchip.now{border-color:var(--accent,#420725);color:var(--accent,#420725);box-shadow:0 0 0 3px color-mix(in oklab, var(--accent,#420725) 14%, transparent)}
 .wchip.ok{background:var(--accent,#420725);border-color:var(--accent,#420725);color:#fff}
@@ -5158,9 +5185,9 @@ document.addEventListener('click', e => { const t = e.target.closest && e.target
 /* ================= stories de boas-vindas em cada aba + Aprenda o CriaHub ================= */
 var STORIES_DATA = {
   inicio: { name: 'Início', slides: [
-    ['🏠', 'Essa é a sua Início', 'O resumo do seu dia de creator: o que precisa de você, suas tarefas, as próximas entregas e o dinheiro do mês.'],
-    ['🔴', 'A bolinha rosa avisa', 'Entrega atrasada, pagamento que não caiu, follow-up do dia… tudo que está pendente aparece em "Precisa de você". Toque pra resolver.'],
-    ['☕', 'Dica de ouro', 'Abra a Início toda manhã. Em 1 minuto você sabe o que fazer primeiro.'],
+    ['🏠', 'Seu painel de creator', 'Tudo que importa hoje num olhar só: suas tarefas, as entregas da semana, quanto falta receber e o aquecimento das contas.'],
+    ['🔴', 'A bolinha rosa avisa', 'Entrega atrasada, pagamento que não caiu, follow-up do dia… o que está pendente aparece em "Precisa de você". Toque pra resolver.'],
+    ['☕', 'Dica de ouro', 'Comece o dia por aqui. Em 1 minuto você sabe o que fazer primeiro.'],
     ['✨', 'Bora começar?', 'Cadastre sua primeira marca ou escreva a prioridade de hoje.']] },
   rotina: { name: 'Rotina', slides: [
     ['✅', 'Sua Rotina', 'Seu dia, suas metas, seus hábitos e o balanço da semana. Organiza a sua vida, não só o trabalho.'],
@@ -5433,6 +5460,11 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .ni-i ol{margin:0;padding-left:20px;display:grid;gap:3px;font-size:14px}
 .ni-i small{color:var(--muted);font-size:12.5px}
 </style>`);
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-pendall],[data-wnopen]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.pendall) S.f.pendAll = !S.f.pendAll; else S.f.wnOpen = true; render();
+}, true);
 connect();
 })();
 </script>
