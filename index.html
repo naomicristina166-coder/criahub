@@ -1339,6 +1339,7 @@ function dvRow(d) {
       <span class="m">${esc(brandName(d.brandId))}${d.format ? ' · ' + esc(d.format) : ''}${d.review ? ` · <span class="pill ${({ aprovado: 'p-ok', ajuste: 'p-warn', revisao: 'p-mute' })[d.review] || 'p-mute'}" style="font-size:10.5px;padding:1px 7px">${esc((REVIEW_OPTS.find(x => x[0] === d.review) || [])[1] || '')}${d.review === 'ajuste' && +d.rounds ? ' ' + (+d.rounds) : ''}</span>` : ''}${exTag(d)}</span>
       <span class="steps" aria-label="Etapa ${st + 1} de 6: ${STAGES[st]}">${STAGES.map((_, i) => `<i class="${i <= st ? 'on' : ''}"></i>`).join('')}<span class="m" style="margin-left:6px">${STAGES[st]}</span></span>
     </button>
+    ${/^https?:\/\//i.test(d.fileUrl || '') ? `<a class="dv-file" href="${esc(d.fileUrl)}" target="_blank" rel="noopener" title="Abrir o arquivo final" aria-label="Abrir o arquivo final de ${esc(d.title)}">${ic('ext')}</a>` : ''}
     ${st < 5 ? `<button class="adv" data-adv="${d.id}" title="Avançar para ${STAGES[st + 1]}">${STAGES[st + 1]} →</button>` : `<span class="adv done">✓ No ar</span>`}
   </div>`;
 }
@@ -1469,8 +1470,9 @@ function vBrands() {
   const subTxt = ac ? 'Perfis que você administra e a grade de postagem de cada marca.' : per ? 'Produtos recebidos em troca de conteúdo: prazos e devoluções.' : kt ? 'Sua apresentação pronta para mandar às marcas.' : lic ? 'Prazos de uso de imagem dos vídeos entregues. Vencendo, renove e cobre de novo.' : ctr ? 'Seu modelo de contrato e tradução de contratos e mensagens das marcas.' : pro ? 'Quem você quer conquistar e quem vale chamar de volta.' : 'Clientes, contratos e quanto cada parceria rende.';
   const btn = ac ? `<button class="btn" data-new="accounts">${ic('plus')}Nova conta</button>` : per ? `<button class="btn" data-new="perms">${ic('plus')}Nova permuta</button>` : ctr || lic || kt ? '' : pro ? `<button class="btn" data-new="leads">${ic('plus')}Nova prospecção</button>` : `<button class="btn" data-new="brands">${ic('plus')}Nova marca</button>`;
   const head = `<div class="head"><div><h1>Marcas</h1><div class="sub">${subTxt}</div></div>${btn}</div>
-  <div class="seg" role="group" aria-label="Visão"><button data-mview="clientes" aria-pressed="${!pro && !ctr && !lic && !per && !kt && !ac}">Clientes</button><button data-mview="contas" aria-pressed="${ac}">Contas</button><button data-mview="prospec" aria-pressed="${pro}">Prospecção${nOpen ? `<span class="n">${nOpen}</span>` : ''}</button><button data-mview="permutas" aria-pressed="${per}">Permutas${nPer ? `<span class="n">${nPer}</span>` : ''}</button><button data-mview="contratos" aria-pressed="${ctr}">Contratos</button><button data-mview="licencas" aria-pressed="${lic}">Licenças${nLic ? `<span class="n">${nLic}</span>` : ''}</button><button data-mview="kit" aria-pressed="${kt}">Mídia kit</button></div>`;
+  <div class="seg" role="group" aria-label="Visão"><button data-mview="clientes" aria-pressed="${!pro && !ctr && !lic && !per && !kt && !ac && mv !== 'mensagens'}">Clientes</button><button data-mview="contas" aria-pressed="${ac}">Contas</button><button data-mview="prospec" aria-pressed="${pro}">Prospecção${nOpen ? `<span class="n">${nOpen}</span>` : ''}</button><button data-mview="permutas" aria-pressed="${per}">Permutas${nPer ? `<span class="n">${nPer}</span>` : ''}</button><button data-mview="contratos" aria-pressed="${ctr}">Contratos</button><button data-mview="licencas" aria-pressed="${lic}">Licenças${nLic ? `<span class="n">${nLic}</span>` : ''}</button><button data-mview="kit" aria-pressed="${kt}">Mídia kit</button><button data-mview="mensagens" aria-pressed="${mv === 'mensagens'}">Mensagens</button></div>`;
   if (!ac && !pro && !ctr && !lic && !per && !kt && S.f.bpage) { const bp = S.data.brands.find(x => x.id === S.f.bpage); if (bp) return vBrandPage(bp); S.f.bpage = ''; }
+  if (mv === 'mensagens') return head.replace(/<div class="sub">[^<]*<\/div>/, '<div class="sub">Mensagens que você manda toda semana, prontas pra copiar com o nome da marca.</div>').replace(/<button class="btn" data-new="brands">[\s\S]*?<\/button>/, '<button class="btn" data-mtnew="1">' + ic('plus') + 'Nova mensagem</button>') + vMsgs();
   if (ac) return head + vAccounts();
   if (lic) return head + vLicenses();
   if (per) return head + vPerms();
@@ -2441,7 +2443,7 @@ Responda em português do Brasil, texto simples sem markdown, com as ideias nume
 /* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
 const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
-  marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio]] },
+  marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
   estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
@@ -2553,6 +2555,7 @@ const HELP = {
   'marcas.contratos': ['Contratos', 'Seu modelo de contrato preenchido com os dados da marca, e tradução de contratos e mensagens em outro idioma.'],
   'marcas.licencas': ['Licenças de uso', 'Por quanto tempo a marca pode usar seu vídeo (em anúncios, por exemplo). Quando vence, dá pra renovar e cobrar de novo.'],
   'marcas.kit': ['Mídia kit', 'Sua apresentação pras marcas: quem você é, seus números e seus melhores vídeos. Pronto pra copiar ou baixar.'],
+  'marcas.mensagens': ['Mensagens', 'As mensagens que você manda toda semana pras marcas: primeiro contato, follow-up, material, cobrança, renovação e depoimento. Escolha a marca e o app preenche o nome, o link do material e a data. Copie, mande pelo WhatsApp ou peça pra IA ajustar o tom (Pro).'],
   'agenda.calendario': ['Calendário', 'Seu mês num lugar só: entregas (com o número de vídeos do dia), tarefas, observações e datas comemorativas.'],
   'agenda.entregas': ['Entregas', 'Cada vídeo que você deve a uma marca, com prazo e etapa: roteiro, gravação, edição, enviado, aprovado e publicado.'],
   'agenda.datas': ['Datas comerciais', 'Datas que movimentam as marcas (Dia das Mães, Black Friday…) e quando começar a prospectar pra cada uma.'],
@@ -4022,6 +4025,7 @@ const FORMS = {
     { k: 'hook', l: 'Gancho usado', t: 'text', ph: 'A primeira frase do vídeo' },
     { row: [{ k: 'hookType', l: 'Tipo de gancho', t: 'select', o: [['', 'Escolha'], ...HOOK_TYPES.map(x => [x, x])] }, { k: 'views', l: 'Views', t: 'number' }] },
     { row: [{ k: 'review', l: 'Aprovação da marca', t: 'select', o: REVIEW_OPTS, d: '' }, { k: 'rounds', l: 'Rodadas de ajuste usadas', t: 'number', d: 0 }] },
+    { k: 'fileUrl', l: 'Link do arquivo final', t: 'text', ph: 'Drive, WeTransfer… do vídeo aprovado', hint: 'Pra achar rápido quando a marca pedir de novo. Entra também na mensagem "Segue o material".' },
     { k: 'minutes', l: 'Tempo gasto (minutos)', t: 'number', hint: 'Use o cronômetro ou anote aqui. Serve para calcular o valor da sua hora.' },
     { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Roteiro, pontos obrigatórios, link do briefing…' },
   ] },
@@ -5465,6 +5469,110 @@ document.addEventListener('click', e => {
   e.stopImmediatePropagation(); e.preventDefault();
   if (t.dataset.pendall) S.f.pendAll = !S.f.pendAll; else S.f.wnOpen = true; render();
 }, true);
+/* ================= Mensagens prontas pras marcas (Marcas › Mensagens) ================= */
+const MT_CATS = ['Prospecção', 'Material', 'Cobrança', 'Renovação', 'Depoimento', 'Outras'];
+const MT_DEF = [
+  { id: 'd1', cat: 'Prospecção', title: 'Primeiro contato', body: 'Oi, {contato}! Tudo bem? Sou a {meu nome}, creator de UGC. Acompanho a {marca} e tive uma ideia de vídeo que combina muito com vocês. Posso te mandar meu portfólio e uma proposta?' },
+  { id: 'd2', cat: 'Prospecção', title: 'Follow-up', body: 'Oi, {contato}! Passando pra saber se você conseguiu ver a minha mensagem sobre os vídeos pra {marca}. Se fizer sentido, te mando uma proposta rapidinho 😊' },
+  { id: 'd3', cat: 'Material', title: 'Segue o material', body: 'Oi, {contato}! Segue o material da {marca}: {link}\nQualquer ajuste, é só me falar. Fico no aguardo da aprovação!' },
+  { id: 'd4', cat: 'Material', title: 'Lembrete de aprovação', body: 'Oi, {contato}! Conseguiu ver os vídeos da {marca}? Preciso da aprovação até {data} pra seguir com o cronograma. Obrigada!' },
+  { id: 'd5', cat: 'Cobrança', title: 'Lembrete de pagamento', body: 'Oi, {contato}! Tudo bem? Passando pra lembrar do pagamento dos vídeos da {marca}, com vencimento em {data}. Se já tiver feito, me manda o comprovante, por favor? Obrigada!' },
+  { id: 'd6', cat: 'Renovação', title: 'Renovar o ciclo', body: 'Oi, {contato}! O nosso ciclo com a {marca} está terminando. Amei os resultados e queria propor a renovação pro próximo mês. Posso te mandar a proposta?' },
+  { id: 'd7', cat: 'Renovação', title: 'Uso de imagem vencendo', body: 'Oi, {contato}! O direito de uso de imagem do vídeo da {marca} vence em {data}. Se quiserem continuar usando, te envio o valor da renovação.' },
+  { id: 'd8', cat: 'Depoimento', title: 'Pedir depoimento', body: 'Oi, {contato}! Foi muito bom trabalhar com a {marca}. Você poderia me mandar uma frase sobre a nossa parceria pro meu portfólio? Ajuda demais! 💛' }];
+const mtList = () => Array.isArray(S.profile.msgTpls) ? S.profile.msgTpls : MT_DEF;
+const mtSt = () => { S.ct.mt = S.ct.mt || { brand: '', contato: '', link: '', data: '', cat: 'todas' }; return S.ct.mt; };
+function mtFill(body) {
+  const m = mtSt(), b = S.data.brands.find(x => x.id === m.brand);
+  const v = { marca: b ? b.name : '', contato: m.contato, 'meu nome': S.profile.name || '', link: m.link, data: m.data ? fmtD(m.data) : '' };
+  return String(body).replace(/\{(marca|contato|meu nome|link|data)\}/g, (_, k) => v[k] || `[${k}]`);
+}
+function mtPick(bid) {
+  const m = mtSt(), b = S.data.brands.find(x => x.id === bid); m.brand = bid;
+  m.contato = b && b.contact && !/[@\d]/.test(b.contact) ? String(b.contact).trim().slice(0, 40) : '';
+  const last = sortBy(S.data.deliveries.filter(d => d.brandId === bid && /^https?:\/\//i.test(d.fileUrl || '')), 'due').pop(); m.link = last ? last.fileUrl : '';
+  const pay = S.data.payments.filter(p => p.brandId === bid && !p.paid && p.due).sort((a, c) => String(a.due).localeCompare(String(c.due)))[0]; m.data = pay ? pay.due : '';
+}
+function vMsgs() {
+  const m = mtSt(), L = mtList(), cats = MT_CATS.filter(c => L.some(x => x.cat === c)), shown = L.filter(x => m.cat === 'todas' || x.cat === m.cat);
+  const brands = S.data.brands.filter(b => b.status !== 'encerrado').sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return `<section class="card section mt-top" style="gap:10px"><b>Pra quem é a mensagem?</b>
+    <div class="mt-f"><div class="field"><label for="mt_brand">Marca</label><select id="mt_brand"><option value="">Escolha a marca</option>${brands.map(b => `<option value="${b.id}" ${m.brand === b.id ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}</select></div>
+    <div class="field"><label for="mt_contato">Nome do contato</label><input type="text" id="mt_contato" value="${esc(m.contato)}" placeholder="Ex.: Carol"></div>
+    <div class="field"><label for="mt_link">Link do material</label><input type="text" id="mt_link" value="${esc(m.link)}" placeholder="Drive, WeTransfer…"></div>
+    <div class="field"><label for="mt_data">Data</label><input type="date" id="mt_data" value="${esc(m.data)}"></div></div>
+    <span class="sub">A marca preenche o link da última entrega e o vencimento do próximo pagamento sozinha. O que faltar aparece entre colchetes.</span></section>
+  <div class="chips">${['todas', ...cats].map(c => `<button class="chip" data-mtcat="${esc(c)}" aria-pressed="${m.cat === c}">${c === 'todas' ? 'Todas' : esc(c)}</button>`).join('')}</div>
+  <div class="mt-list">${shown.map(x => `<article class="card mt"><div class="mt-h"><b>${esc(x.title)}</b><span class="pill p-mute">${esc(x.cat)}</span></div>
+    <p class="mt-b">${esc(mtFill(x.body)).replace(/\[(marca|contato|meu nome|link|data)\]/g, '<mark>[$1]</mark>').replace(/\n/g, '<br>')}</p>
+    <div class="row-btns"><button class="btn sm" data-mtcopy="${x.id}">Copiar</button><a class="btn sm ghost" href="https://wa.me/?text=${encodeURIComponent(mtFill(x.body))}" target="_blank" rel="noopener">WhatsApp</a><button class="btn sm ghost" data-mtai="${x.id}">Ajustar ✨</button><button class="link mt-ed" data-mtedit="${x.id}">Editar</button></div></article>`).join('')}</div>
+  ${Array.isArray(S.profile.msgTpls) ? '<button class="link" data-mtreset="1" style="align-self:flex-start">Trazer de volta as mensagens padrão</button>' : ''}`;
+}
+async function mtSave(list) { await saveProfile({ msgTpls: list }); }
+function mtOpenEdit(id) {
+  const x = mtList().find(t => t.id === id) || { id: '', cat: 'Outras', title: '', body: '' }; sheet = { col: 'mtedit' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="mtedit" data-id="${esc(x.id)}" role="dialog" aria-modal="true" aria-label="${x.id ? 'Editar' : 'Nova'} mensagem">
+    <div class="sh"><h2>${x.id ? 'Editar mensagem' : 'Nova mensagem'}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="field"><label for="mte_t">Nome</label><input type="text" id="mte_t" value="${esc(x.title)}" maxlength="40" required placeholder="Ex.: Agradecer depois do pagamento"></div>
+    <div class="field"><label for="mte_c">Tipo</label><select id="mte_c">${MT_CATS.map(c => `<option ${c === x.cat ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label for="mte_b">Mensagem</label><textarea id="mte_b" rows="7" required maxlength="1500">${esc(x.body)}</textarea><span class="hint">Use {marca}, {contato}, {meu nome}, {link} e {data}: o app troca sozinho.</span></div>
+    <div class="foot">${x.id ? `<button type="button" class="btn ghost" data-mtdel="${esc(x.id)}">Apagar</button>` : ''}<div class="r"><button class="btn">Salvar</button></div></div></form></div>`;
+}
+function mtOpenAi(id) {
+  const x = mtList().find(t => t.id === id); if (!x) return; S.ct.mtAi = { id, text: mtFill(x.body), out: '' }; sheet = { col: 'mtai' }; mtAiRender();
+}
+function mtAiRender() {
+  const a = S.ct.mtAi; if (!a || !sheet || sheet.col !== 'mtai') return; const busy = S.ct.busy === 'mtAi';
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Ajustar com IA">
+    <div class="sh"><h2>Ajustar com IA ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sub">Escolha como você quer a mensagem. A IA mantém as informações e muda só o jeito de falar.</div>
+    <div class="chips">${[['formal', 'Mais formal'], ['leve', 'Mais leve'], ['curta', 'Mais curta'], ['ingles', 'Em inglês'], ['espanhol', 'Em espanhol']].map(([k, l]) => `<button type="button" class="chip" data-mttone="${k}" ${busy ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+    ${busy ? '<div class="sub">Escrevendo…</div>' : ''}${S.ct.err && !busy ? `<div class="err">${esc(S.ct.err)}</div>` : ''}
+    <p class="mt-b mt-out">${esc(a.out || a.text).replace(/\n/g, '<br>')}</p>
+    <div class="foot"><div class="r"><button type="button" class="btn" data-mtaicopy="1">Copiar</button></div></div></div></div>`;
+}
+const mtCopy = async txt => { try { await navigator.clipboard.writeText(txt); toast('Copiado ✨'); } catch (_) { toast('Não consegui copiar. Segure no texto pra copiar.'); } };
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-mtcat],[data-mtcopy],[data-mtedit],[data-mtnew],[data-mtdel],[data-mtreset],[data-mtai],[data-mttone],[data-mtaicopy]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset, m = mtSt();
+  if (d.mtcat) { m.cat = d.mtcat; render(); return; }
+  if (d.mtcopy) { const x = mtList().find(v => v.id === d.mtcopy); if (x) await mtCopy(mtFill(x.body)); return; }
+  if (d.mtedit) { mtOpenEdit(d.mtedit); return; }
+  if (d.mtnew) { mtOpenEdit(''); return; }
+  if (d.mtdel) { await mtSave(mtList().filter(v => v.id !== d.mtdel)); closeForm(); toast('Mensagem apagada'); return; }
+  if (d.mtreset) { await saveProfile({ msgTpls: null }); toast('Mensagens padrão de volta'); return; }
+  if (d.mtai) { mtOpenAi(d.mtai); return; }
+  if (d.mtaicopy) { const a = S.ct.mtAi; if (a) await mtCopy(a.out || a.text); return; }
+  if (d.mttone) { const a = S.ct.mtAi; if (!a || S.ct.busy) return;
+    const how = { formal: 'mais formal e profissional, sem perder a simpatia', leve: 'mais leve e próxima, como uma creator brasileira fala no WhatsApp', curta: 'mais curta e direta, com no máximo 3 frases', ingles: 'traduzida para o inglês, natural e profissional', espanhol: 'traduzida para o espanhol, natural e profissional' }[d.mttone];
+    let out = null; const p = `Reescreva a mensagem abaixo, de uma creator de UGC para uma marca, deixando ${how}. Mantenha todas as informações, nomes, links, datas e valores exatamente como estão (inclusive textos entre colchetes). Não invente nada.\nResponda APENAS com JSON: {"texto":"..."}\n\nMensagem:\n${a.text}`;
+    mtAiRender(); await gated('msg', async () => { out = await askJson('mtAi', p); });
+    if (out && out.texto) a.out = String(out.texto).slice(0, 3000); mtAiRender(); return; }
+}, true);
+document.addEventListener('change', e => {
+  const el = e.target; if (!el || !el.id || !/^mt_/.test(el.id)) return; const m = mtSt();
+  if (el.id === 'mt_brand') { mtPick(el.value); render(); return; }
+  if (el.id === 'mt_data') { m.data = el.value; render(); }
+});
+document.addEventListener('input', e => { const el = e.target; if (!el || !el.id) return; const m = mtSt();
+  if (el.id === 'mt_contato') m.contato = el.value; else if (el.id === 'mt_link') m.link = el.value; else return;
+  clearTimeout(mtSt()._t); m._t = setTimeout(() => { const f = document.activeElement && document.activeElement.id; render(); const n = f && document.getElementById(f); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (_) {} } }, 500); });
+document.addEventListener('submit', async e => {
+  if (!e.target.dataset || e.target.dataset.form !== 'mtedit') return; e.preventDefault(); e.stopImmediatePropagation();
+  const id = e.target.dataset.id, x = { id: id || 'm' + newId().slice(0, 8), cat: $('#mte_c').value, title: $('#mte_t').value.trim().slice(0, 40) || 'Mensagem', body: $('#mte_b').value.trim().slice(0, 1500) };
+  if (!x.body) return; const L = [...mtList()]; const i = L.findIndex(v => v.id === id); if (i >= 0) L[i] = x; else L.push(x);
+  closeForm(); await mtSave(L); toast('Mensagem salva');
+}, true);
+document.head.insertAdjacentHTML('beforeend', `<style>
+.mt-f{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media (min-width:700px){.mt-f{grid-template-columns:repeat(4,1fr)}}
+.mt-f .field{margin:0;min-width:0}.mt-f input,.mt-f select{width:100%;min-width:0}
+.mt-list{display:grid;gap:10px}@media (min-width:800px){.mt-list{grid-template-columns:1fr 1fr}}
+.mt{display:flex;flex-direction:column;gap:8px}.mt a.btn{text-decoration:none}.mt .row-btns{align-items:center}.mt-ed{margin-left:auto}.mt-h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.mt-b{margin:0;font-size:14.5px;line-height:1.5;white-space:normal}.mt-b mark{background:#FFE0EA;color:#A3123F;border-radius:4px;padding:0 3px}
+.mt-out{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.dv:has(.dv-file){grid-template-columns:52px minmax(0,1fr) auto auto}
+.dv-file{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);color:var(--muted);flex:none}.dv-file svg{width:16px;height:16px}
+</style>`);
 connect();
 })();
 </script>
