@@ -105,6 +105,15 @@ h2 em{font-style:italic}
 .card li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--vinho);margin:8px 0 0 4px}
 .card.dark li::before{background:var(--rosa)}
 .who{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.grow{margin-top:40px;background:#fff;border-radius:var(--r);padding:28px 24px;border:2px solid rgba(66,7,37,.08)}
+.grow h3{font:800 28px/1.15 var(--display);margin:0;color:var(--vinho)}
+.grow h3 em{font-style:italic;color:#B0124F}
+.grow>p{margin:10px 0 0;color:var(--muted);max-width:640px}
+.steps{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:12px;counter-reset:st}
+@media (min-width:760px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.steps li{counter-increment:st;background:var(--rosa-2);border-radius:18px;padding:18px;display:grid;gap:6px;align-content:start}
+.steps li::before{content:counter(st);width:34px;height:34px;border-radius:50%;background:var(--vinho);color:var(--rosa);display:grid;place-items:center;font-weight:800}
+.steps b{font-size:17px;color:var(--vinho)}.steps span{font-size:15px;color:var(--ink)}
 .chip{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;background:var(--vinho);color:var(--on-vinho);font-weight:700;font-size:15px}
 
 /* contagem regressiva */
@@ -331,6 +340,15 @@ footer a:hover{color:#fff}
           </ul>
         </article>
       </div>
+      <div class="grow">
+        <h3>Um app que <em>cresce com você</em>.</h3>
+        <p>O CriaHub é completo pra rotina de creator, mas você não precisa usar tudo de uma vez. Começa só com o que faz sentido pra você agora e vai ativando mais coisas conforme a sua carreira cresce.</p>
+        <ol class="steps">
+          <li><b>Começa leve</b><span>Responde 3 perguntinhas e o app mostra só as ferramentas da sua rotina de hoje. Nada sobrando pra te deixar perdida.</span></li>
+          <li><b>Ativa quando precisar</b><span>Fechou a primeira marca? Começou no Tech Canvas? Virou MEI? É só ligar a ferramenta nova nos Ajustes.</span></li>
+          <li><b>Cresce junto</b><span>Do primeiro vídeo à agenda cheia de marcas, o mesmo app acompanha cada fase, com a sua cor e as suas categorias.</span></li>
+        </ol>
+      </div>
       <div class="who" aria-label="Pra quem é">
         <span class="chip">UGC tradicional</span><span class="chip">UGC Tech Canvas</span><span class="chip">Outros trabalhos e rendas</span><span class="chip">Afiliados</span><span class="chip">Quem está começando</span><span class="chip">Pra todo mundo que cria</span>
       </div>
@@ -471,6 +489,7 @@ footer a:hover{color:#fff}
         <details><summary>Como eu pago?</summary><p>Pix, boleto, cartão de crédito (o anual parcela em até 12x) ou cartão de débito. No mensal, o cartão de crédito renova sozinho; no Pix e no boleto, a cobrança chega pra você todo mês.</p></details>
         <details><summary>Posso cancelar?</summary><p>Pode, quando quiser. Você volta pro plano Grátis e tudo que cadastrou continua lá.</p></details>
         <details><summary>Funciona no celular?</summary><p>Funciona no navegador do celular e do computador, e dá pra instalar na tela inicial como um app, sem precisar baixar de loja.</p></details>
+        <details><summary>Preciso usar todas as ferramentas?</summary><p>Não. Você escolhe o que aparece no seu app e esconde o resto. Conforme a sua rotina muda, é só ativar mais ferramentas nos Ajustes. Nada do que você cadastrou se perde.</p></details>
         <details><summary>Pra quem é o CriaHub?</summary><p>Pra todo mundo que cria: quem faz UGC tradicional, UGC Tech Canvas, quem é afiliado, quem tem outros trabalhos e outras rendas, e quem está começando agora. Cada creator monta o app do jeito da própria rotina.</p></details>
         <details><summary>Quando o CriaHub abre?</summary><p>Pra quem está na lista, no dia 15 de dezembro, ao meio-dia. Pra todo mundo, no dia 17 de dezembro.</p></details>
         <details><summary>O que vocês fazem com os meus dados?</summary><p>Usamos só pra te avisar do lançamento e das novidades do CriaHub. Pra sair da lista, é só mandar um e-mail pra <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a>.</p></details>
