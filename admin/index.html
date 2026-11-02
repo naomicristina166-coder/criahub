@@ -149,9 +149,10 @@ select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;paddi
 .toast.on{opacity:1;transform:translateX(-50%)}
 body.disc .pv{filter:blur(6px);user-select:none}
 .loading{color:var(--muted);padding:40px 0;text-align:center}
+.badge[hidden]{display:none !important}
 .badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--rec);color:#fff;font-size:11px;font-weight:800;margin-left:6px;vertical-align:1px}
 .att{display:grid;gap:8px;margin-top:16px}
-@media (min-width:760px){.att{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:760px){.att{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .att button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:700;font-size:14px}
 .att button:focus-visible{outline:2px solid var(--vinho)}
 .att .dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
@@ -168,6 +169,51 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
 .pay{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px 14px}
 .pay b.v{font:800 17px/1 var(--display);white-space:nowrap}
 @media (prefers-reduced-motion: reduce){.toast{transition:none}}
+
+/* radar da fundadora */
+.rd-hero{background:linear-gradient(150deg,var(--vinho),#7A1340);color:#fff;border-radius:22px;padding:20px;display:grid;gap:6px}
+.rd-hero .eb{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--rosa)}
+.rd-hero h1{color:#fff;font-size:26px}
+.rd-grid{display:grid;gap:12px;margin-top:12px}@media (min-width:860px){.rd-grid{grid-template-columns:1fr 1fr}}
+.rd{display:grid;gap:10px;align-content:start}
+.rd .k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rd h2{font-size:21px}
+.rd p{margin:0;font-size:15px}
+.rd .why{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.rd .why b,.rd .act b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--vinho);margin-bottom:2px}
+.rd .act{background:#FFF7E6;border:1px solid #FBE3B5;border-radius:12px;padding:10px 12px;font-size:14.5px}
+.rd .src{font-size:12.5px;color:var(--muted)}.rd .src a{font-weight:700}
+.rd-q{margin-top:12px;font:700 17px/1.35 var(--display);color:var(--vinho);background:#fff;border:1px dashed var(--rosa);border-radius:16px;padding:14px 16px}
+.rd-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.rd-acts input{flex:1 1 220px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+.rd-past{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%}
+.rd-past b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-past small{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-past .d{font:800 15px/1.1 var(--display);color:var(--vinho)}
+.rd-mini{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px;width:100%;margin-top:16px;background:linear-gradient(150deg,var(--vinho),#7A1340);color:#fff;border-radius:18px;padding:16px}
+.rd-mini .eb{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--rosa)}
+.rd-mini b{font:800 18px/1.25 var(--display)}.rd-mini span{font-size:13.5px;color:rgb(255 255 255 / .8)}
+/* crm */
+.crm-st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}@media (min-width:760px){.crm-st{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.crm-st button{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px}
+.crm-st button[aria-pressed=true]{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.crm-st b{font:800 22px/1 var(--display)}.crm-st span{font-size:12.5px;font-weight:700;opacity:.8}
+.crm-c .head{grid-template-columns:40px minmax(0,1fr) auto !important}
+.crm-due{color:#B4232C;font-weight:800}
+.crm-form{display:grid;gap:10px}@media (min-width:760px){.crm-form{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.crm-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+.crm-form input,.crm-form select{min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff;font-weight:600}
+.crm-form .full{grid-column:1/-1}
+.crm-log{display:grid;gap:6px}.crm-log div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;white-space:pre-wrap}.crm-log small{display:block;color:var(--muted);font-size:12px}
+.crm-add{display:flex;gap:8px;flex-wrap:wrap}.crm-add input{flex:1 1 220px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+/* momentos */
+.mom{padding:14px;display:grid;gap:10px}
+.mom .top1{display:flex;gap:12px;align-items:center}
+.mom .em1{font-size:28px;line-height:1;width:44px;height:44px;border-radius:14px;background:var(--rosa-2);display:grid;place-items:center;flex:none}
+.mom .t{font-weight:800;font-size:15.5px}
+.mom textarea{min-height:96px}
+.mom-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mom-acts a{display:inline-grid;place-items:center;text-decoration:none}
+.fund-miss{background:#FFF7E6;border:1px solid #FBE3B5;border-radius:16px;padding:16px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -181,7 +227,10 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   </div>
   <div class="wrap"><nav class="tabs" id="tabs">
     <button data-tab="geral" aria-current="page">Visão geral</button>
+    <button data-tab="radar">Radar ☕</button>
     <button data-tab="creators">Creators</button>
+    <button data-tab="crm">CRM<span class="badge" id="crmBadge" hidden></span></button>
+    <button data-tab="momentos">Momentos<span class="badge" id="momBadge" hidden></span></button>
     <button data-tab="feedback">Feedback<span class="badge" id="fbBadge" hidden></span></button>
     <button data-tab="financas">Finanças</button>
     <button data-tab="lista">Lista de espera</button>
@@ -284,7 +333,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     st.ov = ov.data; st.daily = daily.data || []; st.screens = screens.data || []; st.users = users.data || []; st.wl = wl.data || [];
     st.fb = fb.data || []; st.errs = errs.data || []; st.rev = rev.data || [];
     st.sel = st.daily.length - 1;
-    render();
+    render(); loadFund();
   }
 
   /* ---------- telas ---------- */
@@ -292,7 +341,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === st.tab ? 'page' : 'false'));
     const nNew = (st.fb || []).filter(f => f.status === 'novo').length, bd = $('fbBadge');
     if (bd) { bd.hidden = !nNew; bd.textContent = nNew; }
-    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : st.tab === 'feedback' ? vFeedback() : st.tab === 'financas' ? vFin() : vGeral();
+    fundBadges();
+    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : st.tab === 'feedback' ? vFeedback() : st.tab === 'financas' ? vFin()
+      : st.tab === 'radar' ? vRadar() : st.tab === 'crm' ? vCrm() : st.tab === 'momentos' ? vMom() : vGeral();
   }
 
   const METRICS = { active: ['Creators ativas', 'creators usaram o app'], signups: ['Cadastros', 'cadastros novos'], mins: ['Minutos no app', 'minutos no app'], waitlist: ['Lista de espera', 'entraram na lista'] };
@@ -308,6 +359,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const low = Object.keys(SCREENS).map(k => st.screens.find(s => s.screen === k) || { screen: k, mins: 0, users: 0 }).sort((a, b) => a.users - b.users || a.mins - b.mins).slice(0, 8);
     return `
       <h1>${hello}, fundadora 🍒</h1><p class="sub">Tudo que acontece no CriaHub, num lugar só. Sua conta não entra nesses números.</p>
+      ${radarMini()}
       ${attention()}
       <div class="kpis">
         ${kp('Creators cadastradas', nf(users), `+${nf(o.new7)} nos últimos 7 dias`, true)}
@@ -358,7 +410,8 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const it = (go, n, l, hot) => `<button data-go="${go}" class="${hot ? 'hot' : ''}"><span class="dot"></span>${l}<b>${n}</b></button>`;
     return `<h2 class="sec" style="margin-top:22px">Precisa da sua atenção</h2><div class="att">
       ${it('feedback', nf(nNew), 'Feedbacks novos', nNew)}${it('feedback:erros', nf(nErr), 'Erros do app (7 dias)', nErr)}
-      ${it('financas', nf(venc), 'Pro vencendo ou vencido', venc)}${it('creators:sumidas', nf(sumidas), 'Sumidas há 7+ dias', sumidas)}</div>`;
+      ${it('financas', nf(venc), 'Pro vencendo ou vencido', venc)}${it('creators:sumidas', nf(sumidas), 'Sumidas há 7+ dias', sumidas)}
+      ${st.crm ? it('crm:hoje', nf(crmDue().length), 'Follow-ups do CRM', crmDue().length) : ''}${st.mom ? it('momentos', nf(st.mom.length), 'Momentos pra celebrar', st.mom.length) : ''}</div>`;
   }
   function userList() {
     const q = st.uq.trim().toLowerCase();
@@ -535,7 +588,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (d.bar) { st.sel = +d.bar; render(); return; }
     if (d.uf) { st.uf = d.uf; render(); return; }
     if (d.csv) { d.csv === 'users' ? csvUsers() : d.csv === 'rev' ? csvRev() : csvWl(); return; }
-    if (d.go) { const [tab, sub] = d.go.split(':'); st.tab = tab; if (tab === 'creators' && sub) st.uf = sub; if (tab === 'feedback') st.ff = 'novo'; render(); if (sub === 'erros') document.getElementById('erros')?.scrollIntoView(); else window.scrollTo(0, 0); return; }
+    if (d.go) { const [tab, sub] = d.go.split(':'); st.tab = tab; if (tab === 'creators' && sub) st.uf = sub; if (tab === 'crm' && sub) st.cf = sub; if (tab === 'feedback') st.ff = 'novo'; render(); if (sub === 'erros') document.getElementById('erros')?.scrollIntoView(); else window.scrollTo(0, 0); return; }
     if (d.ff) { st.ff = d.ff; st.fopen = null; render(); return; }
     if (d.fopen) { st.fopen = st.fopen === d.fopen ? null : d.fopen; st.fst = null; render(); if (st.fopen) $('freply')?.focus(); return; }
     if (d.fst) { st.fst = d.fst; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
@@ -594,6 +647,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   });
   document.addEventListener('input', e => {
     const q = e.target.dataset && e.target.dataset.q; if (!q) return;
+    if (q === 'c') return;
     if (q === 'u') st.uq = e.target.value; else { st.wq = e.target.value; st.wlim = 50; }
     const pos = e.target.selectionStart; render();
     const el = document.querySelector(`[data-q="${q}"]`); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (_) {} }
@@ -601,6 +655,203 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   document.addEventListener('change', e => {
     if (e.target.matches('[data-sort]')) { st.us = e.target.value; render(); }
     if (e.target.matches('[data-wk]')) { st.wk = e.target.value; st.wlim = 50; render(); }
+  });
+
+  /* =========== ferramentas da fundadora: Radar, CRM, Momentos (supabase/fundadora.sql) =========== */
+  Object.assign(st, { fd: null, crm: null, mom: null, momStats: null, fundMissing: false, rOpen: null, rSaved: false, cf: 'ativos', ck: 'todos', cq: '', copen: null, clog: {}, momMsg: {}, momSent: {} });
+  async function loadFund() {
+    const [fd, crm, mom, ms] = await Promise.all([sb.rpc('admin_founder', { p_days: 30 }), sb.rpc('admin_crm'), sb.rpc('admin_moments'), sb.rpc('admin_moments_stats')]);
+    if ([fd, crm, mom].some(x => x.error && /admin_founder|admin_crm|admin_moments|function|schema cache/i.test(x.error.message))) { st.fundMissing = true; render(); return; }
+    st.fd = fd.error ? [] : fd.data || []; st.crm = crm.error ? [] : crm.data || []; st.mom = mom.error ? [] : mom.data || []; st.momStats = ms.error ? null : ms.data;
+    render();
+  }
+  const fundMiss = () => `<div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/fundadora.sql</b> no SQL Editor do Supabase (depois do admin.sql) e atualize esta página.</p></div>`;
+  function fundBadges() {
+    const c = $('crmBadge'), m = $('momBadge'), n1 = st.crm ? crmDue().length : 0, n2 = st.mom ? st.mom.length : 0;
+    if (c) { c.hidden = !n1; c.textContent = n1; } if (m) { m.hidden = !n2; m.textContent = n2; }
+  }
+  const longDate = d => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00'); const s = x.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
+  const safeUrl = u => /^https?:\/\//i.test(String(u || '')) ? String(u) : '';
+
+  /* ---- Radar ---- */
+  function radarMini() {
+    if (!st.fd || !st.fd.length) return '';
+    const r = st.fd[0], d = r.data || {}, isToday = String(r.date).slice(0, 10) === todayStr();
+    return `<button class="rd-mini" data-tab-go="radar"><span class="eb">${isToday ? 'Radar da fundadora · hoje' : 'Último Radar · ' + dt(r.date)}${r.done ? ' · lido ✓' : ''}</span>
+      <b>${esc((d.lesson && d.lesson.title) || d.headline || 'Seu insight do dia')}</b><span>${esc((d.news && d.news.title) || '')}</span></button>`;
+  }
+  function radarDay(r) {
+    const d = r.data || {}, n = d.news || {}, l = d.lesson || {}, ds = String(r.date).slice(0, 10);
+    return `<div class="rd-hero"><span class="eb">${esc(longDate(ds))}${ds === todayStr() ? ' · hoje' : ''}</span><h1>${esc(d.headline || 'Seu Radar de hoje')}</h1></div>
+      <div class="rd-grid">
+        ${l.title ? `<section class="card rd"><span class="k">🎓 Aprendizado do dia${l.area ? ' · ' + esc(l.area) : ''}</span><h2>${esc(l.title)}</h2>
+          ${l.idea ? `<p>${esc(l.idea)}</p>` : ''}${l.example ? `<p class="sub" style="font-size:14px"><b>Exemplo:</b> ${esc(l.example)}</p>` : ''}
+          ${l.action ? `<div class="act"><b>Faça hoje no CriaHub</b>${esc(l.action)}</div>` : ''}
+          ${l.source ? `<span class="src">Fonte: ${safeUrl(l.url) ? `<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.source)}</a>` : esc(l.source)}</span>` : ''}</section>` : ''}
+        ${n.title ? `<section class="card rd"><span class="k">📰 Notícia do dia${n.when ? ' · ' + esc(n.when) : ''}</span><h2>${esc(n.title)}</h2>
+          ${n.summary ? `<p>${esc(n.summary)}</p>` : ''}${n.why ? `<div class="why"><b>O que isso ensina pra fundadora</b>${esc(n.why)}</div>` : ''}
+          ${n.source ? `<span class="src">Fonte: ${safeUrl(n.url) ? `<a href="${esc(safeUrl(n.url))}" target="_blank" rel="noopener">${esc(n.source)}</a>` : esc(n.source)}</span>` : ''}</section>` : ''}
+      </div>
+      ${d.question ? `<div class="rd-q">💭 ${esc(d.question)}</div>` : ''}
+      <div class="rd-acts"><button class="btn sm${r.done ? ' ghost' : ''}" data-rdone="${ds}">${r.done ? 'Lido ✓' : 'Marcar como lido'}</button>
+        <button class="btn ghost sm" data-rsave="${ds}">${r.saved ? '⭐ Salvo' : '☆ Salvar'}</button>
+        <input id="rnote" maxlength="1000" placeholder="Sua anotação: o que você vai aplicar?" value="${esc(r.note || '')}"><button class="btn ghost sm" data-rnote="${ds}">Salvar anotação</button></div>`;
+  }
+  function vRadar() {
+    if (st.fundMissing) return `<h1>Radar da fundadora</h1>${fundMiss()}`;
+    if (!st.fd) return '<div class="loading">Carregando…</div>';
+    const L = st.fd, cur = L.find(r => String(r.date).slice(0, 10) === st.rOpen) || L[0];
+    const past = L.filter(r => r !== cur && (!st.rSaved || r.saved));
+    if (!L.length) return `<h1>Radar da fundadora ☕</h1><p class="sub">Todo dia, às 7h, uma notícia de marketing e um aprendizado pra você crescer junto com o CriaHub.</p>
+      <div class="empty" style="margin-top:16px">O primeiro Radar chega amanhã de manhã ✨</div>`;
+    return `${radarDay(cur)}
+      <section class="sec"><div class="sec-h"><div><h2>Dias anteriores</h2><p class="sub">Toque pra reler. Os salvos ficam guardados.</p></div>
+        <div class="chips"><button class="chip" data-rsf="0" aria-pressed="${!st.rSaved}">Todos</button><button class="chip" data-rsf="1" aria-pressed="${st.rSaved}">⭐ Salvos</button></div></div>
+        <div class="list">${past.length ? past.map(r => { const d = r.data || {}; return `<button class="rd-past" data-ropen="${String(r.date).slice(0, 10)}"><span class="d">${dt(r.date).slice(0, 5)}</span><span style="min-width:0"><b>${esc((d.lesson && d.lesson.title) || d.headline || '')}</b><small>${esc((d.news && d.news.title) || '')}</small></span><span>${r.saved ? '⭐' : ''}${r.done ? ' ✓' : ''}</span></button>`; }).join('') : '<div class="empty">Nada por aqui ainda.</div>'}</div></section>`;
+  }
+
+  /* ---- CRM ---- */
+  const CK = { testadora: 'Testadora', afiliada: 'Afiliada', creator: 'Creator', lista: 'Lista de espera', parceria: 'Parceria', imprensa: 'Imprensa', marca: 'Marca', outro: 'Outro' };
+  const CS = { novo: 'Novo', contatada: 'Contatada', conversando: 'Conversando', fechado: 'Fechado', pausado: 'Pausado' };
+  const crmDue = () => (st.crm || []).filter(c => c.next_date && String(c.next_date).slice(0, 10) <= todayStr() && c.stage !== 'fechado' && c.stage !== 'pausado');
+  function crmList() {
+    const q = st.cq.trim().toLowerCase();
+    const ok = c => (st.cf === 'todos' || (st.cf === 'hoje' ? crmDue().includes(c) : st.cf === 'ativos' ? c.stage !== 'fechado' && c.stage !== 'pausado' : c.stage === st.cf))
+      && (st.ck === 'todos' || c.kind === st.ck) && (!q || [c.name, c.email, c.instagram, c.whatsapp, c.notes].join(' ').toLowerCase().includes(q));
+    return (st.crm || []).filter(c => c.id === st.copen || ok(c));
+  }
+  function crmForm(c) {
+    const v = c || {}, o = (O, cur) => Object.entries(O).map(([k, l]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${l}</option>`).join('');
+    return `<form class="crm-form" id="crmf" data-id="${esc(v.id || '')}">
+      <label>Nome<input name="name" required maxlength="100" value="${esc(v.name || '')}" placeholder="Ex.: Julia"></label>
+      <label>Quem é<select name="kind">${o(CK, v.kind || 'testadora')}</select></label>
+      <label>Etapa<select name="stage">${o(CS, v.stage || 'novo')}</select></label>
+      <label>Instagram<input name="instagram" maxlength="60" value="${esc(v.instagram ? '@' + v.instagram : '')}" placeholder="@perfil"></label>
+      <label>WhatsApp<input name="whatsapp" maxlength="30" inputmode="tel" value="${esc(v.whatsapp || '')}" placeholder="61 99999-9999"></label>
+      <label>E-mail<input name="email" type="email" maxlength="160" value="${esc(v.email || '')}"></label>
+      <label>Próximo follow-up<input name="next_date" type="date" value="${esc(v.next_date ? String(v.next_date).slice(0, 10) : '')}"></label>
+      <label class="full" style="grid-column:2/-1">Anotações<input name="notes" maxlength="2000" value="${esc(v.notes || '')}" placeholder="O que combinaram, do que ela gosta, como conheceu"></label>
+      <div class="full planbox"><button class="btn sm" type="submit">${v.id ? 'Salvar' : 'Adicionar contato'}</button>${v.id ? `<button type="button" class="btn danger sm${st.sure === v.id ? ' sure' : ''}" data-crmdel="${v.id}">${st.sure === v.id ? 'Confirmar' : 'Apagar'}</button>` : '<button type="button" class="btn ghost sm" data-crmcancel="1">Cancelar</button>'}</div></form>`;
+  }
+  function crmCard(c) {
+    const open = st.copen === c.id, ig = c.instagram, wa = waNum(c.whatsapp), due = c.next_date && String(c.next_date).slice(0, 10) <= todayStr() && c.stage !== 'fechado' && c.stage !== 'pausado';
+    const L = st.clog[c.id];
+    return `<article class="person crm-c"><button class="head" data-copen="${c.id}" aria-expanded="${open}"><span class="av">${esc(initials(c.name))}</span>
+      <span style="min-width:0"><span class="nm">${esc(c.name)} <span class="pill">${CK[c.kind] || c.kind}</span><span class="pill${c.stage === 'fechado' ? ' ok' : c.stage === 'pausado' ? ' warn' : c.stage === 'conversando' ? ' me' : ''}">${CS[c.stage] || c.stage}</span>${c.plan ? `<span class="pill${c.plan === 'pro' ? ' pro' : ''}">tem conta · ${c.plan === 'pro' ? 'Pro' : 'Grátis'}</span>` : ''}</span>
+        <span class="em pv">${[c.instagram ? '@' + esc(c.instagram) : '', esc(c.email || '')].filter(Boolean).join(' · ')}</span>
+        <span class="meta">${c.next_date ? `<span class="${due ? 'crm-due' : ''}">Follow-up ${due && String(c.next_date).slice(0, 10) < todayStr() ? 'atrasado: ' : ''}${dt(c.next_date)}</span> · ` : ''}${c.last_log ? 'Última conversa: ' + esc(String(c.last_log).slice(0, 60)) : 'Sem conversa anotada'}</span></span>
+      <span class="right">${c.logs ? `<b>${nf(c.logs)}</b>${c.logs === 1 ? 'conversa' : 'conversas'}` : ''}</span></button>
+      ${open ? `<div class="det">
+        <div class="links" style="margin-top:0">${wa ? `<a class="pv" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${ig ? `<a class="pv" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Direct</a><a class="pv" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Perfil</a>` : ''}${c.email ? `<a class="pv" href="mailto:${esc(c.email)}">E-mail</a>` : ''}</div>
+        <div><h3>Próximo follow-up</h3><div class="chips"><button class="chip" data-cnext="${c.id}|1">Amanhã</button><button class="chip" data-cnext="${c.id}|3">Em 3 dias</button><button class="chip" data-cnext="${c.id}|7">Em 1 semana</button><button class="chip" data-cnext="${c.id}|0">Sem follow-up</button></div></div>
+        <div><h3>Conversas</h3><div class="crm-add"><input id="clog" maxlength="1000" placeholder="O que vocês conversaram? Ex.: mandei o convite, ela topou testar"><button class="btn sm" data-caddlog="${c.id}">Anotar</button></div>
+          <div class="crm-log" style="margin-top:8px">${!L ? '<p class="sub">Carregando…</p>' : L.length ? L.map(x => `<div>${esc(x.body)}<small>${dtt(x.created_at)}</small></div>`).join('') : '<p class="sub">Nenhuma conversa anotada ainda.</p>'}</div></div>
+        <div><h3>Dados</h3>${crmForm(c)}</div></div>` : ''}</article>`;
+  }
+  function vCrm() {
+    if (st.fundMissing) return `<h1>CRM</h1>${fundMiss()}`;
+    if (!st.crm) return '<div class="loading">Carregando…</div>';
+    const all = st.crm, L = crmList(), n = k => k === 'ativos' ? all.filter(c => c.stage !== 'fechado' && c.stage !== 'pausado').length : k === 'hoje' ? crmDue().length : all.filter(c => c.stage === k).length;
+    return `<div class="sec-h"><div><h1>CRM da fundadora</h1><p class="sub">Testadoras, afiliadas, creators, parcerias e imprensa: em que pé está cada conversa e quando chamar de novo.</p></div>
+      <div class="planbox"><button class="btn ghost sm" data-crmimport="1">Trazer da lista e do app</button><button class="btn sm" data-copen="new">+ Novo contato</button></div></div>
+      ${st.copen === 'new' ? `<section class="card" style="margin-top:12px"><h2 style="margin-bottom:12px">Novo contato</h2>${crmForm(null)}</section>` : ''}
+      <div class="crm-st">${[['hoje', 'Chamar hoje'], ['ativos', 'Em andamento'], ['novo', 'Novos'], ['conversando', 'Conversando'], ['fechado', 'Fechados'], ['pausado', 'Pausados']].map(([k, l]) => `<button data-cf="${k}" aria-pressed="${st.cf === k}"><b>${nf(n(k))}</b><span>${l}</span></button>`).join('')}</div>
+      <div class="tools" style="margin-top:0"><input class="search" type="search" placeholder="Buscar nome, @, e-mail ou anotação" value="${esc(st.cq)}" data-q="c" aria-label="Buscar no CRM">
+        <select class="sel" data-ck aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(CK).map(([k, l]) => `<option value="${k}"${st.ck === k ? ' selected' : ''}>${l}</option>`).join('')}</select>
+        <button class="chip" data-cf="todos" aria-pressed="${st.cf === 'todos'}">Ver todos · ${nf(all.length)}</button></div>
+      <div class="list">${L.length ? L.map(crmCard).join('') : `<div class="empty">${all.length ? 'Ninguém com esse filtro.' : 'Seu CRM está vazio. Toque em <b>Trazer da lista e do app</b> pra começar com quem já chegou, ou adicione suas testadoras.'}</div>`}</div>`;
+  }
+
+  /* ---- Momentos ---- */
+  const MK = {
+    aniversario: ['🎂', d => `Aniversário ${d === todayStr() ? 'hoje' : 'em ' + dt(d).slice(0, 5)}`, n => `Oi, ${n}! Vi aqui que o seu aniversário tá chegando 🎂 Quero te desejar um ano lindo, cheio de marcas incríveis e de conquistas. Obrigada por fazer parte do CriaHub! Com carinho, Naomi`],
+    primeira_marca: ['🎉', () => 'Organizou a primeira marca', n => `${n}, passando pra comemorar com você: primeira marca organizada no CriaHub! 🎉 Que seja a primeira de muitas. Se precisar de qualquer coisa, me chama aqui. Naomi`],
+    primeiro_video: ['🎬', () => 'Primeiro vídeo no ar', n => `${n}, primeiro vídeo no ar com o CriaHub! 🎬 Passei só pra comemorar com você. Bora pro próximo! Naomi`],
+    primeiro_pagamento: ['💸', () => 'Primeiro pagamento recebido', n => `${n}, primeiro pagamento registrado no CriaHub! 💸 Dinheiro de creator merece comemoração. Fico muito feliz de fazer parte disso. Naomi`],
+    '30_dias': ['🗓️', () => '30 dias de CriaHub', n => `${n}, hoje faz 30 dias que você está no CriaHub! 🗓️ Obrigada por confiar. Me conta: o que mais te ajudou até agora e do que você sente falta? A sua resposta muda o app. Naomi`],
+    virou_pro: ['✨', () => 'Virou Pro', n => `${n}, bem-vinda ao CriaHub Pro! ✨ Obrigada demais por apoiar o app. Qualquer dúvida, me chama direto aqui. Naomi`],
+    sumida: ['💌', () => 'Sumiu há uma semana', n => `Oi, ${n}! Senti sua falta no CriaHub 💌 Tá tudo bem? Se alguma coisa travou ou ficou confusa, me conta que eu te ajudo. Naomi`]
+  };
+  const momKey = m => m.user_id + '|' + m.kind + '|' + (m.ref || '');
+  const first = s => String(s || '').trim().split(/\s+/)[0] || '';
+  function vMom() {
+    if (st.fundMissing) return `<h1>Momentos</h1>${fundMiss()}`;
+    if (!st.mom) return '<div class="loading">Carregando…</div>';
+    const L = st.mom, s30 = st.momStats ? st.momStats.sent30 : 0;
+    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Cada conquista das suas creators, com um recado seu pronto pra mandar. É isso que faz ela se sentir vista e ficar.</p></div>
+      <span class="pill ok" style="font-size:12px">${nf(s30)} ${s30 === 1 ? 'recado' : 'recados'} em 30 dias</span></div>
+      <div class="list" style="margin-top:12px">${L.length ? L.map(m => {
+        const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria'), wa = waNum(m.whatsapp), ig = m.instagram;
+        return `<article class="person mom"><div class="top1"><span class="em1" aria-hidden="true">${K[0]}</span><div style="min-width:0"><div class="t">${esc(K[1](String(m.happened).slice(0, 10)))}</div>
+          <div class="em pv">${esc(m.name || '')}${ig ? ' · @' + esc(ig) : ''}${m.kind !== 'aniversario' ? ' · ' + dt(m.happened) : ''}</div></div></div>
+          <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
+          <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
+            ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
+            ${!wa && !ig ? `<a class="btn sm" href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Um recado da Naomi, do CriaHub')}&body=${encodeURIComponent(txt)}" data-msent="${esc(k)}">E-mail</a>` : ''}
+            <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
+            <span style="flex:1"></span><button class="btn ghost sm" data-mdone="${esc(k)}">${st.momSent[k] ? 'Enviei ✓' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
+        : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
+      <p class="note">Aparecem: aniversário (7 dias antes), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
+  }
+  async function momFinish(k, how) {
+    const m = st.mom.find(x => momKey(x) === k); if (!m) return;
+    const r = await sb.rpc('admin_moment_done', { p_user: m.user_id, p_kind: m.kind, p_ref: m.ref || '', p_how: how });
+    if (r.error) { toast('Não consegui salvar.'); return; }
+    st.mom = st.mom.filter(x => momKey(x) !== k); if (how === 'enviado' && st.momStats) st.momStats.sent30++;
+    toast(how === 'enviado' ? 'Recado marcado como enviado 💌' : 'Pulado'); render();
+  }
+  const copyTxt = async t => { try { await navigator.clipboard.writeText(t); return true; } catch (_) { return false; } };
+
+  document.addEventListener('click', async e => {
+    const t = e.target.closest('button, a'); if (!t) return; const d = t.dataset;
+    if (d.tabGo) { st.tab = d.tabGo; try { sessionStorage.setItem('criahub:admtab', st.tab); } catch (_) {} render(); window.scrollTo(0, 0); return; }
+    if (d.ropen) { st.rOpen = d.ropen; render(); window.scrollTo(0, 0); return; }
+    if (d.rsf !== undefined) { st.rSaved = d.rsf === '1'; render(); return; }
+    if (d.rdone || d.rsave || d.rnote) {
+      const ds = d.rdone || d.rsave || d.rnote, r = st.fd.find(x => String(x.date).slice(0, 10) === ds); if (!r) return;
+      const args = { p_date: ds, p_saved: d.rsave ? !r.saved : null, p_done: d.rdone ? !r.done : null, p_note: d.rnote ? (($('rnote') || {}).value || '').trim() : null };
+      t.disabled = true; const res = await sb.rpc('admin_founder_mark', args); t.disabled = false;
+      if (res.error) { toast('Não consegui salvar.'); return; }
+      if (d.rsave) r.saved = !r.saved; if (d.rdone) r.done = !r.done; if (d.rnote) r.note = args.p_note;
+      toast(d.rnote ? 'Anotação salva' : d.rsave ? (r.saved ? 'Salvo ⭐' : 'Tirado dos salvos') : (r.done ? 'Lido ✓' : 'Desmarcado')); render(); return;
+    }
+    if (d.cf) { st.cf = d.cf; st.copen = null; render(); return; }
+    if (d.crmcancel) { st.copen = null; render(); return; }
+    if (d.copen) {
+      st.copen = st.copen === d.copen ? null : d.copen; st.sure = null; render();
+      if (st.copen && st.copen !== 'new' && !st.clog[st.copen]) { const id = st.copen, r = await sb.rpc('admin_crm_log', { p_id: id }); st.clog[id] = r.error ? [] : r.data || []; if (st.tab === 'crm') render(); }
+      return;
+    }
+    if (d.crmimport) { t.disabled = true; const r = await sb.rpc('admin_crm_import'); if (r.error) { t.disabled = false; toast('Não consegui trazer agora.'); return; } const c = await sb.rpc('admin_crm'); if (!c.error) st.crm = c.data || []; toast(r.data ? `${r.data} ${r.data === 1 ? 'contato novo' : 'contatos novos'} no CRM` : 'Todo mundo já estava no CRM'); render(); return; }
+    if (d.cnext) { const [id, n] = d.cnext.split('|'), c = st.crm.find(x => x.id === id); const nd = +n ? new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : null;
+      const r = await sb.rpc('admin_crm_quick', { p_id: id, p_stage: null, p_next: nd, p_clear_next: !nd }); if (r.error) { toast('Não consegui salvar.'); return; }
+      c.next_date = nd; toast(nd ? 'Follow-up marcado pra ' + dt(nd) : 'Sem follow-up'); render(); return; }
+    if (d.caddlog) { const id = d.caddlog, body = (($('clog') || {}).value || '').trim(); if (!body) { $('clog')?.focus(); return; }
+      t.disabled = true; const r = await sb.rpc('admin_crm_add_log', { p_id: id, p_body: body }); t.disabled = false; if (r.error) { toast('Não consegui anotar.'); return; }
+      const c = st.crm.find(x => x.id === id); (st.clog[id] = st.clog[id] || []).unshift({ id: 'n' + Date.now(), body, created_at: new Date().toISOString() });
+      if (c) { c.last_log = body; c.logs = (c.logs || 0) + 1; if (c.stage === 'novo') c.stage = 'contatada'; } toast('Conversa anotada'); render(); return; }
+    if (d.crmdel) { if (st.sure !== d.crmdel) { st.sure = d.crmdel; render(); return; }
+      const r = await sb.rpc('admin_crm_delete', { p_id: d.crmdel }); if (r.error) { toast('Não consegui apagar.'); return; }
+      st.crm = st.crm.filter(x => x.id !== d.crmdel); st.copen = null; st.sure = null; toast('Contato apagado'); render(); return; }
+    if (d.mcopy) { const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.mcopy)}"]`), ok = await copyTxt((ta && ta.value) || st.momMsg[d.mcopy] || ''); st.momSent[d.mcopy] = true; if (t.tagName === 'BUTTON') toast(ok ? 'Recado copiado ✨' : 'Não consegui copiar'); else if (ok) toast('Recado copiado: cole no Direct'); return; }
+    if (d.msent) { st.momSent[d.msent] = true; setTimeout(render, 400); return; }
+    if (d.mdone) { await momFinish(d.mdone, 'enviado'); return; }
+    if (d.mskip) { await momFinish(d.mskip, 'pulado'); return; }
+  });
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset && el.dataset.mtxt !== undefined) { st.momMsg[el.dataset.mtxt] = el.value; const a = el.closest('.mom').querySelector('a[href^="https://wa.me"]'); if (a) a.href = a.href.split('?')[0] + '?text=' + encodeURIComponent(el.value); return; }
+    if (el.dataset && el.dataset.q === 'c') { st.cq = el.value; const pos = el.selectionStart; render(); const n = document.querySelector('[data-q="c"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (_) {} } }
+  }, true);
+  document.addEventListener('change', e => { if (e.target.matches('[data-ck]')) { st.ck = e.target.value; render(); } });
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'crmf') return; e.preventDefault();
+    const f = e.target, p = { id: f.dataset.id || null }; ['name', 'kind', 'stage', 'instagram', 'whatsapp', 'email', 'next_date', 'notes'].forEach(k => { p[k] = (f.elements[k].value || '').trim(); });
+    const b = f.querySelector('button[type=submit]'); b.disabled = true;
+    const r = await sb.rpc('admin_crm_save', { p }); b.disabled = false;
+    if (r.error) { toast(/já está no CRM/.test(r.error.message) ? 'Esse e-mail já está no CRM' : 'Não consegui salvar.'); return; }
+    const c = await sb.rpc('admin_crm'); if (!c.error) st.crm = c.data || [];
+    st.copen = p.id ? p.id : null; toast(p.id ? 'Contato salvo' : 'Contato adicionado ✨'); render();
   });
   sb && sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin('Sua sessão terminou. Entre de novo.'); });
 
