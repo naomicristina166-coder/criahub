@@ -345,6 +345,13 @@ window.CRIAHUB_CONFIG = {
     return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar UGC todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
+  /* alarme do aquecimento: agenda no servidor (toca mesmo com o app fechado) e mostra a notificação na hora */
+  window.criahubAlarm = {
+    async set(at, title, body, tag) { if (!pushOn()) return null; try { const { data, error } = await sb.from('warm_alerts').insert({ send_at: new Date(at).toISOString(), title, body, tag, url: '/#contas' }).select('id').single(); return error ? null : data.id; } catch (_) { return null; } },
+    async clear(id) { if (!id) return; try { await sb.from('warm_alerts').delete().eq('id', id); } catch (_) {} },
+    async show(title, body, tag, loud) { try { if (!('Notification' in window) || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return; const reg = (await navigator.serviceWorker.getRegistration('/')) || (await swReg()); if (reg) await reg.showNotification(title, { body, tag, renotify: true, silent: !loud, requireInteraction: !!loud, vibrate: loud ? [400, 200, 400, 200, 800] : undefined, data: { url: '/#contas' } }); } catch (_) {} },
+    async close(tag) { try { const reg = await navigator.serviceWorker.getRegistration('/'); if (reg) (await reg.getNotifications({ tag })).forEach(n => n.close()); } catch (_) {} }
+  };
   const pushRefresh = () => document.querySelectorAll('[data-pushbox]').forEach(el => { const t = document.createElement('div'); t.innerHTML = window.criahubPushUI(el.dataset.pushbox); el.replaceWith(t.firstElementChild); });
   async function pushEnable() {
     pushBusy = true; pushMsg = ''; pushRefresh();
@@ -370,7 +377,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -5032,6 +5039,7 @@ function warmPanel() {
     <button class="link" data-warmplan="1" style="text-align:left;align-self:flex-start">⏰ Minha rotina de aquecimento: ${wPlan().sessions.map(x => `${esc(x.name)} ${esc(x.time)}`).join(' · ')}</button>
     <div class="bar ${done === tot ? 'ok' : ''}"><span style="width:${tot ? Math.round(done / tot * 100) : 0}%"></span></div>
     <div class="sub">Toque em <b>Começar aquecimento</b> (ou em qualquer horário) e o cronômetro roda sozinho. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
+    ${window.criahubPushOn && !window.criahubPushOn() ? `<div class="wnote">🔔 <span><b>Quer ouvir quando o tempo acabar?</b> Ligue as notificações e o celular toca e vibra no fim do aquecimento, mesmo com o app fechado.</span><button class="btn sm" data-push="on">Ligar</button></div>` : ''}
     <div class="wlist">${rows}</div></section>`;
 }
 function warmBar() {
@@ -5043,16 +5051,43 @@ function warmBar() {
   el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
   if (!open && !left) warmFinish(true);
 }
+/* som do fim do aquecimento (com o app aberto). O AudioContext é criado no toque de começar, que é quando o celular deixa tocar som */
+let wAudio = null;
+const wUnlock = () => { try { wAudio = wAudio || new (window.AudioContext || window.webkitAudioContext)(); if (wAudio.state === 'suspended') wAudio.resume(); } catch (_) {} };
+function wBeep() {
+  try { const c = wAudio; if (!c) return; if (c.state === 'suspended') c.resume();
+    [0, .35, .7, 1.4, 1.75, 2.1].forEach((t, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = i % 3 === 2 ? 1175 : 880;
+      g.gain.setValueAtTime(0.0001, c.currentTime + t); g.gain.exponentialRampToValueAtTime(0.35, c.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + .28);
+      o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + .3); }); } catch (_) {}
+}
+const wTag = aid => 'warm-' + aid;
 async function warmFinish(auto) {
   if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
+  const A = window.criahubAlarm, a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta';
+  if (A) { A.clear(w.alarmId); }
+  /* acabou agora, com o app na tela: toca, vibra e avisa. Se ela voltou depois, só salva */
+  const fresh = auto && w.end && Date.now() - w.end < 15000;
+  if (fresh) { wBeep(); if (A) A.show(`⏰ Aquecimento de ${h} concluído`, `${WSLOTS[w.slot][0]} · ${Math.min(mins, WSLOTS[w.slot][1])} min. Pode ir pra próxima conta.`, wTag(w.aid), true); }
+  else if (A) A.close(wTag(w.aid));
   await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
-  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {}
+  try { navigator.vibrate && navigator.vibrate(fresh ? [400, 200, 400, 200, 800] : [200, 100, 200]); } catch (_) {}
   toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : `Aquecimento salvo: ${mins} min ✨`);
 }
 function warmStart(aid, slot) {
-  const m = WSLOTS[slot][1]; WT = { aid, slot, start: Date.now(), end: m ? Date.now() + m * 60000 : null }; wSave(); warmBar();
+  wUnlock();
+  const m = WSLOTS[slot][1], now = Date.now(); WT = { aid, slot, start: now, end: m ? now + m * 60000 : null }; wSave(); warmBar();
   clearInterval(wTick); wTick = setInterval(warmBar, 1000); render();
+  const A = window.criahubAlarm; if (!A) return;
+  const a = S.data.accounts.find(x => x.id === aid), h = a ? a.handle : 'a conta', w = WT;
+  const fim = m ? new Date(w.end).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+  A.show(`⏱ Aquecendo ${h}`, m ? `${WSLOTS[slot][0]} · ${m} min, termina às ${fim}. Pode sair do app: eu te aviso quando acabar.` : `${WSLOTS[slot][0]} · tempo livre. Eu te aviso aos 15 minutos.`, wTag(aid), false);
+  /* alarme no servidor: com tempo, no fim; depois do post (tempo livre), aos 15 minutos */
+  const at = w.end || now + 15 * 60000;
+  A.set(at, m ? `⏰ Acabou o aquecimento de ${h}` : `⏰ 15 min de aquecimento em ${h}`, m ? `${WSLOTS[slot][0]} · ${m} min concluídos. Toque pra salvar e ir pra próxima conta.` : 'Depois do post · já deu 15 minutos. Toque pra concluir quando quiser.', wTag(aid))
+    .then(id => { if (id && WT && WT.start === w.start) { WT.alarmId = id; wSave(); } else if (id && (!WT || WT.start !== w.start)) A.clear(id); });
 }
+window.criahubGoContas = () => { if (sheet) closeForm(); S.tab = 'marcas'; S.f.mview = 'contas'; render(); window.scrollTo(0, 0); };
+if (location.hash === '#contas') setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (_) {} window.criahubGoContas(); }, 1500);
 function openWarmPlan() {
   const p = wPlan(); WP = p.sessions.map(x => ({ ...x }));
   sheet = { col: 'warmplan' };
@@ -5061,7 +5096,7 @@ function openWarmPlan() {
     <div class="sh"><h2>Minha rotina de aquecimento</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="sub">Os horários em que você aquece as contas todo dia, do seu jeito. Vale pra todas as contas. Na hora de aquecer, é só tocar em <b>Começar aquecimento</b> na conta.</div>
     <div class="wp-list">${WP.map(row).join('')}</div>
-    <button type="button" class="btn sm ghost" data-wpadd="1" style="align-self:flex-start">${ic('plus')}Adicionar horário</button>
+    <div class="row-btns"><button type="button" class="btn sm ghost" data-wpadd="1">${ic('plus')}Adicionar horário</button><button type="button" class="btn sm ghost" data-wpreset="1">Voltar pra Manhã, Tarde e Noite</button></div>
     <div class="field"><label for="wp_pre">Antes do post (minutos)</label><input type="number" id="wp_pre" min="1" max="120" value="${p.pre}"></div>
     <div class="sub">Depois do post, o cronômetro fica aberto: você para quando quiser (5, 10, 15 min…) e o app guarda quanto tempo foi.</div>
     <div class="foot"><div class="r"><button class="btn">Salvar</button></div></div></form></div>`;
@@ -5069,11 +5104,12 @@ function openWarmPlan() {
 let WP = [];
 const wpRead = () => document.querySelectorAll('[data-wpf]').forEach(el => { const i = +el.dataset.i; if (WP[i]) WP[i][el.dataset.wpf] = el.dataset.wpf === 'mins' ? +el.value || 15 : el.value; });
 document.addEventListener('click', e => {
-  const t = e.target.closest && e.target.closest('[data-warmplan],[data-wpadd],[data-wpdel]'); if (!t) return;
+  const t = e.target.closest && e.target.closest('[data-warmplan],[data-wpadd],[data-wpdel],[data-wpreset]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault();
   if (t.dataset.warmplan) { openWarmPlan(); return; }
   wpRead(); const pre = $('#wp_pre')?.value;
-  if (t.dataset.wpadd) { if (WP.length >= 8) { toast('No máximo 8 horários por dia'); return; } WP.push({ k: 'w' + newId().slice(0, 6), name: 'Novo horário', time: '12:00', mins: 15 }); }
+  if (t.dataset.wpreset) { WP.splice(0, WP.length, ...WDEF.map(x => ({ ...x }))); toast('Pronto: Manhã, Tarde e Noite. Toque em Salvar.'); }
+  else if (t.dataset.wpadd) { if (WP.length >= 8) { toast('No máximo 8 horários por dia'); return; } WP.push({ k: 'w' + newId().slice(0, 6), name: 'Novo horário', time: '12:00', mins: 15 }); }
   else { if (WP.length <= 1) { toast('Deixe pelo menos um horário'); return; } WP.splice(+t.dataset.wpdel, 1); }
   const keep = WP; openWarmPlan(); WP = keep; document.querySelector('.wp-list').innerHTML = keep.map((x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`).join(''); if (pre) $('#wp_pre').value = pre;
 }, true);
@@ -5088,7 +5124,7 @@ document.addEventListener('click', async e => {
   const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
   if (d.warmdone) { await warmFinish(false); return; }
-  if (d.warmstop) { WT = null; wSave(); warmBar(); render(); toast('Cronômetro cancelado'); return; }
+  if (d.warmstop) { const w = WT; WT = null; wSave(); warmBar(); render(); if (w && window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
   if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
   if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
   if (d.warm) {
@@ -5111,6 +5147,7 @@ function warmPending() {
 .wtop .dots{display:flex;flex-wrap:nowrap;flex:none}
 .wtop b{display:block;font-size:15px}.wtop small{display:block;font-size:12.5px;color:var(--muted)}
 .wchips{display:flex;gap:6px;flex-wrap:wrap}
+.wnote{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:#FFF7E6;border:1px solid #FBE3B5;border-radius:14px;padding:10px 12px;font-size:13.5px}
 .wgo{width:100%;justify-content:center}.wgo.run{font-size:13.5px;font-weight:700;color:#B0124F;background:#FFE0EA;border-radius:12px;padding:10px 12px}
 .wchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
 .wchip.now{border-color:var(--accent,#420725);color:var(--accent,#420725);box-shadow:0 0 0 3px color-mix(in oklab, var(--accent,#420725) 14%, transparent)}

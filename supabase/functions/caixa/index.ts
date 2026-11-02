@@ -2,6 +2,8 @@
    • POST do Postmark (webhook de entrada, ?t=<segredo>) → guarda remetente, assunto, data e um trechinho
    • POST {action:'lembrar', key} do agendador → 1 lembrete no celular para e-mail sem "Abrir"/"Já vi" há 24h
    • POST {action:'aniver', key} do agendador (9h) → parabéns no celular de quem faz aniversário hoje
+   • POST {action:'aquecer', key} do agendador (a cada minuto, só quando tem alarme vencido) → avisa que o
+     cronômetro do aquecimento acabou (tabela public.warm_alerts, rode supabase/aquecimento-alarme.sql)
    Não guarda o e-mail inteiro, não lê a caixa de ninguém e não usa IA: a classificação é por palavras.
 
    Como ligar (uma vez só), no painel do Supabase:
@@ -75,10 +77,10 @@ async function vapid() {
   webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', P, K); return true;
 }
 /* manda pra todos os aparelhos dela; apaga inscrições que não existem mais */
-async function pushTo(uid: string, msg: Record<string, string>) {
+async function pushTo(uid: string, msg: Record<string, string>, ttl = 6 * 3600) {
   const { data: subs } = await sb.from('push_subs').select('endpoint,sub').eq('user_id', uid); let n = 0; const gone: string[] = [];
   for (const s of subs || []) {
-    try { await webpush.sendNotification(s.sub, JSON.stringify(msg), { TTL: 6 * 3600 }); n++; }
+    try { await webpush.sendNotification(s.sub, JSON.stringify(msg), { TTL: ttl, urgency: ttl < 3600 ? 'high' : 'normal' }); n++; }
     catch (e) { const c = (e as { statusCode?: number }).statusCode; if (c === 404 || c === 410) gone.push(s.endpoint); }
   }
   if (gone.length) await sb.from('push_subs').delete().in('endpoint', gone);
@@ -125,6 +127,21 @@ async function aniver() {
   return Response.json({ ok: true, people: (who || []).length, sent });
 }
 
+/* alarme do aquecimento: manda os alarmes vencidos (cada um uma vez só) */
+async function aquecer() {
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
+  const { data: due, error } = await sb.from('warm_alerts').select('id').is('sent_at', null).lte('send_at', new Date().toISOString()).limit(500);
+  if (error) return new Response(error.message, { status: 500 });
+  const ids = (due || []).map(r => r.id); let sent = 0, users = 0;
+  if (ids.length) {
+    /* marca antes de mandar: se o agendador rodar duas vezes, ninguém recebe repetido */
+    const { data: mine } = await sb.from('warm_alerts').update({ sent_at: new Date().toISOString() }).in('id', ids).is('sent_at', null).select('user_id,title,body,tag,url');
+    for (const a of mine || []) { users++; sent += await pushTo(a.user_id, { title: a.title, body: a.body || '', tag: a.tag || 'aquecer', url: a.url || '/#contas', alarm: '1' }, 900); }
+  }
+  await sb.from('warm_alerts').delete().lt('created_at', new Date(Date.now() - 2 * 864e5).toISOString());
+  return Response.json({ ok: true, alarms: users, sent });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -132,5 +149,6 @@ Deno.serve(async req => {
   let b: Record<string, any> = {}; try { b = await req.json(); } catch { /* vazio */ }
   if (b.action === 'lembrar' && await keyOk('cron', b.key)) return lembrar();
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
+  if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
   return new Response('forbidden', { status: 403 });
 });
