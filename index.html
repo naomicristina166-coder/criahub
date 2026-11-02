@@ -349,7 +349,7 @@ window.CRIAHUB_CONFIG = {
   window.criahubAlarm = {
     async set(at, title, body, tag) { if (!pushOn()) return null; try { const { data, error } = await sb.from('warm_alerts').insert({ send_at: new Date(at).toISOString(), title, body, tag, url: '/#contas' }).select('id').single(); return error ? null : data.id; } catch (_) { return null; } },
     async clear(id) { if (!id) return; try { await sb.from('warm_alerts').delete().eq('id', id); } catch (_) {} },
-    async show(title, body, tag, loud) { try { if (!('Notification' in window) || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return; const reg = (await navigator.serviceWorker.getRegistration('/')) || (await swReg()); if (reg) await reg.showNotification(title, { body, tag, renotify: true, silent: !loud, requireInteraction: !!loud, vibrate: loud ? [400, 200, 400, 200, 800] : undefined, data: { url: '/#contas' } }); } catch (_) {} },
+    async show(title, body, tag, loud) { try { if (!('Notification' in window) || Notification.permission !== 'granted' || !('serviceWorker' in navigator)) return; const reg = (await navigator.serviceWorker.getRegistration('/')) || (await swReg()); if (reg) await reg.showNotification(title, { body, tag, renotify: !!loud, silent: !loud, requireInteraction: !!loud, vibrate: loud ? [400, 200, 400, 200, 800] : undefined, data: { url: '/#contas' } }); } catch (_) {} },
     async close(tag) { try { const reg = await navigator.serviceWorker.getRegistration('/'); if (reg) (await reg.getNotifications({ tag })).forEach(n => n.close()); } catch (_) {} }
   };
   const pushRefresh = () => document.querySelectorAll('[data-pushbox]').forEach(el => { const t = document.createElement('div'); t.innerHTML = window.criahubPushUI(el.dataset.pushbox); el.replaceWith(t.firstElementChild); });
@@ -5003,7 +5003,9 @@ function homePend() {
    Fase de teste (3 a 5 dias) e conta ativa: 15 min de manhã, de tarde e de noite.
    No dia de post: 15 min antes e 5 a 15 min depois. Cada sessão vira um item em "warm". */
 const WDEF = [{ k: 'manha', name: 'Manhã', time: '09:00', mins: 15 }, { k: 'tarde', name: 'Tarde', time: '14:00', mins: 15 }, { k: 'noite', name: 'Noite', time: '20:00', mins: 15 }];
-const wPlan = () => { const p = S.profile.warmPlan || {}; const ss = Array.isArray(p.sessions) && p.sessions.length ? p.sessions : WDEF; return { sessions: [...ss].sort((a, b) => String(a.time).localeCompare(String(b.time))), pre: +p.pre || 15 }; };
+/* sempre Manhã, Tarde e Noite, com os nomes certos: a creator só escolhe o horário e os minutos de cada um */
+const wPlan = () => { const p = S.profile.warmPlan || {}, ss = Array.isArray(p.sessions) ? p.sessions : [];
+  return { sessions: WDEF.map(d => { const x = ss.find(y => y && y.k === d.k) || {}; return { k: d.k, name: d.name, time: /^\d\d:\d\d$/.test(x.time || '') ? x.time : d.time, mins: Math.min(120, Math.max(1, +x.mins || d.mins)) }; }), pre: +p.pre || 15 }; };
 /* nome e minutos de cada horário; o "depois do post" não tem tempo fixo (0 = cronômetro aberto) */
 const wDef = k => { if (k === 'pre') return ['Antes do post', wPlan().pre]; if (k === 'pos') return ['Depois do post', 0]; const s = wPlan().sessions.find(x => x.k === k); return s ? [s.name, +s.mins || 15] : [k, 15]; };
 const WSLOTS = new Proxy({}, { get: (_, k) => wDef(String(k)) });
@@ -5049,6 +5051,7 @@ function warmBar() {
   const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { WT = null; wSave(); el?.remove(); return; }
   const open = !WT.end, left = open ? Date.now() - WT.start : Math.max(0, WT.end - Date.now()), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
   if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  wNotify(false);
   el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
   if (!open && !left) warmFinish(true);
 }
@@ -5062,13 +5065,22 @@ function wBeep() {
       o.connect(g).connect(c.destination); o.start(c.currentTime + t); o.stop(c.currentTime + t + .3); }); } catch (_) {}
 }
 const wTag = aid => 'warm-' + aid;
+/* notificação = só o cronômetro (⏱ 15 min, ⏱ 14 min…). Atualiza a cada minuto enquanto o celular deixa o app rodar */
+let wNoteMin = -1;
+function wNotify(force) {
+  const A = window.criahubAlarm; if (!A || !WT) return;
+  const open = !WT.end, ms = open ? Date.now() - WT.start : Math.max(0, WT.end - Date.now()), mm = open ? Math.floor(ms / 60000) : Math.ceil(ms / 60000);
+  if (!force && mm === wNoteMin) return; wNoteMin = mm; if (!open && ms <= 0) return;
+  const a = S.data.accounts.find(x => x.id === WT.aid);
+  A.show(`⏱ ${mm} min`, a ? a.handle : '', wTag(WT.aid), false);
+}
 async function warmFinish(auto) {
   if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
   const A = window.criahubAlarm, a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta';
   if (A) { A.clear(w.alarmId); }
   /* acabou agora, com o app na tela: toca, vibra e avisa. Se ela voltou depois, só salva */
   const fresh = auto && w.end && Date.now() - w.end < 15000;
-  if (fresh) { wBeep(); if (A) A.show(`⏰ Aquecimento de ${h} concluído`, `${WSLOTS[w.slot][0]} · ${Math.min(mins, WSLOTS[w.slot][1])} min. Pode ir pra próxima conta.`, wTag(w.aid), true); }
+  if (fresh) { wBeep(); if (A) A.show('⏰ Aquecimento concluído', h, wTag(w.aid), true); }
   else if (A) A.close(wTag(w.aid));
   await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
   try { navigator.vibrate && navigator.vibrate(fresh ? [400, 200, 400, 200, 800] : [200, 100, 200]); } catch (_) {}
@@ -5080,11 +5092,10 @@ function warmStart(aid, slot) {
   clearInterval(wTick); wTick = setInterval(warmBar, 1000); render();
   const A = window.criahubAlarm; if (!A) return;
   const a = S.data.accounts.find(x => x.id === aid), h = a ? a.handle : 'a conta', w = WT;
-  const fim = m ? new Date(w.end).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-  A.show(`⏱ Aquecendo ${h}`, m ? `${WSLOTS[slot][0]} · ${m} min, termina às ${fim}. Pode sair do app: eu te aviso quando acabar.` : `${WSLOTS[slot][0]} · tempo livre. Eu te aviso aos 15 minutos.`, wTag(aid), false);
+  wNotify(true);
   /* alarme no servidor: com tempo, no fim; depois do post (tempo livre), aos 15 minutos */
   const at = w.end || now + 15 * 60000;
-  A.set(at, m ? `⏰ Acabou o aquecimento de ${h}` : `⏰ 15 min de aquecimento em ${h}`, m ? `${WSLOTS[slot][0]} · ${m} min concluídos. Toque pra salvar e ir pra próxima conta.` : 'Depois do post · já deu 15 minutos. Toque pra concluir quando quiser.', wTag(aid))
+  A.set(at, m ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(aid))
     .then(id => { if (id && WT && WT.start === w.start) { WT.alarmId = id; wSave(); } else if (id && (!WT || WT.start !== w.start)) A.clear(id); });
 }
 window.criahubGoContas = () => { if (sheet) closeForm(); S.tab = 'marcas'; S.f.mview = 'contas'; render(); window.scrollTo(0, 0); };
@@ -5092,12 +5103,11 @@ if (location.hash === '#contas') setTimeout(() => { try { history.replaceState(n
 function openWarmPlan() {
   const p = wPlan(); WP = p.sessions.map(x => ({ ...x }));
   sheet = { col: 'warmplan' };
-  const row = (x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`;
+  const row = (x, i) => `<div class="wp-row wp-fix"><b>${esc(x.name)}</b><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário da ${esc(x.name.toLowerCase())}"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos da ${esc(x.name.toLowerCase())}">min</label></div>`;
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="warmplan" role="dialog" aria-modal="true" aria-label="Minha rotina de aquecimento">
     <div class="sh"><h2>Minha rotina de aquecimento</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
-    <div class="sub">Os horários em que você aquece as contas todo dia, do seu jeito. Vale pra todas as contas. Na hora de aquecer, é só tocar em <b>Começar aquecimento</b> na conta.</div>
+    <div class="sub">Escolha o horário e quantos minutos você aquece de manhã, de tarde e de noite. Vale pra todas as contas. Na hora de aquecer, é só tocar em <b>Começar aquecimento</b> na conta.</div>
     <div class="wp-list">${WP.map(row).join('')}</div>
-    <div class="row-btns"><button type="button" class="btn sm ghost" data-wpadd="1">${ic('plus')}Adicionar horário</button><button type="button" class="btn sm ghost" data-wpreset="1">Voltar pra Manhã, Tarde e Noite</button></div>
     <div class="field"><label for="wp_pre">Antes do post (minutos)</label><input type="number" id="wp_pre" min="1" max="120" value="${p.pre}"></div>
     <div class="sub">Depois do post, o cronômetro fica aberto: você para quando quiser (5, 10, 15 min…) e o app guarda quanto tempo foi.</div>
     <div class="foot"><div class="r"><button class="btn">Salvar</button></div></div></form></div>`;
@@ -5105,19 +5115,13 @@ function openWarmPlan() {
 let WP = [];
 const wpRead = () => document.querySelectorAll('[data-wpf]').forEach(el => { const i = +el.dataset.i; if (WP[i]) WP[i][el.dataset.wpf] = el.dataset.wpf === 'mins' ? +el.value || 15 : el.value; });
 document.addEventListener('click', e => {
-  const t = e.target.closest && e.target.closest('[data-warmplan],[data-wpadd],[data-wpdel],[data-wpreset]'); if (!t) return;
-  e.stopImmediatePropagation(); e.preventDefault();
-  if (t.dataset.warmplan) { openWarmPlan(); return; }
-  wpRead(); const pre = $('#wp_pre')?.value;
-  if (t.dataset.wpreset) { WP.splice(0, WP.length, ...WDEF.map(x => ({ ...x }))); toast('Pronto: Manhã, Tarde e Noite. Toque em Salvar.'); }
-  else if (t.dataset.wpadd) { if (WP.length >= 8) { toast('No máximo 8 horários por dia'); return; } WP.push({ k: 'w' + newId().slice(0, 6), name: 'Novo horário', time: '12:00', mins: 15 }); }
-  else { if (WP.length <= 1) { toast('Deixe pelo menos um horário'); return; } WP.splice(+t.dataset.wpdel, 1); }
-  const keep = WP; openWarmPlan(); WP = keep; document.querySelector('.wp-list').innerHTML = keep.map((x, i) => `<div class="wp-row"><input type="text" value="${esc(x.name)}" data-wpf="name" data-i="${i}" aria-label="Nome do horário" maxlength="20"><input type="time" value="${esc(x.time)}" data-wpf="time" data-i="${i}" aria-label="Horário"><label class="wp-min"><input type="number" min="1" max="120" value="${esc(x.mins)}" data-wpf="mins" data-i="${i}" aria-label="Minutos">min</label><button type="button" class="iconbtn" data-wpdel="${i}" aria-label="Tirar esse horário">${ic('x')}</button></div>`).join(''); if (pre) $('#wp_pre').value = pre;
+  const t = e.target.closest && e.target.closest('[data-warmplan]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); openWarmPlan();
 }, true);
 document.addEventListener('submit', async e => {
   if (!e.target.dataset || e.target.dataset.form !== 'warmplan') return;
   e.preventDefault(); e.stopImmediatePropagation(); wpRead();
-  const sessions = WP.map(x => ({ k: x.k, name: String(x.name || 'Horário').trim().slice(0, 20) || 'Horário', time: /^\d\d:\d\d$/.test(x.time) ? x.time : '12:00', mins: Math.min(120, Math.max(1, +x.mins || 15)) }));
+  const sessions = WDEF.map(d => { const x = WP.find(y => y.k === d.k) || d; return { k: d.k, name: d.name, time: /^\d\d:\d\d$/.test(x.time || '') ? x.time : d.time, mins: Math.min(120, Math.max(1, +x.mins || 15)) }; });
   const pre = Math.min(120, Math.max(1, +$('#wp_pre').value || 15));
   closeForm(); await saveProfile({ warmPlan: { sessions, pre } }); toast('Rotina de aquecimento salva ⏰');
 }, true);
@@ -5157,6 +5161,7 @@ function warmPending() {
 .wchip small{font-weight:600;opacity:.75}
 .wp-list{display:flex;flex-direction:column;gap:8px}
 .wp-row{display:grid;grid-template-columns:minmax(0,1fr) 104px 84px 40px;gap:6px;align-items:center}
+.wp-row.wp-fix{grid-template-columns:minmax(0,1fr) 112px 90px}.wp-fix b{font-size:15px}
 .wp-row input{min-width:0}
 .wp-min{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
 .wp-min input{width:56px}
