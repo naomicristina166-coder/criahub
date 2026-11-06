@@ -3135,16 +3135,29 @@ function acReport(bid) {
   const acs = S.data.accounts.filter(a => a.brandId === bid), st = acStats(b, acs), nf = n => (+n || 0).toLocaleString('pt-BR');
   return `Relatório ${b.name}${st.c ? ` · ciclo ${fmtD(b.start)} a ${fmtD(b.end)}` : ''}\n\nPostagens: ${st.total}${st.goal ? ` (meta ${st.goal})` : ''}\nViews totais: ${nf(st.views)}\n\nPor conta:\n${st.per.map(x => `• ${x.a.platform} ${x.a.handle}: ${x.n} posts · ${nf(x.views)} views${+x.a.goalViews ? ` (meta ${nf(x.a.goalViews)})` : ''}`).join('\n')}${st.best ? `\n\nMelhor vídeo: ${st.best.d.title} · ${nf(st.best.v)} views${st.best.a ? ' no ' + st.best.a.platform : ''}` : ''}\n\nEnviado pelo CriaHub.`;
 }
+/* contas por marca: ela escolhe a marca e vê só as contas dela (aquecimento e grade) */
+const acKey = a => a.brandId || '_none';
+function acBrandSel() {
+  let v = S.f.acBrand; if (v === undefined) { try { v = localStorage.getItem('criahub:acbrand') || 'todas'; } catch (_) { v = 'todas'; } S.f.acBrand = v; }
+  return v === 'todas' || S.data.accounts.some(a => acKey(a) === v) ? v : 'todas';
+}
+function acBrandBar() {
+  const keys = [...new Set(S.data.accounts.map(acKey))]; if (keys.length < 2) return '';
+  const sel = acBrandSel(), nm = k => k === '_none' ? 'Sem marca' : brandName(k), t = today();
+  const pend = k => { try { const cur = wNow(); return wAccs().some(a => acKey(a) === k && !wLog(a.id, t, cur)); } catch (_) { return false; } };
+  keys.sort((a, b) => (a === '_none') - (b === '_none') || nm(a).localeCompare(nm(b)));
+  return `<div class="acb" role="group" aria-label="Escolha a marca"><button class="chip" data-acb="todas" aria-pressed="${sel === 'todas'}">Todas <small>${S.data.accounts.length}</small></button>${keys.map(k => `<button class="chip" data-acb="${esc(k)}" aria-pressed="${sel === k}">${pend(k) ? '<i class="acb-dot" aria-label="tem conta pra aquecer agora"></i>' : ''}${esc(nm(k))} <small>${S.data.accounts.filter(a => acKey(a) === k).length}</small></button>`).join('')}</div>`;
+}
 function vAccounts() {
   const accs = S.data.accounts;
-  if (accs.length) return warmPanel() + top3Card('contas') + vAccountsGrid();
+  if (accs.length) { const bf = acBrandSel(); return acBrandBar() + warmPanel(bf) + top3Card('contas') + vAccountsGrid(bf); }
   if (!accs.length) return `<div class="empty"><strong>Cadastre as contas que você administra</strong>TikTok, Instagram, YouTube… cada perfil ligado à marca. Aí eu monto a grade da semana: qual vídeo foi postado em qual conta, a meta de posts e as views de cada perfil.<button class="btn sm" data-new="accounts">${ic('plus')}Nova conta</button></div>`;
   return vAccountsGrid();
 }
-function vAccountsGrid() {
+function vAccountsGrid(bf) {
   const accs = S.data.accounts;
   const wk = S.f.pwk || 0, ws = addDays(weekStart(today()), wk * 7), we = addDays(ws, 6);
-  const bids = [...new Set(accs.map(a => a.brandId || ''))];
+  const bids = [...new Set(accs.map(a => a.brandId || ''))].filter(b => !bf || bf === 'todas' || (b || '_none') === bf);
   const nav = `<div class="calnav"><button class="iconbtn" data-pwk="-1" aria-label="Semana anterior">‹</button><h2 style="font-size:17px">Semana ${fmtD(ws)} a ${fmtD(we)}</h2><button class="iconbtn" data-pwk="1" aria-label="Próxima semana">›</button></div>${wk ? '<button class="link" data-pwk="0">Voltar para esta semana</button>' : ''}`;
   return nav + bids.map(bid => {
     const b = S.data.brands.find(x => x.id === bid) || { id: '', name: 'Sem marca' }, acs = accs.filter(a => (a.brandId || '') === bid);
@@ -5024,22 +5037,25 @@ function wPhase(a) {
 let WT = null; try { WT = JSON.parse(localStorage.getItem('criahub:warmT') || 'null'); } catch (_) {}
 let wTick = null;
 const wSave = () => { try { WT ? localStorage.setItem('criahub:warmT', JSON.stringify(WT)) : localStorage.removeItem('criahub:warmT'); } catch (_) {} };
-function warmPanel() {
-  const t = today(), accs = wAccs(); if (!accs.length) return '';
+function warmPanel(bf) {
+  const t = today(), all = wAccs(), byB = bf && bf !== 'todas', accs = (byB ? all.filter(a => acKey(a) === bf) : all).slice().sort((a, b) => (acKey(a) === '_none') - (acKey(b) === '_none') || brandName(a.brandId).localeCompare(brandName(b.brandId)));
+  if (!accs.length) return all.length && byB ? '<div class="sub" style="margin:4px 2px">Nenhuma conta dessa marca está ativa ou em teste agora.</div>' : '';
+  const grouped = !byB && new Set(accs.map(acKey)).size > 1;
   let tot = 0, done = 0; accs.forEach(a => wSlots(a, t).forEach(sl => { tot++; if (wLog(a.id, t, sl)) done++; }));
   const cur = wNow(), days = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
-  const rows = accs.map(a => {
+  const rows = accs.map((a, i) => {
+    const head = grouped && (i === 0 || acKey(accs[i - 1]) !== acKey(a)) ? `<div class="wbrand">${esc(acKey(a) === '_none' ? 'Sem marca' : brandName(a.brandId))}</div>` : '';
     const ph = wPhase(a), sl = wSlots(a, t);
     const chips = sl.map(k => { const l = wLog(a.id, t, k), on = WT && WT.aid === a.id && WT.slot === k;
       return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}${!l && wSesTime(k) ? ` <small>${wSesTime(k)}</small>` : ''}</button>`; }).join('');
     const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post').length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
-    return `<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
+    return `${head}<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
       <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
-      ${(() => { const nx = sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); const on = WT && WT.aid === a.id; if (on) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[WT.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
+      ${(() => { const nx = (sl.includes(cur) && !wLog(a.id, t, cur) ? cur : null) || sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); const on = WT && WT.aid === a.id; if (on) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[WT.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
       <div class="wchips">${chips}<button class="wchip post ${wPostDay(a.id, t) ? 'ok' : ''}" data-warmpost="${a.id}" aria-pressed="${wPostDay(a.id, t)}">${wPostDay(a.id, t) ? '📌 Posto hoje' : '+ Vou postar hoje'}</button></div>
       ${ph.done ? `<button class="link" data-warmactive="${a.id}" style="text-align:left">Teste acabou: marcar a conta como ativa</button>` : ''}</div>`;
   }).join('');
-  return `<section class="card section warm" style="gap:12px"><div class="row-h"><h2>Aquecimento de hoje</h2><span class="sub num">${done} de ${tot}</span></div>
+  return `<section class="card section warm" style="gap:12px"><div class="row-h"><h2>Aquecimento de hoje${byB ? ' · ' + esc(bf === '_none' ? 'Sem marca' : brandName(bf)) : ''}</h2><span class="sub num">${done} de ${tot}</span></div>
     <button class="link" data-warmplan="1" style="text-align:left;align-self:flex-start">⏰ Minha rotina de aquecimento: ${wPlan().sessions.map(x => `${esc(x.name)} ${esc(x.time)}`).join(' · ')}</button>
     <div class="bar ${done === tot ? 'ok' : ''}"><span style="width:${tot ? Math.round(done / tot * 100) : 0}%"></span></div>
     <div class="sub">Toque em <b>Começar aquecimento</b> (ou em qualquer horário) e o cronômetro roda sozinho. ${done === tot ? 'Tudo aquecido hoje ✨' : `Agora é hora de: <b>${WSLOTS[cur][0].toLowerCase()}</b>.`}</div>
@@ -5099,6 +5115,10 @@ function warmStart(aid, slot) {
   A.set(at, m ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(aid))
     .then(id => { if (id && WT && WT.start === w.start) { WT.alarmId = id; wSave(); } else if (id && (!WT || WT.start !== w.start)) A.clear(id); });
 }
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-acb]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); S.f.acBrand = t.dataset.acb; try { localStorage.setItem('criahub:acbrand', S.f.acBrand); } catch (_) {} render();
+}, true);
 window.criahubGoContas = () => { if (sheet) closeForm(); S.tab = 'marcas'; S.f.mview = 'contas'; render(); window.scrollTo(0, 0); };
 if (location.hash === '#contas') setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (_) {} window.criahubGoContas(); }, 1500);
 function openWarmPlan() {
@@ -5153,6 +5173,10 @@ function warmPending() {
 .wtop .dots{display:flex;flex-wrap:nowrap;flex:none}
 .wtop b{display:block;font-size:15px}.wtop small{display:block;font-size:12.5px;color:var(--muted)}
 .wchips{display:flex;gap:6px;flex-wrap:wrap}
+.acb{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:none}.acb::-webkit-scrollbar{display:none}
+.acb .chip{white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:6px}.acb small{opacity:.7;font-weight:700}
+.acb-dot{width:8px;height:8px;border-radius:50%;background:#FF5C8A;display:inline-block}
+.wbrand{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 2px -4px}
 .wnote{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;background:#FFF7E6;border:1px solid #FBE3B5;border-radius:14px;padding:10px 12px;font-size:13.5px}
 .wgo{width:100%;justify-content:center}.wgo.run{font-size:13.5px;font-weight:700;color:#B0124F;background:#FFE0EA;border-radius:12px;padding:10px 12px}
 .wchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
