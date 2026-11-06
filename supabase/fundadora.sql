@@ -27,6 +27,11 @@ begin
   insert into public.founder_days (date, data, updated_at) values (p_date, p_data, now())
     on conflict (date) do update set data = excluded.data, updated_at = now();
   delete from public.founder_days where date < p_date - 120;  -- guarda 4 meses
+  -- aviso no celular só das admins, pelo app do CriaHub (usa a fila do alarme, se o aquecimento-alarme.sql já foi rodado)
+  if to_regclass('public.warm_alerts') is not null and not exists (select 1 from public.founder_days where date = p_date and updated_at < now() - interval '1 minute') then
+    execute format('insert into public.warm_alerts (user_id, send_at, title, body, tag, url) select a.user_id, now(), %L, %L, %L, %L from private.admins a',
+      '☕ Radar da fundadora', left(coalesce(p_data#>>'{lesson,title}', p_data->>'headline', 'Seu insight de hoje chegou'), 200), 'fundadora-' || p_date, '/#painel');
+  end if;
   return 'ok ' || p_date;
 end $$;
 revoke all on function public.publish_founder(text, date, jsonb) from public;
