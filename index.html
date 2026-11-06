@@ -377,7 +377,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -5066,11 +5066,12 @@ function warmBar() {
   let el = document.getElementById('warmBar');
   if (!WT) { el?.remove(); clearInterval(wTick); wTick = null; return; }
   const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { WT = null; wSave(); el?.remove(); return; }
-  const open = !WT.end, left = open ? Date.now() - WT.start : Math.max(0, WT.end - Date.now()), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
+  const now = WT.pausedAt || Date.now(), open = !WT.end, left = open ? now - WT.start : Math.max(0, WT.end - now), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
   if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
   wNotify(false);
-  el.innerHTML = `<div><b>Aquecendo ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
-  if (!open && !left) warmFinish(true);
+  el.classList.toggle('paused', !!WT.pausedAt);
+  el.innerHTML = `<div><b>${WT.pausedAt ? 'Pausado' : 'Aquecendo'} ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${!WT.pausedAt && open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="iconbtn wpause" data-warmpause="1" aria-label="${WT.pausedAt ? 'Continuar' : 'Pausar'}">${WT.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
+  if (!open && !left && !WT.pausedAt) warmFinish(true);
 }
 /* som do fim do aquecimento (com o app aberto). O AudioContext é criado no toque de começar, que é quando o celular deixa tocar som */
 let wAudio = null;
@@ -5086,19 +5087,29 @@ const wTag = aid => 'warm-' + aid;
 let wNoteMin = -1;
 function wNotify(force) {
   const A = window.criahubAlarm; if (!A || !WT) return;
-  const open = !WT.end, ms = open ? Date.now() - WT.start : Math.max(0, WT.end - Date.now()), mm = open ? Math.floor(ms / 60000) : Math.ceil(ms / 60000);
-  if (!force && mm === wNoteMin) return; wNoteMin = mm; if (!open && ms <= 0) return;
+  const now = WT.pausedAt || Date.now(), open = !WT.end, ms = open ? now - WT.start : Math.max(0, WT.end - now), mm = open ? Math.floor(ms / 60000) : Math.ceil(ms / 60000);
+  const key = (WT.pausedAt ? 'p' : '') + mm; if (!force && key === wNoteMin) return; wNoteMin = key; if (!open && ms <= 0) return;
   const a = S.data.accounts.find(x => x.id === WT.aid);
-  A.show(`⏱ ${mm} min`, a ? a.handle : '', wTag(WT.aid), false);
+  A.show(WT.pausedAt ? `⏸ ${mm} min · pausado` : `⏱ ${mm} min`, a ? a.handle : '', wTag(WT.aid), false);
 }
+/* alerta grande na tela quando o tempo acaba (aparece também se ela voltar pro app depois) */
+function wDoneAlert(h, slot, fresh) {
+  document.getElementById('wDone')?.remove();
+  const el = document.createElement('div'); el.id = 'wDone'; el.className = 'wdone'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', 'Aquecimento concluído');
+  el.innerHTML = `<div class="wdone-box"><div class="wdone-e" aria-hidden="true">⏰</div><b>Acabou o tempo!</b><span>${esc(WSLOTS[slot][0])} de ${esc(h)} concluído e salvo.</span><button class="btn" data-wdoneok="1">Bora pra próxima</button></div>`;
+  document.body.appendChild(el);
+  if (fresh) { let n = 0; const t = setInterval(() => { if (!document.getElementById('wDone') || ++n > 2) { clearInterval(t); return; } wBeep(); try { navigator.vibrate && navigator.vibrate([400, 200, 400]); } catch (_) {} }, 6000); }
+}
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-wdoneok]'); if (!t) return; e.preventDefault(); document.getElementById('wDone')?.remove(); }, true);
 async function warmFinish(auto) {
   if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
   const A = window.criahubAlarm, a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta';
   if (A) { A.clear(w.alarmId); }
   /* acabou agora, com o app na tela: toca, vibra e avisa. Se ela voltou depois, só salva */
   const fresh = auto && w.end && Date.now() - w.end < 15000;
-  if (fresh) { wBeep(); if (A) A.show('⏰ Aquecimento concluído', h, wTag(w.aid), true); }
+  if (fresh) { wBeep(); setTimeout(wBeep, 3200); if (A) A.show('⏰ Aquecimento concluído', h, wTag(w.aid), true); }
   else if (A) A.close(wTag(w.aid));
+  if (auto) wDoneAlert(h, w.slot, fresh);
   await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
   try { navigator.vibrate && navigator.vibrate(fresh ? [400, 200, 400, 200, 800] : [200, 100, 200]); } catch (_) {}
   toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : `Aquecimento salvo: ${mins} min ✨`);
@@ -5120,6 +5131,7 @@ document.addEventListener('click', e => {
   e.stopImmediatePropagation(); e.preventDefault(); S.f.acBrand = t.dataset.acb; try { localStorage.setItem('criahub:acbrand', S.f.acBrand); } catch (_) {} render();
 }, true);
 window.criahubGoContas = () => { if (sheet) closeForm(); S.tab = 'marcas'; S.f.mview = 'contas'; render(); window.scrollTo(0, 0); };
+if (location.hash === '#painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { try { history.replaceState(null, '', location.pathname); } catch (_) {} if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 30) clearInterval(t); }, 500); }
 if (location.hash === '#contas') setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (_) {} window.criahubGoContas(); }, 1500);
 function openWarmPlan() {
   const p = wPlan(); WP = p.sessions.map(x => ({ ...x }));
@@ -5147,9 +5159,15 @@ document.addEventListener('submit', async e => {
   closeForm(); await saveProfile({ warmPlan: { sessions, pre } }); toast('Rotina de aquecimento salva ⏰');
 }, true);
 document.addEventListener('click', async e => {
-  const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop]'); if (!t) return;
+  const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop],[data-warmpause]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
   if (d.warmdone) { await warmFinish(false); return; }
+  if (d.warmpause) { if (!WT) return; wUnlock(); const A = window.criahubAlarm, now = Date.now();
+    if (!WT.pausedAt) { WT.pausedAt = now; if (A) A.clear(WT.alarmId); WT.alarmId = null; }
+    else { const dur = now - WT.pausedAt; WT.start += dur; if (WT.end) WT.end += dur; delete WT.pausedAt;
+      const a = S.data.accounts.find(x => x.id === WT.aid), h = a ? a.handle : 'a conta', w = WT;
+      if (A) A.set(w.end || w.start + 15 * 60000, w.end ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(w.aid)).then(id => { if (id && WT && WT.start === w.start && !WT.pausedAt) { WT.alarmId = id; wSave(); } else if (id) A.clear(id); }); }
+    wSave(); wNotify(true); warmBar(); return; }
   if (d.warmstop) { const w = WT; WT = null; wSave(); warmBar(); render(); if (w && window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
   if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
   if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
@@ -5193,6 +5211,15 @@ function warmPending() {
 .wchip.post{border-style:dashed}.wchip.post.ok{border-style:solid;background:#FFF1DE;border-color:#FFD9A8;color:#8A4B00}
 .warmbar{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:120;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;background:#420725;color:#fff;border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgb(0 0 0 / .25);max-width:560px;margin:0 auto}
 @media (min-width:900px){.warmbar{bottom:20px}}
+.warmbar{grid-template-columns:minmax(0,1fr) auto auto auto auto !important}
+.warmbar .wpause{background:rgb(255 255 255 / .14);border-color:transparent;color:#fff;font-size:13px;font-weight:800}
+.warmbar.paused{background:#5B4A52}
+.wdone{position:fixed;inset:0;z-index:200;background:rgb(20 6 12 / .55);display:grid;place-items:center;padding:20px;animation:wdin .2s ease-out}
+.wdone-box{background:var(--bg,#fff);border-radius:24px;padding:26px 22px;max-width:340px;width:100%;display:grid;gap:8px;text-align:center;box-shadow:0 20px 50px rgb(0 0 0 / .3)}
+.wdone-e{font-size:54px;line-height:1;animation:wdshake .5s ease-in-out 3}
+.wdone-box b{font-size:24px}.wdone-box span{color:var(--muted)}.wdone-box .btn{margin-top:8px;justify-content:center}
+@keyframes wdin{from{opacity:0}}@keyframes wdshake{25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+@media (prefers-reduced-motion:reduce){.wdone,.wdone-e{animation:none}}
 .warmbar b{display:block;font-size:14px}.warmbar small{display:block;font-size:12px;color:#F4C9D8}
 .warmbar .wt{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
 .warmbar .btn{background:#F4C9D8;color:#420725;border:0}.warmbar .iconbtn{background:rgb(255 255 255 / .12);color:#fff;border:0}
