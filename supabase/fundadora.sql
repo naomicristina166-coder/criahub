@@ -1,4 +1,4 @@
--- CriaHub · Ferramentas da fundadora: Radar da fundadora, CRM e Momentos
+-- CriaHub · Ferramentas da fundadora: Radar da fundadora, CRM, Momentos e "Pro até"
 -- Rode no SQL Editor do Supabase DEPOIS do admin.sql (pode rodar de novo: nada é duplicado).
 --   • Radar da fundadora: uma tarefa diária grava 1 notícia + 1 aprendizado de marketing.
 --     Só a fundadora lê (pelo painel). Usa a mesma chave do Radar UGC.
@@ -321,11 +321,21 @@ as $$ begin
     'sentAll', (select count(*) from public.moments_done where how = 'enviado'));
 end $$;
 
+-- =============== PRO ATÉ (presente com data pra acabar) ===============
+-- quando a data passa, o app volta a creator pro Grátis sozinho (e ela pode assinar com o preço de fundadora)
+create or replace function public.admin_set_until(p_user uuid, p_until date)
+returns void language plpgsql security definer set search_path = ''
+as $$ begin
+  perform private.must_admin();
+  insert into public.plans (user_id, plan, since, until, updated_at) values (p_user, 'free', now(), p_until, now())
+  on conflict (user_id) do update set until = p_until, updated_at = now();
+end $$;
+
 -- permissões: só usuárias logadas chamam; cada função confere se é a fundadora
 do $$ declare f text; begin
   foreach f in array array['admin_founder(integer)', 'admin_founder_mark(date,boolean,boolean,text)', 'admin_crm()', 'admin_crm_save(jsonb)',
     'admin_crm_quick(uuid,text,date,boolean)', 'admin_crm_delete(uuid)', 'admin_crm_log(uuid)', 'admin_crm_add_log(uuid,text)', 'admin_crm_import()',
-    'admin_moments()', 'admin_moment_done(uuid,text,text,text)', 'admin_moments_stats()'] loop
+    'admin_moments()', 'admin_moment_done(uuid,text,text,text)', 'admin_moments_stats()', 'admin_set_until(uuid,date)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;

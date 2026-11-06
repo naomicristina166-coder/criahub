@@ -119,6 +119,7 @@ select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;paddi
 .counts span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px}
 .counts b{font-variant-numeric:tabular-nums}
 .planbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.planbox .until{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--muted)}.planbox .until input{flex:none;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 8px;background:#fff;font-weight:600;color:var(--ink)}
 .planbox input{flex:1 1 200px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
 .seg{display:inline-flex;background:var(--rosa-2);border-radius:12px;padding:3px}
 .seg button{border:0;background:none;border-radius:9px;padding:7px 14px;font-weight:800;font-size:13px;color:var(--vinho)}
@@ -453,8 +454,10 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
         <div class="meta">Abriu o app ${nf(u.opens_30)} ${u.opens_30 === 1 ? 'vez' : 'vezes'} em 30 dias · ${dur(u.mins_total)} no total · último login ${dtt(u.last_sign_in_at)}</div>
         <div><h3>Plano</h3><div class="planbox">
           <span class="seg" role="group" aria-label="Plano"><button data-plan="free" aria-pressed="${p !== 'pro'}">Grátis</button><button data-plan="pro" aria-pressed="${p === 'pro'}">Pro</button></span>
+          <label class="until">Pro até<input id="puntil" type="date" value="${esc(u.plan_until ? String(u.plan_until).slice(0, 10) : '')}" title="Deixe vazio pra não ter data de fim"></label>
           <input id="pnote" placeholder="Anotação (ex.: testadora, cortesia, pagou via Pix)" value="${esc(u.plan_note || '')}" maxlength="200">
           <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
+          <div class="chips" style="margin-top:8px"><button class="chip" data-gift="${u.user_id}|36">🎁 Presente Cria Beta (3 anos)</button><button class="chip" data-gift="${u.user_id}|1">1 mês de cortesia</button><button class="chip" data-gift="${u.user_id}|0">Sem data de fim</button></div>
           ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}${u.plan_until ? ' · pago até ' + dt(u.plan_until) : ''}. Pagamento novo? Registre em Finanças que a data se atualiza sozinha.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
       </div>` : ''}</article>`;
   }
@@ -612,13 +615,25 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       if (st.open && !st.uscr[st.open]) { const id = st.open; const r = await sb.rpc('admin_user_screens', { p_user: id }); st.uscr[id] = r.error ? [] : r.data || []; if (st.tab === 'creators') render(); }
       return;
     }
+    if (d.gift) { const [id, m] = d.gift.split('|'); st.plan[id] = 'pro'; document.querySelectorAll('[data-plan]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === 'pro')));
+      const el = $('puntil'), note = $('pnote');
+      if (+m) { const x = new Date(todayStr() + 'T12:00:00'); x.setMonth(x.getMonth() + +m); const ds = x.toLocaleDateString('en-CA'); if (el) el.value = ds;
+        const br = ds.split('-').reverse().join('/'); if (note) note.value = +m === 36 ? `Cria Beta · presente até ${br} · depois R$ 24,90 de fundadora` : `Cortesia de 1 mês · até ${br}`; }
+      else if (el) el.value = '';
+      toast('Confere e toque em Salvar plano'); return; }
     if (d.plan) { st.plan[st.open] = d.plan; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
     if (d.saveplan) {
       const id = d.saveplan, u = st.users.find(x => x.user_id === id), plan = st.plan[id] || u.plan, note = ($('pnote') || {}).value?.trim() || null;
       t.disabled = true;
       const r = await sb.rpc('admin_set_plan', { p_user: id, p_plan: plan, p_note: note });
+      if (r.error) { t.disabled = false; toast('Não consegui salvar. Tenta de novo.'); return; }
+      const until = ($('puntil') || {}).value || null, curU = u.plan_until ? String(u.plan_until).slice(0, 10) : null;
+      if (until !== curU) {
+        const r2 = await sb.rpc('admin_set_until', { p_user: id, p_until: until });
+        if (r2.error) { t.disabled = false; toast(/admin_set_until|function|schema cache/i.test(r2.error.message) ? 'Plano salvo. Pra salvar a data, rode o fundadora.sql no Supabase.' : 'Plano salvo, mas não consegui salvar a data.'); return; }
+        u.plan_until = until;
+      }
       t.disabled = false;
-      if (r.error) { toast('Não consegui salvar. Tenta de novo.'); return; }
       if (u.plan !== plan) u.plan_since = new Date().toISOString();
       u.plan = plan; u.plan_note = note; delete st.plan[id];
       st.ov && (st.ov.pro = st.users.filter(x => x.plan === 'pro' && !x.is_admin).length);
