@@ -80,7 +80,7 @@ window.CRIAHUB_CONFIG = {
       ${mode === 'entrar' || mode === 'criar' ? `<label class="ck"><input type="checkbox" name="lembrar" ${noLembrar() ? '' : 'checked'}> Lembrar meu e-mail e senha neste aparelho</label>` : ''}
       <button class="go" ${busy ? 'disabled' : ''}>${busy ? 'Aguarde…' : mode === 'esqueci' ? 'Enviar link' : mode === 'nova' ? 'Salvar senha' : t}</button>
       ${mode === 'entrar' ? '<button type="button" class="lnk" data-am="esqueci">Esqueci minha senha</button>' : mode === 'esqueci' ? '<button type="button" class="lnk" data-am="entrar">Voltar</button>' : ''}
-      ${mode === 'criar' ? '<div class="sm">A senha precisa ter pelo menos 6 caracteres.</div>' : ''}
+      ${mode === 'criar' ? '<div class="sm">A senha precisa ter pelo menos 6 caracteres. Ao criar a conta, você confirma que tem 18 anos ou mais e concorda com os <a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> e a <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a>.</div>' : ''}
     </form>`;
   }
   const ptErr = e => { const m = String(e?.message || e || ''); if (/invalid login/i.test(m)) return 'E-mail ou senha incorretos.'; if (/email not confirmed/i.test(m)) return 'Confirme seu e-mail pelo link que enviamos antes de entrar.'; if (/already registered|already been registered/i.test(m)) return 'Esse e-mail já tem conta. Toque em Entrar.'; if (/password/i.test(m) && /6/.test(m)) return 'A senha precisa ter pelo menos 6 caracteres.'; if (/rate|too many/i.test(m)) return 'Muitas tentativas. Espere alguns minutos e tente de novo.'; if (/fetch|network/i.test(m)) return 'Sem conexão. Confira sua internet.'; return 'Não deu certo: ' + m; };
@@ -4274,6 +4274,7 @@ function openSettings() {
       ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
     </div>
     ${window.criahubPushUI ? window.criahubPushUI('ajustes') : ''}
+    <div class="sub" style="text-align:center"><a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> · <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a> · <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a></div>
     <div class="card section" style="gap:8px"><b>E-mails importantes</b><span class="sub">Propostas, cobranças do MEI e pagamentos aparecem na Início, com lembrete se ficarem sem abrir.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-act="mail">Configurar</button></div></div>
     <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Dados de exemplo</b><span class="sub">Itens marcados como “exemplo” servem pra você ver o app funcionando.</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
