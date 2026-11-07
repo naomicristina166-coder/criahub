@@ -2459,7 +2459,7 @@ const TOOLS = {
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
   estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar nas suas redes', () => S.data.myposts.length], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
-  financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
+  financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e quando investir'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
 const allTools = () => Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, toolOn(tab, v)])));
@@ -2577,6 +2577,7 @@ const HELP = {
   'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
+  'financeiro.plano': ['Plano', 'Seu assistente financeiro: com o que você ganhou e gastou nos últimos meses, ele mostra quanto guardar, quanto falta pra reserva de emergência e se já é hora de investir em equipamento ou curso. É uma orientação geral, não consultoria de investimento.'],
   'estudio.posts': ['Meus posts', 'O planejador das SUAS redes (fora das contas de marca do Tech Canvas): o que vai postar em cada dia, o status de cada post, a legenda e as hashtags prontas pra copiar. Dá pra mandar uma ideia do banco direto pra cá.'],
   'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto. No topo, a IA cria ideias pro seu perfil a partir do seu nicho e do seu objetivo (Pro).'],
   'estudio.ganchos': ['Ganchos', 'Gancho é a frase dos primeiros segundos que prende a pessoa. Aqui você vê quais tipos deram mais views.'],
@@ -2768,9 +2769,9 @@ function vErrors() {
   ${fb.length ? `<section class="section"><div class="row-h"><h2>Feedbacks</h2></div><div class="list">${fb.slice(0, 30).map(x => `<div class="lead"><button class="open" data-edit="feedbacks:${x.id}"><span class="t" style="white-space:normal">${esc(x.text)}</span><span class="m">${esc(x.cat || 'Outro')}${x.brandId ? ' · ' + esc(brandName(x.brandId)) : ''}${x.from ? ' · ' + esc(x.from) : ''} · ${fmtD(x.date)}</span></button></div>`).join('')}</div></section>` : ''}`;
 }
 /* ================= finanças: meta de renda e precificador ================= */
-const FVIEWS = [['marcas', 'Marcas'], ['dolar', 'US$ / €'], ['rendas', 'Rendas'], ['gastos', 'Gastos'], ['ano', 'Ano'], ['meta', 'Meta'], ['preco', 'Preço'], ['notas', 'Notas fiscais']];
+const FVIEWS = [['marcas', 'Marcas'], ['plano', 'Plano'], ['dolar', 'US$ / €'], ['rendas', 'Rendas'], ['gastos', 'Gastos'], ['ano', 'Ano'], ['meta', 'Meta'], ['preco', 'Preço'], ['notas', 'Notas fiscais']];
 const finSeg = () => `<div class="seg" role="group" aria-label="Finanças">${FVIEWS.map(([k, l]) => `<button data-fview="${k}" aria-pressed="${S.f.fview === k}">${l}</button>`).join('')}</div>`;
-function vFinance() { return ({ marcas: vMoney, dolar: vDollar, rendas: vExtras, gastos: vExpenses, ano: vYear, meta: vIncome, preco: vPricer, notas: vNotas })[S.f.fview](); }
+function vFinance() { return ({ plano: vPlano, marcas: vMoney, dolar: vDollar, rendas: vExtras, gastos: vExpenses, ano: vYear, meta: vIncome, preco: vPricer, notas: vNotas })[S.f.fview](); }
 const FXC = { USD: '', EUR: '' };
 function fxOutHtml() {
   const c = S.f.cur || 'USD', v = +FXC[c] || 0, r = fxRate(c), fee = fxFee();
@@ -4936,7 +4937,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
    Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
 const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
 const FREE_BRANDS = 10;
-const PRO_TOOLS = { 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
+const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
 const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
@@ -4968,7 +4969,7 @@ function proDecorate(v) {
   const sg = v.querySelector('.seg'); if (!sg) return;
   v.querySelectorAll('.head .btn').forEach(b => b.remove());
   let n = sg.nextElementSibling; while (n) { const nx = n.nextElementSibling; n.remove(); n = nx; }
-  const desc = { 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
+  const desc = { 'financeiro.plano': 'Quanto guardar por mês, a sua reserva de emergência e a hora certa de investir em equipamento ou curso, com base no que você ganha e gasta.', 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
   sg.insertAdjacentHTML('afterend', `<div class="pro-lock section"><span class="pro-pill" style="align-self:flex-start;margin:0;background:#F4C9D8;color:#420725">PRO</span><h2>${esc(PRO_TOOLS[key])}</h2><p>${esc(desc)}</p><button class="btn" data-pro="${esc(key)}">Conhecer o Pro</button></div>`);
 }
 function openPro(reason) {
@@ -5930,6 +5931,54 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .ch-pro{padding:16px;border-top:1px solid var(--line);display:grid;gap:6px;text-align:center}.ch-pro span{color:var(--muted);font-size:14px}
 .typing{display:flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:chb 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes chb{0%,80%,100%{opacity:.3}40%{opacity:1}}
+</style>`);
+/* ================= Plano do dinheiro (assistente financeiro, Pro) ================= */
+function vPlano() {
+  const t = today(), cur = monthKey(t), P = S.profile;
+  const prev = [1, 2, 3].map(i => monthKey(addDays(t.slice(0, 8) + '01', -i * 28)));
+  const expOf = monthExp;
+  const withData = prev.filter(mk => monthIncome(mk) > 0 || expOf(mk) > 0);
+  const base = withData.length ? withData : (monthIncome(cur) || expOf(cur) ? [cur] : []);
+  const inc = base.length ? base.reduce((a, mk) => a + monthIncome(mk), 0) / base.length : 0, exp = base.length ? base.reduce((a, mk) => a + expOf(mk), 0) / base.length : 0;
+  const das = P.mei ? dasValue() : 0, livingIn = +P.lifeCost || 0, monthCost = Math.max(exp, 0) + livingIn, left = inc - exp - livingIn;
+  const saved = +P.reserveSaved || 0, goal = Math.round(monthCost * 6), months = monthCost ? saved / monthCost : 0, pct = goal ? Math.min(100, Math.round(saved / goal * 100)) : 0;
+  const posMonths = base.filter(mk => monthIncome(mk) - expOf(mk) - livingIn > 0).length;
+  const ready = months >= 3 && posMonths >= Math.min(2, base.length) && left > 0;
+  const rRes = saved >= goal && goal ? 0.10 : 0.20, rGear = ready ? 0.10 : 0;
+  const sug = inc > 0 ? [['Impostos (DAS)', das, 'separe assim que o dinheiro cair'], ['Reserva de emergência', Math.max(0, Math.min(inc * rRes, Math.max(left, inc * 0.05))), saved >= goal && goal ? 'reserva completa: mantenha 10% pra ela crescer' : `${Math.round(rRes * 100)}% do que entra, até completar`], ['Equipamento e cursos', inc * rGear, ready ? '10% pra investir em você' : 'espere a reserva chegar a 3 meses']].filter(x => x[1] > 0) : [];
+  const want = +P.wantBuy || 0, gearRate = inc * (ready ? 0.10 : 0.05), toBuy = want && gearRate ? Math.ceil(want / gearRate) : 0;
+  const num = (id, v, ph) => `<input type="text" inputmode="decimal" id="${id}" value="${v ? String(v).replace('.', ',') : ''}" placeholder="${ph}">`;
+  return `<div class="head"><div><h1>Finanças</h1><div class="sub">Seu plano: quanto guardar, a sua reserva e a hora certa de investir em você.</div></div><button class="btn soft" data-chq="Quanto eu devo guardar por mês e quando vale investir em equipamento?">${ic('chat')}Perguntar no chat</button></div>${finSeg()}
+  ${!base.length ? `<div class="empty"><strong>Lance seus ganhos e gastos por um mês</strong>Com os pagamentos das marcas, as outras rendas e os gastos, eu monto o seu plano: quanto guardar, a sua reserva e quando investir.</div>` : `
+  <section class="stats"><div class="stat hero"><div class="l">Entra por mês (média)</div><div class="v">${brl(inc)}</div></div><div class="stat"><div class="l">Sai por mês (média)</div><div class="v">${brl(exp + livingIn)}</div></div><div class="stat"><div class="l">Sobra</div><div class="v" style="color:${left >= 0 ? 'var(--ok)' : 'var(--warn)'}">${brl(left)}</div></div></section>
+  <div class="sub">Média de ${base.length === 1 ? (base[0] === cur ? 'este mês' : '1 mês') : `${base.length} meses`} (${base.map(monthLabel).join(', ')}).${livingIn ? ` Inclui ${brl(livingIn)} de custo de vida que você informou.` : ''}</div>`}
+  <section class="card section" style="gap:10px"><h2>Sua reserva de emergência</h2>
+    <div class="sub">O ideal pra creator é ter guardado de 3 a 6 meses do que você gasta, porque a renda muda de um mês pro outro.</div>
+    <div class="pl-f"><label>Quanto você já tem guardado (R$)${num('pl_saved', saved, '0')}</label><label>Custo de vida fora do trabalho, por mês (R$) <small>opcional</small>${num('pl_life', livingIn, 'aluguel, mercado, contas…')}</label></div>
+    ${goal ? `<div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${months >= 6 ? 'Reserva completa ✨' : `${months.toFixed(1).replace('.', ',')} de 6 meses`}</span><span class="num">${brl(saved)} de ${brl(goal)}</span></div><div class="bar ${pct >= 100 ? 'ok' : ''}"><span style="width:${pct}%"></span></div></div>` : ''}
+  </section>
+  ${sug.length ? `<section class="card section" style="gap:10px"><h2>Quanto separar todo mês</h2><div class="pl-s">${sug.map(([l, v, h]) => `<div><span>${l}</span><b>${brl(v)}</b><small>${h}</small></div>`).join('')}</div>
+    ${left < 0 ? `<div class="sub" style="color:var(--warn)">Está saindo mais do que entra. Antes de guardar, vale olhar os gastos em Finanças › Gastos e os pagamentos atrasados.</div>` : `<div class="sub">O resto (${brl(Math.max(0, inc - sug.reduce((a, x) => a + x[1], 0) - exp - livingIn))}) fica livre pro seu dia a dia.</div>`}</section>` : ''}
+  <section class="card section pl-ready ${ready ? 'ok' : ''}" style="gap:8px"><h2>${ready ? '✅ Já dá pra investir em você' : '⏳ Ainda não é hora de compra grande'}</h2>
+    <div class="sub">${ready ? 'Sua reserva cobre pelo menos 3 meses e está sobrando dinheiro. Equipamento ou curso que aumente o valor do seu trabalho é um bom investimento agora.' : !base.length ? 'Lance seus números primeiro.' : months < 3 ? `Primeiro complete pelo menos 3 meses de reserva (faltam ${brl(Math.max(0, monthCost * 3 - saved))}). Até lá, prefira cursos gratuitos e o equipamento que você já tem.` : 'A reserva está boa, mas os últimos meses não sobraram dinheiro. Espere uns meses positivos antes de comprar.'}</div>
+    <div class="pl-f"><label>Quer comprar algo? Quanto custa (R$)${num('pl_want', want, 'ex.: 1.200 de um microfone')}</label></div>
+    ${want ? `<div class="sub" style="color:var(--fg)">${toBuy ? `Separando ${brl(gearRate)} por mês, você junta em <b>${toBuy} ${toBuy === 1 ? 'mês' : 'meses'}</b>.` : 'Quando sobrar dinheiro no mês, eu calculo em quanto tempo você junta.'} Comprar à vista evita juros; se for parcelar, que a parcela caiba na sobra.</div>` : ''}
+  </section>
+  <p class="sub">Isto é uma orientação geral pra organizar o seu dinheiro, não consultoria de investimento. Pra investir, procure um profissional certificado.</p>`;
+}
+document.addEventListener('change', async e => {
+  const el = e.target; if (!el || !['pl_saved', 'pl_life', 'pl_want'].includes(el.id)) return;
+  const v = Math.max(0, +String(el.value).replace(/\./g, '').replace(',', '.') || 0);
+  await saveProfile({ [{ pl_saved: 'reserveSaved', pl_life: 'lifeCost', pl_want: 'wantBuy' }[el.id]]: v });
+});
+document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-chq]'); if (!t) return; e.stopImmediatePropagation(); e.preventDefault(); if (window.criahubOpenChat) window.criahubOpenChat(t.dataset.chq); }, true);
+document.head.insertAdjacentHTML('beforeend', `<style>
+.pl-f{display:grid;gap:10px}@media (min-width:700px){.pl-f{grid-template-columns:1fr 1fr}}
+.pl-f label{display:flex;flex-direction:column;gap:5px;font-size:13.5px;font-weight:700}.pl-f label small{font-weight:500;color:var(--muted)}
+.pl-f input{min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--surface);color:var(--fg);font:inherit;font-size:16px}
+.pl-s{display:grid;gap:8px}@media (min-width:700px){.pl-s{grid-template-columns:repeat(3,1fr)}}
+.pl-s div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px}.pl-s span{font-size:13px;font-weight:700}.pl-s b{font-size:20px}.pl-s small{font-size:12px;color:var(--muted)}
+.pl-ready.ok{border-color:color-mix(in oklab, var(--ok,#1F8A5B) 45%, var(--line))}
 </style>`);
 connect();
 })();
