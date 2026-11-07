@@ -1134,7 +1134,7 @@ const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
 const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
 const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos', 'myposts'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
-const LIMITS = { ctr: 5, msg: 30, studio: 15 };
+const LIMITS = { ctr: 5, msg: 30, studio: 15, chat: 25 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
 const BASE_TPL = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE CRIAÇÃO DE CONTEÚDO (UGC)
 
@@ -1637,7 +1637,7 @@ function usage() { const u = S.profile.usage || {}; return u.day === today() ? {
 async function gated(kind, run) {
   if (!S.sample) { toast('Os recursos de IA chegam na próxima atualização do CriaHub.'); return; }
   const u = usage();
-  if (!window.CRIAHUB_STANDALONE && u[kind] >= LIMITS[kind]) { S.ct.err = kind === 'ctr' ? `Você já usou as ${LIMITS.ctr} traduções de contrato de hoje. Amanhã libera de novo.` : `Você já usou as ${LIMITS.msg} traduções e ajustes de hoje. Amanhã libera de novo.`; render(); return; }
+  if (!window.CRIAHUB_STANDALONE && u[kind] >= LIMITS[kind]) { S.ct.err = kind === 'chat' ? `Você já mandou as ${LIMITS.chat} mensagens do chat de hoje. Amanhã libera de novo ✨` : kind === 'ctr' ? `Você já usou as ${LIMITS.ctr} traduções de contrato de hoje. Amanhã libera de novo.` : `Você já usou as ${LIMITS.msg} traduções e ajustes de hoje. Amanhã libera de novo.`; render(); return; }
   await run();
   if (S.ct.lastOk) { const n = usage(); n[kind] = (n[kind] || 0) + 1; await saveProfile({ usage: n }); }
 }
@@ -2458,8 +2458,8 @@ const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar nas suas redes', () => S.data.myposts.length], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
-  financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e quando investir'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e pra quê', null, true], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
 const allTools = () => Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, toolOn(tab, v)])));
@@ -2470,6 +2470,8 @@ function toolsFor(kinds, focus) {
   if (kinds.includes('ugc')) on.push('estudio.gravar', 'estudio.revisor', 'estudio.ganchos', 'marcas.contratos');
   if (kinds.includes('canvas')) on.push('marcas.contas', 'financeiro.dolar', 'estudio.ganchos');
   if (kinds.includes('rendas')) on.push('financeiro.gastos');
+  if (kinds.includes('perfil') || kinds.includes('comecando')) on.push('estudio.ganchos');
+  on.push('estudio.posts', 'financeiro.plano');
   if (focus === 'rotina') on.push('rotina.semana');
   if (focus === 'dinheiro') on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
   return Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, on.includes(tab + '.' + v)])));
@@ -2481,7 +2483,7 @@ function toolsSettings() {
 }
 
 /* ---------- boas-vindas: 3 perguntas, só no primeiro acesso ---------- */
-const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e conquistar as primeiras marcas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
+const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e conquistar as primeiras marcas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['perfil', 'Conteúdo pro meu perfil', 'Crio pro meu Instagram, TikTok ou YouTube, de qualquer nicho'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
 const OB_FOCUS = [['rotina', 'Minha rotina', 'Tarefas, hábitos e semana'], ['marcas', 'Minhas marcas', 'Clientes, entregas e prazos'], ['dinheiro', 'Meu dinheiro', 'Quanto cobrar, receber e gastar']];
 let OB = null;
 function checkOnboard() {
@@ -2578,7 +2580,7 @@ const HELP = {
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
   'financeiro.plano': ['Plano', 'Seu assistente financeiro: com o que você ganhou e gastou nos últimos meses, ele mostra quanto guardar, quanto falta pra reserva de emergência e se já é hora de investir em equipamento ou curso. É uma orientação geral, não consultoria de investimento.'],
-  'estudio.posts': ['Meus posts', 'O planejador das SUAS redes (fora das contas de marca do Tech Canvas): o que vai postar em cada dia, o status de cada post, a legenda e as hashtags prontas pra copiar. Dá pra mandar uma ideia do banco direto pra cá.'],
+  'estudio.posts': ['Meus posts', 'O planejador do seu perfil profissional: o que vai postar em cada dia, o status de cada post, a legenda e as hashtags prontas pra copiar. Serve pra qualquer creator, de qualquer nicho. Dá pra mandar uma ideia do banco direto pra cá.'],
   'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto. No topo, a IA cria ideias pro seu perfil a partir do seu nicho e do seu objetivo (Pro).'],
   'estudio.ganchos': ['Ganchos', 'Gancho é a frase dos primeiros segundos que prende a pessoa. Aqui você vê quais tipos deram mais views.'],
   'estudio.erros': ['Erros', 'Os feedbacks que as marcas te deram viram uma checklist pra você conferir antes de gravar e enviar.'],
@@ -2966,11 +2968,11 @@ const dasValue = () => +S.profile.dasValue || 86.05;
 const dasPaid = mk => S.data.expenses.some(e => e.cat === 'Impostos (DAS)' && monthKey(e.date) === mk);
 function potsCard() {
   const mk = monthKey(today()), got = monthIncome(mk), pt = +S.profile.potTax || 0, pr = S.profile.potReserve === undefined || S.profile.potReserve === '' ? 10 : +S.profile.potReserve, pg = S.profile.potGear === undefined || S.profile.potGear === '' ? 5 : +S.profile.potGear;
-  const pots = [['Impostos', pt], ['Reserva', pr], ['Equipamento', pg]].filter(x => x[1] > 0);
+  const custom = Array.isArray(S.profile.pots), pots = custom ? S.profile.pots.filter(q => +q.val > 0).map(q => [q.name, q.mode === 'pct' ? +q.val : null, +q.val]) : [['Impostos', pt], ['Reserva', pr], ['Equipamento', pg]].filter(x => x[1] > 0);
   const yr = today().slice(0, 4), yearGot = S.data.payments.filter(p => p.paid && String(p.paidAt || p.due).slice(0, 4) === yr).reduce((s, p) => s + brlOf(p), 0) + S.data.extras.filter(x => x.paid && String(x.date).slice(0, 4) === yr).reduce((s, x) => s + brlOf(x), 0);
   const lim = meiLimit(), pct = Math.min(100, Math.round(yearGot / lim * 100));
-  return `<section class="card section"><div class="row-h"><h2>Cofrinho</h2><button class="link" data-act="settings">Ajustar</button></div>
-    ${pots.length && got ? `<div class="sub">Do que já caiu este mês, somando marcas e outras rendas (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p]) => `<div><span>${l} · ${p}%</span><b>${brl(got * p / 100)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
+  return `<section class="card section"><div class="row-h"><h2>Cofrinho</h2><button class="link" ${Array.isArray(S.profile.pots) ? 'data-fview="plano"' : 'data-act="settings"'}>Ajustar</button></div>
+    ${pots.length && got ? `<div class="sub">Do que já caiu este mês, somando marcas e outras rendas (${brl(got)}), separe:</div><div class="pots">${pots.map(([l, p, v]) => `<div><span>${esc(l)}${p !== null ? ' · ' + String(p).replace('.', ',') + '%' : ' · fixo'}</span><b>${brl(p !== null ? got * p / 100 : v)}</b></div>`).join('')}</div>` : `<div class="sub">${got ? 'Defina em Ajustes quanto separar de cada ganho.' : 'Quando entrar dinheiro este mês, eu mostro quanto separar para reserva, equipamento e impostos.'}</div>`}
     ${S.profile.mei ? `<div class="das ${dasPaid(mk) ? 'ok' : ''}"><div><b>DAS do MEI · ${brl(dasValue())}</b><span>${dasPaid(mk) ? 'Pago este mês' : `Vence dia 20 de ${monthLabel(mk).split(' ')[0].toLowerCase()}`}</span></div>${dasPaid(mk) ? '' : `<div class="row-btns"><a class="btn sm" href="${PGMEI_URL}" target="_blank" rel="noopener">Pagar DAS ${ic('ext')}</a><button class="btn sm soft" data-act="daspaid">Paguei</button></div>`}</div>
     <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">Limite do MEI em ${yr}</span><span class="num">${brl(yearGot)} de ${brl(lim)}</span></div><div class="bar ${pct >= 80 ? 'warn' : ''}"><span style="width:${pct}%"></span></div><div class="meta"><span>${pct >= 100 ? 'Você passou do limite. Fale com um contador.' : pct >= 80 ? 'Perto do limite. Vale conversar com um contador.' : `${pct}% do limite anual`}</span></div></div>` : `<div class="sub">É MEI? Ative em Ajustes para ver o DAS do mês e o limite anual.</div>`}
   </section>`;
@@ -5753,7 +5755,7 @@ function vMyPosts() {
   const goal = +S.profile.postGoal || 0, done = inWk.filter(m => m.status === 'postado').length, nodate = L.filter(m => !m.date && m.status !== 'postado');
   const late = L.filter(m => m.date && m.date < t && m.status !== 'postado');
   const dl = d => { const x = parse(d), w = x.toLocaleDateString('pt-BR', { weekday: 'long' }); return `${w.charAt(0).toUpperCase() + w.slice(1, w.indexOf('-') > 0 ? w.indexOf('-') : undefined)} ${pad(x.getDate())}/${pad(x.getMonth() + 1)}`; };
-  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">O que você vai postar nas suas redes, dia a dia. (As contas de marca do Tech Canvas ficam em Marcas › Contas.)</div></div><button class="btn" data-mpnew="">${ic('plus')}Novo post</button></div>${studioSeg()}
+  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">O que você vai postar no seu perfil, dia a dia: Instagram, TikTok, YouTube ou onde você estiver.</div></div><button class="btn" data-mpnew="">${ic('plus')}Novo post</button></div>${studioSeg()}
   <div class="calnav"><button class="iconbtn" data-mpw="-1" aria-label="Semana anterior">‹</button><h2 style="font-size:17px">${wk === 0 ? 'Esta semana' : wk === 1 ? 'Próxima semana' : `Semana ${fmtD(ws)}`}</h2><button class="iconbtn" data-mpw="1" aria-label="Próxima semana">›</button></div>${wk ? '<button class="link" data-mpw="0" style="align-self:center">Voltar pra esta semana</button>' : ''}
   <section class="card section" style="gap:8px">${goal ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Posts da semana</span><span class="num">${done} de ${goal}</span></div><div class="bar ${done >= goal ? 'ok' : ''}"><span style="width:${Math.min(100, Math.round(done / goal * 100))}%"></span></div>` : '<b>Quantos posts por semana você quer fazer?</b>'}
     <div class="chips">${[2, 3, 4, 5, 7, 10, 14].map(n => `<button class="chip" data-mpgoal="${n}" aria-pressed="${goal === n}">${n}</button>`).join('')}</div>
@@ -5885,7 +5887,8 @@ function chRender() {
 async function chSend(text) {
   text = String(text || '').trim(); if (!text || S.ct.busy) return;
   CH.msgs.push({ r: 'u', t: text.slice(0, 1200) }); CH.draft = ''; S.ct.chErr = false; chSave(); chRender();
-  let out = null; await gated('msg', async () => { out = await askJson('chat', chPrompt()); });
+  let out = null; await gated('chat', async () => { out = await askJson('chat', chPrompt()); });
+  if (!out && /mensagens do chat de hoje/.test(S.ct.err || '')) S.ct.chErr = true;
   if (out && (out.resposta || (out.acoes || []).length)) {
     const acts = (Array.isArray(out.acoes) ? out.acoes : []).filter(a => a && ['gasto', 'recebi', 'renda', 'tarefa', 'habito', 'meta'].includes(a.tipo)).slice(0, 20);
     CH.msgs.push({ r: 'a', t: String(out.resposta || 'Separei isso aqui pra você confirmar:').slice(0, 2000), acts }); chSave();
@@ -5933,6 +5936,46 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 @keyframes chb{0%,80%,100%{opacity:.3}40%{opacity:1}}
 </style>`);
 /* ================= Plano do dinheiro (assistente financeiro, Pro) ================= */
+const PL_SUGG = ['Curso', 'Tratamento', 'Viagem', 'Meu negócio', 'Equipamento', 'Casa', 'Presentes', 'Férias de creator'];
+const plMonthly = (q, inc) => q.mode === 'pct' ? (inc || 0) * (+q.val || 0) / 100 : +q.val || 0;
+function plPots(inc, ready, resFull) {
+  const P = S.profile; if (Array.isArray(P.pots)) return P.pots;
+  const L = [];
+  if (P.mei) L.push({ id: 'das', name: 'Impostos (DAS)', mode: 'brl', val: dasValue() });
+  else if (+P.potTax) L.push({ id: 'imp', name: 'Impostos', mode: 'pct', val: +P.potTax });
+  L.push({ id: 'res', name: 'Reserva de emergência', mode: 'pct', val: P.potReserve !== undefined && P.potReserve !== '' ? +P.potReserve : resFull ? 10 : 20 });
+  L.push({ id: 'gear', name: 'Equipamento e cursos', mode: 'pct', val: P.potGear !== undefined && P.potGear !== '' ? +P.potGear : ready ? 10 : 5 });
+  return L.filter(q => +q.val > 0);
+}
+function plOpen(id, preset) {
+  const inc = 0, L = plPots(inc, false, false), q = (id && L.find(x => x.id === id)) || { id: '', name: preset || '', mode: 'pct', val: 5, goal: '', have: '' };
+  sheet = { col: 'pote' }; const n = v => v === '' || v === undefined ? '' : String(v).replace('.', ',');
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="pote" data-id="${esc(q.id)}" role="dialog" aria-modal="true" aria-label="${q.id ? 'Editar pote' : 'Novo pote'}">
+    <div class="sh"><h2>${q.id ? 'Editar pote' : 'Novo pote'}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    ${q.id ? '' : `<div class="chips">${PL_SUGG.map(x => `<button type="button" class="chip" data-plname="${esc(x)}">${esc(x)}</button>`).join('')}</div>`}
+    <div class="field"><label for="po_n">Pra quê é esse dinheiro</label><input type="text" id="po_n" maxlength="40" required value="${esc(q.name)}" placeholder="Ex.: Curso de edição, tratamento, viagem"></div>
+    <div class="grid2"><div class="field"><label for="po_m">Como separar</label><select id="po_m"><option value="pct" ${q.mode === 'pct' ? 'selected' : ''}>% do que entra</option><option value="brl" ${q.mode === 'brl' ? 'selected' : ''}>Valor fixo (R$)</option></select></div>
+      <div class="field"><label for="po_v">Quanto por mês</label><input type="text" inputmode="decimal" id="po_v" value="${n(q.val)}" required></div></div>
+    <div class="grid2"><div class="field"><label for="po_g">Meta (R$) <small class="sub">opcional</small></label><input type="text" inputmode="decimal" id="po_g" value="${n(q.goal)}" placeholder="ex.: 1.500"></div>
+      <div class="field"><label for="po_h">Já tenho (R$) <small class="sub">opcional</small></label><input type="text" inputmode="decimal" id="po_h" value="${n(q.have)}"></div></div>
+    <div class="foot">${q.id ? `<button type="button" class="btn danger" data-pldel="${esc(q.id)}">Apagar</button>` : ''}<div class="r"><button class="btn">Salvar</button></div></div></form></div>`;
+}
+const plNum = v => { const x = String(v || '').trim(); if (!x) return ''; return Math.max(0, +x.replace(/\./g, '').replace(',', '.') || 0); };
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-plnew],[data-pledit],[data-pldel],[data-plname]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.plnew) { plOpen(''); return; }
+  if (d.pledit) { plOpen(d.pledit); return; }
+  if (d.plname) { const el = $('#po_n'); if (el) el.value = d.plname; return; }
+  if (d.pldel) { const L = plPots(0, false, false).filter(q => q.id !== d.pldel); closeForm(); await saveProfile({ pots: L }); toast('Pote apagado'); return; }
+}, true);
+document.addEventListener('submit', async e => {
+  if (!e.target.dataset || e.target.dataset.form !== 'pote') return; e.preventDefault(); e.stopImmediatePropagation();
+  const id = e.target.dataset.id, q = { id: id || 'p' + newId().slice(0, 8), name: $('#po_n').value.trim().slice(0, 40) || 'Pote', mode: $('#po_m').value === 'brl' ? 'brl' : 'pct', val: plNum($('#po_v').value) || 0, goal: plNum($('#po_g').value), have: plNum($('#po_h').value) };
+  if (q.mode === 'pct') q.val = Math.min(100, q.val);
+  const L = plPots(0, false, false).map(x => ({ ...x })), i = L.findIndex(x => x.id === id); if (i >= 0) L[i] = q; else L.push(q);
+  closeForm(); await saveProfile({ pots: L }); toast(id ? 'Pote salvo' : 'Pote criado ✨');
+}, true);
 function vPlano() {
   const t = today(), cur = monthKey(t), P = S.profile;
   const prev = [1, 2, 3].map(i => monthKey(addDays(t.slice(0, 8) + '01', -i * 28)));
@@ -5944,9 +5987,7 @@ function vPlano() {
   const saved = +P.reserveSaved || 0, goal = Math.round(monthCost * 6), months = monthCost ? saved / monthCost : 0, pct = goal ? Math.min(100, Math.round(saved / goal * 100)) : 0;
   const posMonths = base.filter(mk => monthIncome(mk) - expOf(mk) - livingIn > 0).length;
   const ready = months >= 3 && posMonths >= Math.min(2, base.length) && left > 0;
-  const rRes = saved >= goal && goal ? 0.10 : 0.20, rGear = ready ? 0.10 : 0;
-  const sug = inc > 0 ? [['Impostos (DAS)', das, 'separe assim que o dinheiro cair'], ['Reserva de emergência', Math.max(0, Math.min(inc * rRes, Math.max(left, inc * 0.05))), saved >= goal && goal ? 'reserva completa: mantenha 10% pra ela crescer' : `${Math.round(rRes * 100)}% do que entra, até completar`], ['Equipamento e cursos', inc * rGear, ready ? '10% pra investir em você' : 'espere a reserva chegar a 3 meses']].filter(x => x[1] > 0) : [];
-  const want = +P.wantBuy || 0, gearRate = inc * (ready ? 0.10 : 0.05), toBuy = want && gearRate ? Math.ceil(want / gearRate) : 0;
+  const pots = plPots(inc, ready, saved >= goal && goal), sep = pots.reduce((x, q) => x + plMonthly(q, inc), 0);
   const num = (id, v, ph) => `<input type="text" inputmode="decimal" id="${id}" value="${v ? String(v).replace('.', ',') : ''}" placeholder="${ph}">`;
   return `<div class="head"><div><h1>Finanças</h1><div class="sub">Seu plano: quanto guardar, a sua reserva e a hora certa de investir em você.</div></div><button class="btn soft" data-chq="Quanto eu devo guardar por mês e quando vale investir em equipamento?">${ic('chat')}Perguntar no chat</button></div>${finSeg()}
   ${!base.length ? `<div class="empty"><strong>Lance seus ganhos e gastos por um mês</strong>Com os pagamentos das marcas, as outras rendas e os gastos, eu monto o seu plano: quanto guardar, a sua reserva e quando investir.</div>` : `
@@ -5957,12 +5998,15 @@ function vPlano() {
     <div class="pl-f"><label>Quanto você já tem guardado (R$)${num('pl_saved', saved, '0')}</label><label>Custo de vida fora do trabalho, por mês (R$) <small>opcional</small>${num('pl_life', livingIn, 'aluguel, mercado, contas…')}</label></div>
     ${goal ? `<div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${months >= 6 ? 'Reserva completa ✨' : `${months.toFixed(1).replace('.', ',')} de 6 meses`}</span><span class="num">${brl(saved)} de ${brl(goal)}</span></div><div class="bar ${pct >= 100 ? 'ok' : ''}"><span style="width:${pct}%"></span></div></div>` : ''}
   </section>
-  ${sug.length ? `<section class="card section" style="gap:10px"><h2>Quanto separar todo mês</h2><div class="pl-s">${sug.map(([l, v, h]) => `<div><span>${l}</span><b>${brl(v)}</b><small>${h}</small></div>`).join('')}</div>
-    ${left < 0 ? `<div class="sub" style="color:var(--warn)">Está saindo mais do que entra. Antes de guardar, vale olhar os gastos em Finanças › Gastos e os pagamentos atrasados.</div>` : `<div class="sub">O resto (${brl(Math.max(0, inc - sug.reduce((a, x) => a + x[1], 0) - exp - livingIn))}) fica livre pro seu dia a dia.</div>`}</section>` : ''}
+  <section class="card section" style="gap:10px"><div class="row-h"><h2>Seus potes do mês</h2><button class="link" data-plnew="1">+ Novo pote</button></div>
+    <div class="sub">Pra onde vai cada parte do que entra. ${Array.isArray(P.pots) ? 'Toque num pote pra mudar.' : 'Essa é uma sugestão: toque num pote pra mudar, apagar ou criar os seus (curso, tratamento, viagem, seu negócio…).'}</div>
+    <div class="pl-s">${pots.map(q => { const m = plMonthly(q, inc), falta = Math.max(0, (+q.goal || 0) - (+q.have || 0)), n = falta && m ? Math.ceil(falta / m) : 0, pc = q.goal ? Math.min(100, Math.round((+q.have || 0) / q.goal * 100)) : 0;
+      return `<button class="pl-pot" data-pledit="${esc(q.id)}"><span>${esc(q.name)}${Array.isArray(P.pots) ? '' : ' <i>sugestão</i>'}</span><b>${brl(m)}<small>/mês</small></b><small>${q.mode === 'pct' ? `${String(q.val).replace('.', ',')}% do que entra` : 'valor fixo'}${q.goal ? ` · meta ${brl(q.goal)}` : ''}</small>${q.goal ? `<span class="bar ${pc >= 100 ? 'ok' : ''}"><span style="width:${pc}%"></span></span><small>${pc >= 100 ? 'Meta alcançada ✨' : n ? `Faltam ${brl(falta)}: dá em ${n} ${n === 1 ? 'mês' : 'meses'}` : `Faltam ${brl(falta)}`}</small>` : ''}</button>`; }).join('')}</div>
+    ${inc > 0 ? (sep > Math.max(0, left) ? `<div class="sub" style="color:var(--warn)">Os potes somam ${brl(sep)}, mais do que sobra no mês (${brl(Math.max(0, left))}). Vale diminuir algum.</div>` : `<div class="sub">Os potes somam ${brl(sep)}. O resto (${brl(Math.max(0, left - sep))}) fica livre pro seu dia a dia.</div>`) : ''}
+  </section>
   <section class="card section pl-ready ${ready ? 'ok' : ''}" style="gap:8px"><h2>${ready ? '✅ Já dá pra investir em você' : '⏳ Ainda não é hora de compra grande'}</h2>
     <div class="sub">${ready ? 'Sua reserva cobre pelo menos 3 meses e está sobrando dinheiro. Equipamento ou curso que aumente o valor do seu trabalho é um bom investimento agora.' : !base.length ? 'Lance seus números primeiro.' : months < 3 ? `Primeiro complete pelo menos 3 meses de reserva (faltam ${brl(Math.max(0, monthCost * 3 - saved))}). Até lá, prefira cursos gratuitos e o equipamento que você já tem.` : 'A reserva está boa, mas os últimos meses não sobraram dinheiro. Espere uns meses positivos antes de comprar.'}</div>
-    <div class="pl-f"><label>Quer comprar algo? Quanto custa (R$)${num('pl_want', want, 'ex.: 1.200 de um microfone')}</label></div>
-    ${want ? `<div class="sub" style="color:var(--fg)">${toBuy ? `Separando ${brl(gearRate)} por mês, você junta em <b>${toBuy} ${toBuy === 1 ? 'mês' : 'meses'}</b>.` : 'Quando sobrar dinheiro no mês, eu calculo em quanto tempo você junta.'} Comprar à vista evita juros; se for parcelar, que a parcela caiba na sobra.</div>` : ''}
+    <div class="sub">Quer juntar pra algo específico? Crie um pote com meta: <button class="link" data-plnew="1">+ Novo pote</button></div>
   </section>
   <p class="sub">Isto é uma orientação geral pra organizar o seu dinheiro, não consultoria de investimento. Pra investir, procure um profissional certificado.</p>`;
 }
@@ -5978,6 +6022,9 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .pl-f input{min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--surface);color:var(--fg);font:inherit;font-size:16px}
 .pl-s{display:grid;gap:8px}@media (min-width:700px){.pl-s{grid-template-columns:repeat(3,1fr)}}
 .pl-s div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px}.pl-s span{font-size:13px;font-weight:700}.pl-s b{font-size:20px}.pl-s small{font-size:12px;color:var(--muted)}
+.pl-pot{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:4px}
+.pl-pot:hover{border-color:var(--accent,#420725)}.pl-pot > span:first-child{font-size:13.5px;font-weight:700}.pl-pot i{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);background:var(--bg);border-radius:6px;padding:1px 6px;margin-left:4px}
+.pl-pot b{font-size:20px}.pl-pot b small{font-size:12px;font-weight:600;color:var(--muted)}.pl-pot > small{font-size:12px;color:var(--muted)}
 .pl-ready.ok{border-color:color-mix(in oklab, var(--ok,#1F8A5B) 45%, var(--line))}
 </style>`);
 connect();
