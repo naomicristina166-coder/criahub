@@ -12,7 +12,7 @@ create table if not exists public.waitlist (
   email       text not null check (char_length(email) <= 160 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
   instagram   text check (char_length(instagram) <= 60),
   whatsapp    text check (char_length(whatsapp) <= 30),
-  kind        text check (kind in ('ugc', 'tech', 'ambos', 'comecando')),
+  kind        text check (kind in ('ugc', 'tech', 'ambos', 'comecando', 'influencer', 'social')),
   pain        text check (char_length(pain) <= 500),
   source      text check (char_length(source) <= 60),
   consent     boolean not null default false
@@ -37,3 +37,7 @@ as $$ select count(*)::int from public.waitlist $$;
 
 revoke all on function public.waitlist_count() from public;
 grant execute on function public.waitlist_count() to anon, authenticated;
+
+-- tipos novos na lista (nov/2026): influencer e social media. Pode rodar de novo sem problema.
+alter table public.waitlist drop constraint if exists waitlist_kind_check;
+alter table public.waitlist add constraint waitlist_kind_check check (kind in ('ugc', 'tech', 'ambos', 'comecando', 'influencer', 'social'));

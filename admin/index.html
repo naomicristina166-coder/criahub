@@ -264,9 +264,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   };
   const scr = k => SCREENS[k] || k || '—';
   const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', dreams: 'sonhos', warm: 'aquecimentos', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
-  const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', rendas: 'tem outras rendas', comecando: 'está começando' };
+  const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', perfil: 'é influencer / cria pro perfil', social: 'é social media', rendas: 'tem outras rendas', comecando: 'está começando' };
   const waNum = v => { const w = String(v || '').replace(/\D/g, ''); return w ? (w.length <= 11 ? '55' + w : w) : ''; };
-  const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
+  const KINDS = { influencer: 'Influencer', ugc: 'UGC pra marcas', social: 'Social media', tech: 'UGC Tech Canvas', ambos: 'Mais de um', comecando: 'Começando' };
 
   const dur = secsOrMins => { const m = Math.round(secsOrMins); if (m < 1) return '0 min'; if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + String(r).padStart(2, '0') : ''); };
   const dt = d => !d ? '—' : /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? String(d).slice(8, 10) + '/' + String(d).slice(5, 7) + '/' + String(d).slice(2, 4) : new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' });

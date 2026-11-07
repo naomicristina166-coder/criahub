@@ -1112,6 +1112,15 @@ const setHTML = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h
 const TABS = [['inicio', 'Início'], ['rotina', 'Rotina'], ['marcas', 'Marcas'], ['agenda', 'Agenda'], ['estudio', 'Estúdio'], ['financeiro', 'Finanças']];
 const TAB_ALIAS = { ideias: ['estudio', 'sview', 'ideias'], rendas: ['financeiro', 'fview', 'rendas'] };
 const DEFAULT_FRONTS = ['UGC', 'UGC Tech Canvas'];
+/* quem ela é, pelas boas-vindas: usado nos textos e nos pedidos pra IA */
+function crWho() {
+  const k = Array.isArray(S.profile.obKinds) ? S.profile.obKinds : [], L = [];
+  if (k.includes('ugc') || k.includes('canvas')) L.push('creator de UGC');
+  if (k.includes('perfil')) L.push('influenciadora/criadora de conteúdo');
+  if (k.includes('social')) L.push('social media');
+  return L.length ? L.join(' e ') : 'criadora de conteúdo';
+}
+const crRole = () => { const k = Array.isArray(S.profile.obKinds) ? S.profile.obKinds : []; return k.includes('ugc') || k.includes('canvas') ? 'Creator de UGC' : k.includes('perfil') ? 'Criadora de conteúdo' : k.includes('social') ? 'Social media' : 'Criadora de conteúdo'; };
 const EXTRA_TYPES = ['Afiliados', 'Curso ou mentoria', 'Aulas e consultoria', 'Emprego fixo', 'Freela', 'Venda de produto', 'Monetização de redes', 'Outro'];
 const STAGES = ['Roteiro', 'Gravação', 'Edição', 'Enviado', 'Aprovado', 'Publicado'];
 const BRAND_STATUS = { ativo: ['Ativo', 'p-ok'], negociando: ['Negociando', 'p-acc'], pausado: ['Pausado', 'p-warn'], encerrado: ['Encerrado', 'p-mute'] };
@@ -1649,7 +1658,7 @@ function usageCard() {
   return `<div class="card section"><div class="row-h"><h2 style="font-size:16px">Seu uso de hoje</h2><span class="sub">renova à meia-noite</span></div><div class="grid2">${row('Traduções de contrato', 'ctr')}${row('Mensagens e ajustes', 'msg')}</div></div>`;
 }
 function contractPrompt(text, n, lang) {
-  return `Você ajuda creators de UGC a entender contratos de marcas.${n ? ` As ${n} imagem(ns) anexada(s) são fotos das páginas de um contrato, na ordem. Transcreva o texto delas com atenção.` : ''}
+  return `Você ajuda creators brasileiras (${crWho()}) a entender contratos de marcas e clientes.${n ? ` As ${n} imagem(ns) anexada(s) são fotos das páginas de um contrato, na ordem. Transcreva o texto delas com atenção.` : ''}
 ${text ? `\nTexto do contrato colado pela creator (entre as linhas ${Q}):\n${Q}\n${text.slice(0, 120000)}\n${Q}\n` : ''}
 Escreva TODA a resposta em ${lang === 'Inglês' ? 'inglês (traduza também os títulos das seções)' : 'português do Brasil'}, em texto simples: sem markdown, sem asteriscos, sem #. Use exatamente estas seções, com o título em maiúsculas e uma linha em branco entre elas:
 
@@ -2041,7 +2050,7 @@ function weekPrompt(w) {
   const miss = w.dMiss.map(x => `- ${x.title} (${brandName(x.brandId)})`).join('\n') || 'nenhuma';
   const next = S.data.deliveries.filter(x => (x.stage || 0) < 5 && x.due > w.we && x.due <= addDays(w.we, 7)).map(x => `- ${x.title} (${brandName(x.brandId)}), prazo ${WD_LONG[parse(x.due).getDay()]} ${fmtD(x.due)}, etapa ${STAGES[x.stage || 0]}`).join('\n') || 'nenhuma cadastrada';
   const hab = w.hs.map(h => `- ${h.name}: ${w.days.filter(d => d <= today() && hDone(h, d)).length} dias`).join('\n') || 'nenhum';
-  return `Você ajuda uma creator de UGC brasileira a organizar a rotina. Resumo da semana dela:\n\nTAREFAS POR DIA\n${lines}\n\nTAREFAS QUE FICARAM PENDENTES\n${pend}\n\nENTREGAS ATRASADAS\n${miss}\n\nHÁBITOS (dias cumpridos)\n${hab}\n\nENTREGAS DA PRÓXIMA SEMANA\n${next}${S.profile.workMode ? `\n\nDIAS EM QUE ELA TRABALHA EM OUTRO EMPREGO (${workLabel()}) NA PRÓXIMA SEMANA\n${[0, 1, 2, 3, 4, 5, 6].map(i => addDays(w.ws, 7 + i)).filter(isWorkDay).map(d => WD_LONG[parse(d).getDay()]).join(', ') || 'nenhum'}\nNesses dias, planeje só tarefas rápidas; gravação e edição vão para os dias livres.` : ''}\n\nEscreva em português do Brasil, em texto simples, sem markdown e sem asteriscos, com tom acolhedor e direto, curto. Use estas seções com o título em maiúsculas e uma linha em branco entre elas:\n\nRESUMO DA SEMANA\n(2 a 3 linhas, reconhecendo o que deu certo)\n\nO QUE TRAVOU\n(até 3 tópicos com •)\n\nPLANO DA PRÓXIMA SEMANA\n(um dia por linha, de segunda a sexta, com no máximo 3 prioridades por dia, encaixando as pendências e as entregas antes do prazo)\n\nUM HÁBITO PARA FOCAR\n(uma linha)`;
+  return `Você ajuda uma ${crWho()} brasileira a organizar a rotina. Resumo da semana dela:\n\nTAREFAS POR DIA\n${lines}\n\nTAREFAS QUE FICARAM PENDENTES\n${pend}\n\nENTREGAS ATRASADAS\n${miss}\n\nHÁBITOS (dias cumpridos)\n${hab}\n\nENTREGAS DA PRÓXIMA SEMANA\n${next}${S.profile.workMode ? `\n\nDIAS EM QUE ELA TRABALHA EM OUTRO EMPREGO (${workLabel()}) NA PRÓXIMA SEMANA\n${[0, 1, 2, 3, 4, 5, 6].map(i => addDays(w.ws, 7 + i)).filter(isWorkDay).map(d => WD_LONG[parse(d).getDay()]).join(', ') || 'nenhum'}\nNesses dias, planeje só tarefas rápidas; gravação e edição vão para os dias livres.` : ''}\n\nEscreva em português do Brasil, em texto simples, sem markdown e sem asteriscos, com tom acolhedor e direto, curto. Use estas seções com o título em maiúsculas e uma linha em branco entre elas:\n\nRESUMO DA SEMANA\n(2 a 3 linhas, reconhecendo o que deu certo)\n\nO QUE TRAVOU\n(até 3 tópicos com •)\n\nPLANO DA PRÓXIMA SEMANA\n(um dia por linha, de segunda a sexta, com no máximo 3 prioridades por dia, encaixando as pendências e as entregas antes do prazo)\n\nUM HÁBITO PARA FOCAR\n(uma linha)`;
 }
 
 /* lembretes dentro do app */
@@ -2236,7 +2245,7 @@ function vBriefing() {
   ${saved.length ? `<section class="section"><div class="row-h"><h2>Briefings salvos</h2></div><div class="list">${saved.map(x => `<div class="lead"><button class="open" data-openbrief="${x.id}"><span class="t">${esc(x.title || 'Briefing')}</span><span class="m">${esc(x.brandId ? brandName(x.brandId) : 'Sem marca')} · ${fmtD(String(x.created || '').slice(0, 10))} · ${esc(briefStatus(x))}</span></button></div>`).join('')}</div></section>` : ''}`;
 }
 function briefPrompt(text, n) {
-  return `Você ajuda uma creator de UGC brasileira a transformar o briefing de uma marca num plano de gravação.${n ? ` As ${n} imagem(ns) anexada(s) são prints do briefing; leia o texto delas com atenção.` : ''}
+  return `Você ajuda uma ${crWho()} brasileira a transformar o briefing de uma marca num plano de gravação.${n ? ` As ${n} imagem(ns) anexada(s) são prints do briefing; leia o texto delas com atenção.` : ''}
 Hoje é ${today()}.
 ${text ? `Briefing (entre as linhas ${Q}):\n${Q}\n${text.slice(0, 60000)}\n${Q}\n` : ''}
 Responda APENAS com um objeto JSON, em português do Brasil (traduza se o briefing estiver em outro idioma), exatamente neste formato:
@@ -2437,7 +2446,7 @@ function vTrends() {
 function trendPrompt() {
   const T = (S.trends || [])[0] || {}, mine = myNiches(), byN = T.niches || {};
   const L = (a, f) => (Array.isArray(a) ? a : []).map(f).join('\n') || '(nada)';
-  return `Você ajuda uma creator brasileira de UGC a ter ideias de vídeo pro perfil dela, a partir das tendências REAIS desta semana listadas abaixo (coletadas de fontes confiáveis).
+  return `Você ajuda uma ${crWho()} brasileira a ter ideias de vídeo pro perfil dela, a partir das tendências REAIS desta semana listadas abaixo (coletadas de fontes confiáveis).
 Nicho dela: ${mine.length ? mine.map(nicheName).join(', ') : 'não informado (use as trends gerais)'}.
 
 Músicas e áudios em alta:
@@ -2456,7 +2465,7 @@ Responda em português do Brasil, texto simples sem markdown, com as ideias nume
 /* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
 const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
-  marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
+  marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis que você administra: clientes de social media e Tech Canvas', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
   estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e pra quê', null, true], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
@@ -2470,7 +2479,9 @@ function toolsFor(kinds, focus) {
   if (kinds.includes('ugc')) on.push('estudio.gravar', 'estudio.revisor', 'estudio.ganchos', 'marcas.contratos');
   if (kinds.includes('canvas')) on.push('marcas.contas', 'financeiro.dolar', 'estudio.ganchos');
   if (kinds.includes('rendas')) on.push('financeiro.gastos');
-  if (kinds.includes('perfil') || kinds.includes('comecando')) on.push('estudio.ganchos');
+  if (kinds.includes('perfil') || kinds.includes('comecando')) on.push('estudio.ganchos', 'estudio.gravar');
+  if (kinds.includes('perfil')) on.push('marcas.permutas', 'marcas.contratos', 'marcas.licencas');
+  if (kinds.includes('social')) on.push('marcas.contas', 'marcas.contratos', 'financeiro.notas');
   on.push('estudio.posts', 'financeiro.plano');
   if (focus === 'rotina') on.push('rotina.semana');
   if (focus === 'dinheiro') on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
@@ -2483,7 +2494,7 @@ function toolsSettings() {
 }
 
 /* ---------- boas-vindas: 3 perguntas, só no primeiro acesso ---------- */
-const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e conquistar as primeiras marcas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['perfil', 'Conteúdo pro meu perfil', 'Crio pro meu Instagram, TikTok ou YouTube, de qualquer nicho'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
+const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e crescer com conteúdo'], ['perfil', 'Influencer / conteúdo pro meu perfil', 'Crio pro meu Instagram, TikTok ou YouTube, faço publis e permutas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['social', 'Social media', 'Cuido das redes de clientes: posts, aprovação e relatório'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
 const OB_FOCUS = [['rotina', 'Minha rotina', 'Tarefas, hábitos e semana'], ['marcas', 'Minhas marcas', 'Clientes, entregas e prazos'], ['dinheiro', 'Meu dinheiro', 'Quanto cobrar, receber e gastar']];
 let OB = null;
 function checkOnboard() {
@@ -2513,7 +2524,7 @@ function obRead() { const n = $('#ob_name'), l = $('#ob_label'), g = $('#ob_ig')
 async function obFinish(skip) {
   const o = OB; OB = null; document.getElementById('ob')?.remove();
   if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}), ...(o.ig ? { ig: o.ig } : {}) }); return; }
-  const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
+  const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: [...(o.kinds.includes('ugc') || o.kinds.includes('canvas') || !o.kinds.length ? ['UGC'] : []), ...(o.kinds.includes('canvas') ? ['UGC Tech Canvas'] : []), ...(o.kinds.includes('perfil') ? ['Publis e permutas'] : []), ...(o.kinds.includes('social') ? ['Social media'] : [])].filter((x, i, a) => a.indexOf(x) === i) }) };
   if (o.name) patch.name = o.name;
   if (o.ig) patch.ig = o.ig;
   if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
@@ -2557,7 +2568,7 @@ function checkSteps() {
 /* ---------- "o que é isso?" em cada tela ---------- */
 const HELP = {
   'inicio': ['Início', 'Seu resumo do dia: quanto falta receber, entregas da semana, tarefas e alertas. Toque nos cards pra ir direto ao lugar certo.'],
-  'radar': ['Radar UGC', 'Notícias do mercado de UGC, no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
+  'radar': ['Radar UGC', 'Notícias do mercado de creators, UGC e redes sociais, no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
   'rotina.hoje': ['Meu dia', 'Suas tarefas do dia: de trabalho e da vida (saúde, casa, estudos…). Marque o que fez. O que ficar pra trás, você traz pra hoje com um toque.'],
   'rotina.metas': ['Metas', 'Objetivos com número, como "fechar 2 marcas" ou "postar 12 vídeos". Você soma o progresso e vê quanto falta.'],
   'rotina.habitos': ['Hábitos', 'Pequenos cuidados do dia, como beber água ou dormir bem. Marque todo dia e veja quantos dias seguidos você manteve.'],
@@ -3036,7 +3047,7 @@ function scamBody() {
   <section class="card section"><h2 style="font-size:16px">Sinais comuns de golpe com creators</h2><ul class="tips">${SCAM_SIGNS.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ul></section>`;
 }
 function scamPrompt(text, n) {
-  return `Você ajuda creators de UGC brasileiras a identificar golpes em propostas de "marcas".${n ? ` As ${n} imagem(ns) anexada(s) são prints da conversa ou do perfil; leia com atenção.` : ''}
+  return `Você ajuda creators brasileiras a identificar golpes em propostas de "marcas".${n ? ` As ${n} imagem(ns) anexada(s) são prints da conversa ou do perfil; leia com atenção.` : ''}
 ${text ? `Mensagem recebida (entre as linhas ${Q}):\n${Q}\n${text.slice(0, 30000)}\n${Q}` : ''}
 Responda em português do Brasil, em texto simples, sem markdown e sem asteriscos, com estas seções (título em maiúsculas, linha em branco entre elas):
 
@@ -3454,7 +3465,7 @@ const kitVideos = k => String(k.videos || '').split('\n').map(l => l.trim()).fil
 const kitBrands = k => (Array.isArray(k.brands) ? k.brands : []).map(id => S.data.brands.find(b => b.id === id)?.name).filter(Boolean);
 function kitPreview() {
   const k = kit(), nm = S.profile.name || 'Seu nome', niches = String(k.niches || '').split(',').map(s => s.trim()).filter(Boolean), br = kitBrands(k), vids = kitVideos(k);
-  return `<div class="kitp"><div class="kh"><div class="ka">${esc(nm.slice(0, 1).toUpperCase())}</div><div><h3>${esc(nm)}</h3><div class="sub">${esc(k.role || 'Creator de UGC')}${k.city ? ' · ' + esc(k.city) : ''}</div></div></div>
+  return `<div class="kitp"><div class="kh"><div class="ka">${esc(nm.slice(0, 1).toUpperCase())}</div><div><h3>${esc(nm)}</h3><div class="sub">${esc(k.role || crRole())}${k.city ? ' · ' + esc(k.city) : ''}</div></div></div>
     ${k.bio ? `<p>${esc(k.bio)}</p>` : '<p class="muted">Escreva uma bio curta sobre o seu trabalho.</p>'}
     ${niches.length ? `<div class="chips">${niches.map(n => `<span class="chip" style="cursor:default">${esc(n)}</span>`).join('')}</div>` : ''}
     ${k.stats ? `<div class="kstat">${esc(k.stats)}</div>` : ''}
@@ -3465,7 +3476,7 @@ function kitPreview() {
 function kitHtml() {
   const k = kit(), nm = S.profile.name || '', acc = /^#[0-9a-f]{6}$/i.test(S.profile.accent || '') ? S.profile.accent : '#420725', niches = String(k.niches || '').split(',').map(s => s.trim()).filter(Boolean), br = kitBrands(k), vids = kitVideos(k);
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(nm)} · Mídia kit</title><style>body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#faf6f7;color:#22141a;line-height:1.5}.w{max-width:680px;margin:0 auto;padding:40px 20px}.top{background:${acc};color:#fff;border-radius:22px;padding:28px}.top h1{margin:0;font-size:34px;letter-spacing:-.02em}.top p{margin:6px 0 0;opacity:.85}.c{background:#fff;border:1px solid #e9dee2;border-radius:16px;padding:20px;margin-top:14px}.c h2{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#76626c}.chips span{display:inline-block;border:1px solid #e9dee2;border-radius:999px;padding:5px 12px;margin:0 6px 6px 0;font-size:14px;font-weight:600}a{color:${acc};font-weight:700}li{margin:4px 0}.f{text-align:center;color:#76626c;font-size:12px;margin-top:24px}</style></head><body><div class="w">
-<div class="top"><h1>${esc(nm)}</h1><p>${esc(k.role || 'Creator de UGC')}${k.city ? ' · ' + esc(k.city) : ''}</p></div>
+<div class="top"><h1>${esc(nm)}</h1><p>${esc(k.role || crRole())}${k.city ? ' · ' + esc(k.city) : ''}</p></div>
 ${k.bio ? `<div class="c"><h2>Sobre</h2><div>${esc(k.bio)}</div></div>` : ''}
 ${niches.length ? `<div class="c"><h2>Nichos</h2><div class="chips">${niches.map(n => `<span>${esc(n)}</span>`).join('')}</div></div>` : ''}
 ${k.stats ? `<div class="c"><h2>Resultados</h2><div>${esc(k.stats)}</div></div>` : ''}
@@ -3476,7 +3487,7 @@ ${vids.length ? `<div class="c"><h2>Trabalhos</h2><ul>${vids.map(v => `<li><a hr
 }
 function kitText() {
   const k = kit(), br = kitBrands(k), vids = kitVideos(k);
-  return [`${S.profile.name || ''} · ${k.role || 'Creator de UGC'}${k.city ? ' · ' + k.city : ''}`, k.bio, k.niches ? 'Nichos: ' + k.niches : '', k.stats ? 'Resultados: ' + k.stats : '', br.length ? 'Marcas atendidas: ' + br.join(', ') : '', vids.length ? 'Trabalhos:\n' + vids.map(v => '• ' + (v.t ? v.t + ': ' : '') + v.u).join('\n') : '', [k.contact, k.ig, k.tt].filter(Boolean).join(' · '), k.langs ? 'Idiomas: ' + k.langs : ''].filter(Boolean).join('\n\n');
+  return [`${S.profile.name || ''} · ${k.role || crRole()}${k.city ? ' · ' + k.city : ''}`, k.bio, k.niches ? 'Nichos: ' + k.niches : '', k.stats ? 'Resultados: ' + k.stats : '', br.length ? 'Marcas atendidas: ' + br.join(', ') : '', vids.length ? 'Trabalhos:\n' + vids.map(v => '• ' + (v.t ? v.t + ': ' : '') + v.u).join('\n') : '', [k.contact, k.ig, k.tt].filter(Boolean).join(' · '), k.langs ? 'Idiomas: ' + k.langs : ''].filter(Boolean).join('\n\n');
 }
 function vKit() {
   const k = kit(), brands = S.data.brands.filter(b => !b.example || (k.brands || []).includes(b.id));
@@ -4102,7 +4113,7 @@ const FORMS = {
   accounts: { title: 'conta', fields: [
     { row: [{ k: 'platform', l: 'Plataforma', t: 'select', o: PLATFORMS.map(x => [x, x]), d: 'TikTok' }, { k: 'handle', l: '@ da conta', t: 'text', req: 1, ph: '@perfil' }] },
     { k: 'brandId', l: 'Marca dessa conta', t: 'select', o: brandOpts },
-    { row: [{ k: 'phase', l: 'Fase da conta', t: 'select', o: [['teste', 'Em teste (aquecendo)'], ['ativa', 'Ativa (postando)'], ['pausada', 'Pausada']], d: 'teste' }, { k: 'testStart', l: 'Início do teste', t: 'date', d: today }] },
+    { row: [{ k: 'phase', l: 'Fase da conta', t: 'select', o: [['teste', 'Em teste (aquecendo)'], ['ativa', 'Ativa (postando)'], ['pausada', 'Pausada']], d: () => wUses() ? 'teste' : 'ativa' }, { k: 'testStart', l: 'Início do teste', t: 'date', d: today }] },
     { k: 'testDays', l: 'Quantos dias dura o teste', t: 'number', d: 5, hint: 'Do jeito que a marca pediu: 3, 5, 15, 30 dias…' },
     { row: [{ k: 'goalWeek', l: 'Meta de posts por semana', t: 'number', d: 7 }, { k: 'goalViews', l: 'Meta de views no ciclo', t: 'number', hint: 'Opcional' }] },
     { k: 'url', l: 'Link do perfil (opcional)', t: 'text', ph: 'https://…' },
@@ -4445,7 +4456,7 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
   if (d.renprop) { openTextSheet('ren', d.renprop, '', 'Proposta de renovação'); return; }
   if (d.tslang) { TS.lang = d.tslang; tsRefresh(); return; }
   if (d.act === 'tscopy') { const v = $('#o_tsOut')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Copiado'); } catch (_) { $('#o_tsOut')?.select(); toast('Texto selecionado. Use o copiar do seu aparelho.'); } return; }
-  if (d.act === 'tsai') { const cur = $('#o_tsOut')?.value || ''; await gated('msg', async () => { await ask('tsOut', `Reescreva a mensagem abaixo, de uma creator de UGC para uma marca, deixando mais persuasiva e profissional, sem exagero e sem inventar números ou fatos. Mantenha o idioma original, o tamanho parecido e um tom simpático. Responda só com a mensagem pronta, sem aspas e sem comentários.\n\nMensagem (entre as linhas ${Q}):\n${Q}\n${cur}\n${Q}`); const ta = $('#o_tsOut'); if (ta && S.ct.tsOut) ta.value = S.ct.tsOut; }); return; }
+  if (d.act === 'tsai') { const cur = $('#o_tsOut')?.value || ''; await gated('msg', async () => { await ask('tsOut', `Reescreva a mensagem abaixo, de uma ${crWho()} para uma marca ou cliente, deixando mais persuasiva e profissional, sem exagero e sem inventar números ou fatos. Mantenha o idioma original, o tamanho parecido e um tom simpático. Responda só com a mensagem pronta, sem aspas e sem comentários.\n\nMensagem (entre as linhas ${Q}):\n${Q}\n${cur}\n${Q}`); const ta = $('#o_tsOut'); if (ta && S.ct.tsOut) ta.value = S.ct.tsOut; }); return; }
   if (d.act === 'bclear') { const c = S.ct; c.bIn = ''; c.bImgs = []; c.bRes = null; c.err = ''; render(); setTimeout(() => document.querySelector('textarea[id^="b"], #b_in')?.focus(), 30); toast('Pronto para um briefing novo'); return; }
   if (d.act === 'brief') { const c = S.ct, txt = c.bIn.trim(), imgs = c.bImgs; if (!txt && !imgs.length) { toast('Cole o briefing ou envie prints'); return; } await gated('studio', async () => { const r = await askJson('bRes', briefPrompt(txt, imgs.length), imgs); if (r && typeof r === 'object' && !Array.isArray(r)) { c.bRes = r; await createFromBrief(); } else if (r) { c.err = 'Não consegui organizar o briefing. Tente de novo.'; c.lastOk = false; render(); } }); return; }
   if (d.act === 'briefcreate') { await createFromBrief(); return; }
@@ -4516,7 +4527,7 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
   if (d.act === 'grec') { const dl = S.data.deliveries.find(x => x.id === S.ct.gDeliv); if (dl) { await put('deliveries', { ...dl, stage: Math.max(2, dl.stage || 0) }); toast('Boa! Agora é edição.'); } return; }
   if (d.scene) { const [id, i] = d.scene.split(':'); const dl = S.data.deliveries.find(x => x.id === id); if (dl && Array.isArray(dl.scenes) && dl.scenes[+i]) { const sc = dl.scenes.map((x, j) => j === +i ? { ...x, done: !x.done } : x); await put('deliveries', { ...dl, scenes: sc }); } return; }
   if (d.rmrule) { const r = arr(S.profile.rules); r.splice(+d.rmrule, 1); await saveProfile({ rules: r }); return; }
-  if (d.act === 'rulesai') { const fb = S.data.feedbacks.slice(-60).map(x => `- [${x.cat || 'Outro'}] ${x.text}`).join('\n'); await gated('studio', async () => { const r = await askJson('rulesOut', `Abaixo estão feedbacks que uma creator de UGC recebeu de marcas e gerentes. Agrupe o que se repete e escreva uma checklist pessoal com no máximo 8 regras curtas e práticas (até 70 caracteres cada), no imperativo, em português do Brasil, para ela conferir antes de gravar e de enviar. Priorize o que aparece mais vezes. Responda APENAS com um array JSON de strings.\n\nFeedbacks:\n${fb}`); if (Array.isArray(r)) { const rules = arr(r).slice(0, 8); if (rules.length) { await saveProfile({ rules }); toast('Checklist atualizada'); } } }); return; }
+  if (d.act === 'rulesai') { const fb = S.data.feedbacks.slice(-60).map(x => `- [${x.cat || 'Outro'}] ${x.text}`).join('\n'); await gated('studio', async () => { const r = await askJson('rulesOut', `Abaixo estão feedbacks que uma ${crWho()} recebeu de marcas e gerentes. Agrupe o que se repete e escreva uma checklist pessoal com no máximo 8 regras curtas e práticas (até 70 caracteres cada), no imperativo, em português do Brasil, para ela conferir antes de gravar e de enviar. Priorize o que aparece mais vezes. Responda APENAS com um array JSON de strings.\n\nFeedbacks:\n${fb}`); if (Array.isArray(r)) { const rules = arr(r).slice(0, 8); if (rules.length) { await saveProfile({ rules }); toast('Checklist atualizada'); } } }); return; }
   if (d.act === 'prsave') { const v = +PR.base || 0; if (!v) { toast('Coloque um valor base'); return; } await saveProfile({ basePrice: v }); toast('Valor base salvo'); return; }
   if (d.year) { const cur = +today().slice(0, 4); S.f.year = Math.min(cur + 1, (S.f.year || cur) + Number(d.year)); render(); return; }
   if (d.ymonth) { S.f.month = d.ymonth; S.f.fview = 'marcas'; render(); window.scrollTo(0, 0); return; }
@@ -4578,10 +4589,10 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
   if (d.act === 'tmsg') { const c = S.ct, txt = c.mIn.trim(), imgs = c.mMode === 'in' ? c.mImgs : [];
     if (!txt && !imgs.length) { toast(c.mMode === 'in' ? 'Cole a mensagem da marca' : 'Escreva sua resposta'); return; }
     if (c.mMode === 'in') {
-      let out = ''; await gated('msg', async () => { out = await ask('mOut', `Uma creator de UGC brasileira recebeu esta mensagem de uma marca${imgs.length ? ' (as imagens anexadas são prints da conversa; transcreva e use o texto delas)' : ''}${txt ? ` (entre as linhas ${Q}):\n${Q}\n${txt}\n${Q}` : '.'}\n\nResponda em português do Brasil, em texto simples sem markdown e sem asteriscos, com estas seções (título em maiúsculas, linha em branco entre elas):\n\nTRADUÇÃO\n(tradução fiel e natural)\n\nO QUE ELES ESTÃO PEDINDO\n• pedidos, prazos, valores e dúvidas, em tópicos curtos\n\nTOM DA MENSAGEM\n(uma linha)\n\nIDIOMA ORIGINAL\n(só o nome do idioma, em português)`, imgs); });
+      let out = ''; await gated('msg', async () => { out = await ask('mOut', `Uma ${crWho()} brasileira recebeu esta mensagem de uma marca${imgs.length ? ' (as imagens anexadas são prints da conversa; transcreva e use o texto delas)' : ''}${txt ? ` (entre as linhas ${Q}):\n${Q}\n${txt}\n${Q}` : '.'}\n\nResponda em português do Brasil, em texto simples sem markdown e sem asteriscos, com estas seções (título em maiúsculas, linha em branco entre elas):\n\nTRADUÇÃO\n(tradução fiel e natural)\n\nO QUE ELES ESTÃO PEDINDO\n• pedidos, prazos, valores e dúvidas, em tópicos curtos\n\nTOM DA MENSAGEM\n(uma linha)\n\nIDIOMA ORIGINAL\n(só o nome do idioma, em português)`, imgs); });
       const m = /IDIOMA ORIGINAL\s*\n\s*([^\n]+)/i.exec(out || ''); if (m) { const l = LANGS.find(x => m[1].toLowerCase().includes(x.toLowerCase().slice(0, 5))); if (l) c.mLang = l; }
     } else {
-      await gated('msg', () => ask('mOut', `Traduza a mensagem abaixo, escrita em português por uma creator de UGC, para ${c.mLang}, para ela enviar a uma marca. Mantenha o sentido, deixe natural, profissional e simpática, como uma pessoa nativa escreveria numa DM ou e-mail de trabalho. Não acrescente informações. Responda apenas com a mensagem traduzida, pronta para copiar, sem aspas e sem comentários.\n\nMensagem (entre as linhas ${Q}):\n${Q}\n${txt}\n${Q}`));
+      await gated('msg', () => ask('mOut', `Traduza a mensagem abaixo, escrita em português por uma ${crWho()}, para ${c.mLang}, para ela enviar a uma marca. Mantenha o sentido, deixe natural, profissional e simpática, como uma pessoa nativa escreveria numa DM ou e-mail de trabalho. Não acrescente informações. Responda apenas com a mensagem traduzida, pronta para copiar, sem aspas e sem comentários.\n\nMensagem (entre as linhas ${Q}):\n${Q}\n${txt}\n${Q}`));
     }
     return; }
   if (d.act === 'reply') { S.ct.mMode = 'out'; S.ct.mIn = ''; S.ct.mOut = ''; render(); setTimeout(() => $('#m_in')?.focus(), 0); return; }
@@ -4939,8 +4950,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
    Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
 const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
 const FREE_BRANDS = 10;
-const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
-const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
+const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Perfis que você administra, com métricas', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
+const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Perfis de clientes e contas de marca, com métricas e aquecimento', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
 window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
@@ -4971,7 +4982,7 @@ function proDecorate(v) {
   const sg = v.querySelector('.seg'); if (!sg) return;
   v.querySelectorAll('.head .btn').forEach(b => b.remove());
   let n = sg.nextElementSibling; while (n) { const nx = n.nextElementSibling; n.remove(); n = nx; }
-  const desc = { 'financeiro.plano': 'Quanto guardar por mês, a sua reserva de emergência e a hora certa de investir em equipamento ou curso, com base no que você ganha e gasta.', 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
+  const desc = { 'financeiro.plano': 'Quanto guardar por mês, a sua reserva de emergência e a hora certa de investir em equipamento ou curso, com base no que você ganha e gasta.', 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis que você administra (clientes de social media ou Tech Canvas), com grade de posts e métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
   sg.insertAdjacentHTML('afterend', `<div class="pro-lock section"><span class="pro-pill" style="align-self:flex-start;margin:0;background:#F4C9D8;color:#420725">PRO</span><h2>${esc(PRO_TOOLS[key])}</h2><p>${esc(desc)}</p><button class="btn" data-pro="${esc(key)}">Conhecer o Pro</button></div>`);
 }
 function openPro(reason) {
@@ -5047,7 +5058,9 @@ const wLog = (aid, d, slot) => S.data.warm.find(x => x.id === `${aid}_${d}_${slo
 const wPostDay = (aid, d) => !!wLog(aid, d, 'post');
 const wSesTime = k => (wPlan().sessions.find(x => x.k === k) || {}).time || '';
 const wSlots = (a, d) => [...wPlan().sessions.map(x => x.k), ...(wPostDay(a.id, d) ? ['pre', 'pos'] : [])];
-const wAccs = () => S.data.accounts.filter(a => (a.phase || 'ativa') !== 'pausada');
+/* o aquecimento é do Tech Canvas: aparece pra quem marcou essa frente ou já usa (social media só vê a grade de posts) */
+const wUses = () => { const k = Array.isArray(S.profile.obKinds) ? S.profile.obKinds : null; return !k || k.includes('canvas') || S.data.warm.length > 0 || S.data.accounts.some(a => a.phase === 'teste') || (Array.isArray(S.profile.fronts) && S.profile.fronts.some(f => /canvas/i.test(f))); };
+const wAccs = () => wUses() ? S.data.accounts.filter(a => (a.phase || 'ativa') !== 'pausada') : [];
 function wPhase(a) {
   if ((a.phase || 'ativa') !== 'teste') return { txt: 'Ativa', done: false };
   const n = a.testStart ? diff(a.testStart, today()) + 1 : 1, tot = +a.testDays || 5;
@@ -5313,26 +5326,27 @@ var STORIES_DATA = {
     ['🎯', 'Metas, hábitos e sonhos', 'Metas com número, hábitos como beber água e o Quadro dos sonhos com as suas imagens.'],
     ['🗓️', 'Semana', 'No fim da semana, veja o que deu certo e replaneje o que ficou pra trás.']] },
   marcas: { name: 'Marcas', slides: [
-    ['💼', 'Suas Marcas', 'Cada marca com quem você trabalha: contato, tipo de contrato (ciclo, pacote ou avulso) e quanto ela paga.'],
+    ['💼', 'Marcas e clientes', 'Cada marca ou cliente com quem você trabalha: publi, UGC, permuta ou gestão de redes. Contato, tipo de contrato (ciclo, pacote ou avulso) e quanto paga.'],
     ['🔁', 'Ciclos e pacotes', 'Coloque o início e o fim. O app avisa quando o ciclo está acabando, pra você renovar a tempo.'],
     ['🎯', 'Prospecção', 'As marcas que você quer conquistar, com lembrete de follow-up pra nenhuma conversa esfriar.'],
-    ['📱', 'Faz Tech Canvas?', 'Em Contas ficam os perfis de marca que você posta, o aquecimento de cada um e os seus 3 melhores vídeos.']] },
+    ['📱', 'Cuida de perfis?', 'Em Contas ficam os perfis que você administra: clientes de social media ou contas de marca do Tech Canvas, com a grade de posts e as métricas.']] },
   agenda: { name: 'Agenda', slides: [
     ['📅', 'Sua Agenda', 'Todas as entregas e prazos num calendário só.'],
     ['🎬', 'Entregas por etapa', 'Cada vídeo anda pelas etapas: roteiro, gravação, edição, enviado, aprovado e publicado. Você sempre sabe onde cada um está.'],
     ['🛍️', 'Datas comerciais', 'Black Friday, Dia das Mães, Natal… o app avisa quando é hora de prospectar pra cada data.']] },
   estudio: { name: 'Estúdio', slides: [
-    ['🎬', 'Seu Estúdio', 'Onde o conteúdo nasce: do pedido da marca até o vídeo enviado.'],
+    ['🎬', 'Seu Estúdio', 'Onde o conteúdo nasce: do seu perfil, de uma publi ou de um cliente, da ideia até o post.'],
+    ['🗓️', 'Meus posts', 'O que você vai postar no seu perfil, dia a dia, com status, legenda e hashtags prontas pra copiar.'],
     ['📋', 'Briefing', 'Cole o briefing da marca: a IA separa as regras, monta os roteiros e manda os vídeos pra sua semana.'],
     ['🎙️', 'Gravar e revisar', 'Leia o roteiro no teleprompter, grave vários vídeos de uma vez e, antes de enviar, o Revisor confere se nada ficou pra trás.'],
     ['💡', 'Ideias e Em alta', 'Seu banco de ideias, a IA criando ideias pro seu perfil e as trends da semana pro seu nicho, pra nunca ficar sem assunto.']] },
   financeiro: { name: 'Finanças', slides: [
     ['💸', 'Suas Finanças', 'Quanto você recebeu, quanto falta receber e de quem.'],
     ['🧾', 'Marcas e outras rendas', 'Pagamentos das marcas de um lado; afiliados, freelas e salário do outro. Tudo somado no mês.'],
-    ['🐷', 'Cofrinho e MEI', 'O app sugere quanto separar de cada ganho pra reserva, equipamento e impostos, e lembra do DAS.'],
-    ['📈', 'Seu ano', 'Veja o seu ano em números e descubra quanto cobrar por vídeo.']] },
+    ['🐷', 'Plano e potes', 'Crie seus potes (reserva, curso, tratamento, viagem, seu negócio) e veja quanto separar de cada ganho. O app também lembra do DAS do MEI.'],
+    ['📈', 'Seu ano', 'Veja o seu ano em números e descubra quanto cobrar por vídeo, publi ou gestão de perfil.']] },
   radar: { name: 'Radar UGC', slides: [
-    ['📰', 'Radar UGC', 'As notícias do mercado de UGC todo dia, num resumo que você lê em 2 minutos.'],
+    ['📰', 'Radar UGC', 'As notícias do mercado de creators, UGC e redes sociais todo dia, num resumo que você lê em 2 minutos.'],
     ['🧭', 'O que muda pra você', 'Cada notícia vem com o que ela muda na sua rotina de creator.'],
     ['🔴', 'Bolinha = novidade', 'Quando sai notícia nova, aparece a bolinha. Leu, ela some.']] }
 };
@@ -5586,7 +5600,7 @@ document.addEventListener('click', e => {
 /* ================= Mensagens prontas pras marcas (Marcas › Mensagens) ================= */
 const MT_CATS = ['Prospecção', 'Material', 'Cobrança', 'Renovação', 'Depoimento', 'Outras'];
 const MT_DEF = [
-  { id: 'd1', cat: 'Prospecção', title: 'Primeiro contato', body: 'Oi, {contato}! Tudo bem? Sou a {meu nome}, creator de UGC. Acompanho a {marca} e tive uma ideia de vídeo que combina muito com vocês. Posso te mandar meu portfólio e uma proposta?' },
+  { id: 'd1', cat: 'Prospecção', title: 'Primeiro contato', body: 'Oi, {contato}! Tudo bem? Sou a {meu nome}, creator. Acompanho a {marca} e tive uma ideia de vídeo que combina muito com vocês. Posso te mandar meu portfólio e uma proposta?' },
   { id: 'd2', cat: 'Prospecção', title: 'Follow-up', body: 'Oi, {contato}! Passando pra saber se você conseguiu ver a minha mensagem sobre os vídeos pra {marca}. Se fizer sentido, te mando uma proposta rapidinho 😊' },
   { id: 'd3', cat: 'Material', title: 'Segue o material', body: 'Oi, {contato}! Segue o material da {marca}: {link}\nQualquer ajuste, é só me falar. Fico no aguardo da aprovação!' },
   { id: 'd4', cat: 'Material', title: 'Lembrete de aprovação', body: 'Oi, {contato}! Conseguiu ver os vídeos da {marca}? Preciso da aprovação até {data} pra seguir com o cronograma. Obrigada!' },
@@ -5659,7 +5673,7 @@ document.addEventListener('click', async e => {
   if (d.mtaicopy) { const a = S.ct.mtAi; if (a) await mtCopy(a.out || a.text); return; }
   if (d.mttone) { const a = S.ct.mtAi; if (!a || S.ct.busy) return;
     const how = { formal: 'mais formal e profissional, sem perder a simpatia', leve: 'mais leve e próxima, como uma creator brasileira fala no WhatsApp', curta: 'mais curta e direta, com no máximo 3 frases', ingles: 'traduzida para o inglês, natural e profissional', espanhol: 'traduzida para o espanhol, natural e profissional' }[d.mttone];
-    let out = null; const p = `Reescreva a mensagem abaixo, de uma creator de UGC para uma marca, deixando ${how}. Mantenha todas as informações, nomes, links, datas e valores exatamente como estão (inclusive textos entre colchetes). Não invente nada.\nResponda APENAS com JSON: {"texto":"..."}\n\nMensagem:\n${a.text}`;
+    let out = null; const p = `Reescreva a mensagem abaixo, de uma ${crWho()} para uma marca ou cliente, deixando ${how}. Mantenha todas as informações, nomes, links, datas e valores exatamente como estão (inclusive textos entre colchetes). Não invente nada.\nResponda APENAS com JSON: {"texto":"..."}\n\nMensagem:\n${a.text}`;
     mtAiRender(); await gated('msg', async () => { out = await askJson('mtAi', p); });
     if (out && out.texto) a.out = String(out.texto).slice(0, 3000); mtAiRender(); return; }
 }, true);
@@ -5689,7 +5703,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 </style>`);
 /* ================= Gráfico do aquecimento (Pro): minutos por dia, dias completos, sequência e efeito nas views ================= */
 function warmChart(bf) {
-  if (proLocked('marcas.contas')) return '';
+  if (proLocked('marcas.contas') || !wUses()) return '';
   const byB = bf && bf !== 'todas', accs = S.data.accounts.filter(a => !byB || acKey(a) === bf); if (!accs.length) return '';
   const N = S.f.wcR === 30 ? 30 : 14, t = today(), ids = new Set(accs.map(a => a.id)), per = wPlan().sessions.length;
   const logs = S.data.warm.filter(x => ids.has(x.aid) && x.slot !== 'post');
@@ -5818,7 +5832,7 @@ ${P.mei ? 'É MEI (paga DAS todo mês).' : ''}`;
 }
 function chPrompt() {
   const hist = CH.msgs.slice(-12).map(m => `${m.r === 'u' ? 'CREATOR' : 'CRIAHUB'}: ${m.t}`).join('\n');
-  return `Você é o Chat CriaHub, assistente de organização de rotina e de finanças de uma creator de UGC brasileira, dentro do app CriaHub. Fale como uma amiga organizada: português do Brasil, simples, acolhedor, frases curtas, sem markdown, sem asteriscos.
+  return `Você é o Chat CriaHub, assistente de organização de rotina e de finanças de uma ${crWho()} brasileira, dentro do app CriaHub. Fale como uma amiga organizada: português do Brasil, simples, acolhedor, frases curtas, sem markdown, sem asteriscos.
 
 DADOS DELA (use para responder; não invente nada além disso):
 ${chContext()}
