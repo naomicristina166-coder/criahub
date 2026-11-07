@@ -1114,6 +1114,9 @@ const DEFAULT_FRONTS = ['UGC', 'UGC Tech Canvas'];
 const EXTRA_TYPES = ['Afiliados', 'Curso ou mentoria', 'Aulas e consultoria', 'Emprego fixo', 'Freela', 'Venda de produto', 'Monetização de redes', 'Outro'];
 const STAGES = ['Roteiro', 'Gravação', 'Edição', 'Enviado', 'Aprovado', 'Publicado'];
 const BRAND_STATUS = { ativo: ['Ativo', 'p-ok'], negociando: ['Negociando', 'p-acc'], pausado: ['Pausado', 'p-warn'], encerrado: ['Encerrado', 'p-mute'] };
+const MP_PLATS = ['Instagram', 'TikTok', 'YouTube', 'Pinterest', 'LinkedIn', 'Outra'];
+const MP_FMTS = ['Reels', 'Carrossel', 'Stories', 'Post', 'Shorts', 'Vídeo longo', 'Live'];
+const MP_ST = [['ideia', 'Ideia', 'p-mute'], ['roteiro', 'Roteiro', 'p-acc'], ['gravado', 'Gravado', 'p-acc'], ['editado', 'Editado', 'p-warn'], ['agendado', 'Agendado', 'p-warn'], ['postado', 'Postado ✓', 'p-ok']];
 const IDEA_TAGS = ['Gancho', 'Roteiro', 'Tendência', 'Referência', 'Trend de áudio'];
 /* etiquetas do banco de ideias: as da creator (Ajustes) ou as padrão */
 const ideaTags = () => { const a = Array.isArray(S.profile.ideaTags) ? S.profile.ideaTags.map(x => String(x || '').trim()).filter(Boolean) : []; return a.length ? a : IDEA_TAGS; };
@@ -1128,7 +1131,7 @@ const COLOR_FAMS = [
 ];
 const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
 const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
-const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos'];
+const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos', 'myposts'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
@@ -1174,7 +1177,7 @@ const LEAD_NEXT = { contatada: 3, respondeu: 2, proposta: 4 };
 const CHANNELS = ['DM Instagram', 'E-mail', 'DM TikTok', 'LinkedIn', 'WhatsApp', 'Indicação', 'Plataforma de UGC'];
 
 /* ================= state & storage ================= */
-const S = { tab: 'inicio', data: { brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], warm: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
+const S = { tab: 'inicio', data: { myposts: [], brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], warm: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
   f: { brand: 'todas', idea: 'todas', month: monthKey(today()), agBrand: '', front: '', mview: 'clientes', rview: 'hoje', day: today(), wk: 0, sview: 'briefing', fview: 'marcas', year: 0, cur: 'USD', aview: 'calendario', calM: today().slice(0, 7), calDay: today() },
   ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
   sample: null, imgLimits: null, news: [], newsReady: false };
@@ -1729,7 +1732,7 @@ function vIdeas() {
         <span class="q">${esc(i.title)}</span>${i.notes ? `<span class="n">${esc(i.notes)}</span>` : ''}
       </button>
       <div class="f"><span class="sub">${esc(i.tag || 'Sem etiqueta')}${i.brandId ? ' · ' + esc(brandName(i.brandId)) : ''}${exTag(i)}</span>
-      <button class="pill ${st[1]}" style="border:0;cursor:pointer" data-istat="${i.id}" title="Mudar status">${st[0]}</button></div>
+      <span style="display:flex;gap:6px;align-items:center"><button class="link" data-mpidea="${i.id}" style="font-size:12.5px">${S.data.myposts.some(m => m.ideaId === i.id) ? 'Planejado ✓' : 'Planejar post'}</button><button class="pill ${st[1]}" style="border:0;cursor:pointer" data-istat="${i.id}" title="Mudar status">${st[0]}</button></span></div>
     </article>`; }).join('')}</div>`
     : `<div class="empty"><strong>${S.data.ideas.length ? 'Nada com essa etiqueta' : 'Seu banco de ideias está vazio'}</strong>Anote ganchos que você viu, trends de áudio e roteiros que quer testar.<span class="ex">Exemplo: gancho "Testei por 7 dias e…" com a etiqueta Gancho.</span></div>`}`;
 }
@@ -2188,9 +2191,9 @@ function workBanner(d) {
 }
 
 /* ================= estúdio ================= */
-const STVIEWS = [['briefing', 'Briefing'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
-const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
-function vStudio() { return ({ alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
+const STVIEWS = [['briefing', 'Briefing'], ['posts', 'Meus posts'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
+const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros', 'posts'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
+function vStudio() { return ({ posts: vMyPosts, alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
 function studioUsage() {
   if (window.CRIAHUB_STANDALONE) return '';
   const u = usage(), used = u.studio || 0, max = LIMITS.studio, pct = Math.min(100, Math.round(used / max * 100));
@@ -2453,7 +2456,7 @@ const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar nas suas redes', () => S.data.myposts.length], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
@@ -2572,6 +2575,7 @@ const HELP = {
   'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
+  'estudio.posts': ['Meus posts', 'O planejador das SUAS redes (fora das contas de marca do Tech Canvas): o que vai postar em cada dia, o status de cada post, a legenda e as hashtags prontas pra copiar. Dá pra mandar uma ideia do banco direto pra cá.'],
   'estudio.ideias': ['Ideias', 'Seu banco de ideias: ganchos, roteiros, tendências e referências pra não ficar sem assunto. No topo, a IA cria ideias pro seu perfil a partir do seu nicho e do seu objetivo (Pro).'],
   'estudio.ganchos': ['Ganchos', 'Gancho é a frase dos primeiros segundos que prende a pessoa. Aqui você vê quais tipos deram mais views.'],
   'estudio.erros': ['Erros', 'Os feedbacks que as marcas te deram viram uma checklist pra você conferir antes de gravar e enviar.'],
@@ -4050,6 +4054,16 @@ const FORMS = {
     { k: 'minutes', l: 'Tempo gasto (minutos)', t: 'number', hint: 'Use o cronômetro ou anote aqui. Serve para calcular o valor da sua hora.' },
     { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Roteiro, pontos obrigatórios, link do briefing…' },
   ] },
+  myposts: { title: 'post', fields: [
+    { k: 'title', l: 'Sobre o que é o post', t: 'text', req: 1, ph: 'Ex.: 3 erros de quem está começando no UGC' },
+    { row: [{ k: 'platform', l: 'Rede', t: 'select', o: MP_PLATS.map(x => [x, x]), d: 'Instagram' }, { k: 'format', l: 'Formato', t: 'select', o: MP_FMTS.map(x => [x, x]), d: 'Reels' }] },
+    { row: [{ k: 'date', l: 'Dia de postar', t: 'date' }, { k: 'time', l: 'Horário', t: 'time' }] },
+    { k: 'status', l: 'Status', t: 'select', o: () => MP_ST.map(([k, l]) => [k, l]), d: 'ideia' },
+    { k: 'caption', l: 'Legenda', t: 'textarea', ph: 'O texto que vai junto do post' },
+    { k: 'tags', l: 'Hashtags', t: 'text', ph: '#ugc #creatorbrasileira #rotinadecreator' },
+    { k: 'views', l: 'Views (depois de postado)', t: 'number' },
+    { k: 'notes', l: 'Notas', t: 'textarea', ph: 'Roteiro, áudio, referência…' },
+  ] },
   ideas: { title: 'ideia', fields: [
     { k: 'title', l: 'Gancho ou ideia', t: 'text', req: 1, ph: 'Ex.: "Testei por 7 dias e…"' },
     { row: [{ k: 'tag', l: 'Etiqueta', t: 'select', o: () => [...new Set([...ideaTags(), ...S.data.ideas.map(i => i.tag).filter(Boolean)])].map(x => [x, x]), d: 'Gancho' }, { k: 'status', l: 'Status', t: 'select', o: Object.entries(IDEA_STATUS).map(([k, v]) => [k, v[0]]), d: 'nova' }] },
@@ -4157,7 +4171,7 @@ function openForm(col, id, preset = {}) {
   sheet = { col, id };
   const flds = F.fields.filter(f => !(f.newOnly && id)).map(f => f.row ? `<div class="grid2">${f.row.map(x => fieldHtml(x, obj)).join('')}</div>` : fieldHtml(f, obj)).join('');
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="entity" role="dialog" aria-modal="true" aria-label="${id ? 'Editar' : 'Nova'} ${F.title}">
-    <div class="sh"><h2>${id ? 'Editar' : (['pagamento', 'hábito', 'feedback', 'gasto', 'vídeo'].includes(F.title) ? 'Novo' : 'Nova')} ${F.title}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="sh"><h2>${id ? 'Editar' : (['pagamento', 'hábito', 'feedback', 'gasto', 'vídeo', 'post'].includes(F.title) ? 'Novo' : 'Nova')} ${F.title}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     ${obj.example ? '<div class="sub"><span class="ex">exemplo</span> Este item é de exemplo. Edite ou apague à vontade.</div>' : ''}
     ${flds}
     <div class="foot">${id ? `<button type="button" class="btn danger" data-act="delete">Excluir</button>` : ''}${col === 'deliveries' && id ? (TIMER?.id === id ? '<button type="button" class="btn soft" data-act="tstop">Parar cronômetro</button>' : `<button type="button" class="btn ghost" data-tstart="${id}">Cronômetro</button>`) : ''}<div class="r"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn">Salvar</button></div></div>
@@ -5721,6 +5735,60 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .wc-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.wc-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:color-mix(in oklab, var(--accent,#420725) 38%, var(--surface))}.wc-leg i.lf{background:var(--accent,#420725)}
 .wc-cmp{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .wc-cmp > b{font-size:22px;font-weight:800;color:var(--accent,#420725)}.wc-cmp span{font-size:13.5px}
+</style>`);
+/* ================= Meus posts: planejador das redes da creator (fora das contas do Tech Canvas) ================= */
+const mpSt = k => MP_ST.find(x => x[0] === k) || MP_ST[0];
+const MP_IC = { Instagram: '📸', TikTok: '🎵', YouTube: '▶️', Pinterest: '📌', LinkedIn: '💼', Outra: '•' };
+function mpCard(m) {
+  const st = mpSt(m.status), hasCopy = (m.caption || m.tags);
+  return `<div class="mp${m.status === 'postado' ? ' done' : ''}"><button class="mp-open" data-edit="myposts:${m.id}"><span class="mp-ic" aria-hidden="true">${MP_IC[m.platform] || '•'}</span><span style="min-width:0"><b>${esc(m.title)}</b><small>${esc(m.platform || '')}${m.format ? ' · ' + esc(m.format) : ''}${m.time ? ' · ' + esc(m.time) : ''}${m.status === 'postado' && +m.views ? ' · ' + (+m.views).toLocaleString('pt-BR') + ' views' : ''}</small></span></button>
+    <span class="mp-r">${hasCopy ? `<button class="iconbtn sm" data-mpcopy="${m.id}" aria-label="Copiar legenda e hashtags" title="Copiar legenda e hashtags">📋</button>` : ''}<button class="pill ${st[2]}" data-mpst="${m.id}" title="Toque pra avançar o status">${st[1]}</button></span></div>`;
+}
+function vMyPosts() {
+  const wk = S.f.mpw || 0, t = today(), ws = addDays(weekStart(t), wk * 7), days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+  const L = S.data.myposts, inWk = L.filter(m => m.date && m.date >= ws && m.date <= days[6]);
+  const goal = +S.profile.postGoal || 0, done = inWk.filter(m => m.status === 'postado').length, nodate = L.filter(m => !m.date && m.status !== 'postado');
+  const late = L.filter(m => m.date && m.date < t && m.status !== 'postado');
+  const dl = d => { const x = parse(d), w = x.toLocaleDateString('pt-BR', { weekday: 'long' }); return `${w.charAt(0).toUpperCase() + w.slice(1, w.indexOf('-') > 0 ? w.indexOf('-') : undefined)} ${pad(x.getDate())}/${pad(x.getMonth() + 1)}`; };
+  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">O que você vai postar nas suas redes, dia a dia. (As contas de marca do Tech Canvas ficam em Marcas › Contas.)</div></div><button class="btn" data-mpnew="">${ic('plus')}Novo post</button></div>${studioSeg()}
+  <div class="calnav"><button class="iconbtn" data-mpw="-1" aria-label="Semana anterior">‹</button><h2 style="font-size:17px">${wk === 0 ? 'Esta semana' : wk === 1 ? 'Próxima semana' : `Semana ${fmtD(ws)}`}</h2><button class="iconbtn" data-mpw="1" aria-label="Próxima semana">›</button></div>${wk ? '<button class="link" data-mpw="0" style="align-self:center">Voltar pra esta semana</button>' : ''}
+  <section class="card section" style="gap:8px">${goal ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Posts da semana</span><span class="num">${done} de ${goal}</span></div><div class="bar ${done >= goal ? 'ok' : ''}"><span style="width:${Math.min(100, Math.round(done / goal * 100))}%"></span></div>` : '<b>Quantos posts por semana você quer fazer?</b>'}
+    <div class="chips">${[2, 3, 4, 5, 7, 10, 14].map(n => `<button class="chip" data-mpgoal="${n}" aria-pressed="${goal === n}">${n}</button>`).join('')}</div>
+    ${late.length ? `<div class="sub" style="color:var(--warn)">${late.length} post${late.length > 1 ? 's' : ''} de dias que já passaram ainda não ${late.length > 1 ? 'foram postados' : 'foi postado'}.</div>` : ''}</section>
+  <div class="mp-days">${days.map(d => { const its = sortBy(inWk.filter(m => m.date === d), 'time');
+    return `<section class="mp-day${d === t ? ' today' : ''}"><div class="mp-dh"><b>${dl(d)}${d === t ? ' · hoje' : ''}</b><button class="link" data-mpnew="${d}">+ post</button></div>${its.length ? its.map(mpCard).join('') : '<div class="mp-empty">Nada planejado</div>'}</section>`; }).join('')}</div>
+  ${nodate.length ? `<section class="section"><div class="row-h"><h2>Sem dia ainda</h2><span class="sub">abra e escolha o dia</span></div><div class="mp-list">${nodate.map(mpCard).join('')}</div></section>` : ''}
+  <div class="sub">Ideias salvas viram post com um toque: Estúdio › Ideias › <b>Planejar post</b>.</div>`;
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-mpnew],[data-mpw],[data-mpgoal],[data-mpst],[data-mpcopy],[data-mpidea]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.mpnew !== undefined) { openForm('myposts', null, d.mpnew ? { date: d.mpnew } : {}); return; }
+  if (d.mpw !== undefined) { S.f.mpw = d.mpw === '0' ? 0 : (S.f.mpw || 0) + +d.mpw; render(); return; }
+  if (d.mpgoal) { await saveProfile({ postGoal: +d.mpgoal }); return; }
+  if (d.mpst) { const m = S.data.myposts.find(x => x.id === d.mpst); if (!m) return; const i = MP_ST.findIndex(x => x[0] === (m.status || 'ideia')), nx = MP_ST[(i + 1) % MP_ST.length][0];
+    await put('myposts', { ...m, status: nx, ...(nx === 'postado' && !m.date ? { date: today() } : {}) }); if (nx === 'postado') toast('Postado ✓ Depois anota as views pra acompanhar'); return; }
+  if (d.mpcopy) { const m = S.data.myposts.find(x => x.id === d.mpcopy); if (!m) return; const txt = [m.caption, m.tags].filter(Boolean).join('\n\n'); try { await navigator.clipboard.writeText(txt); toast('Legenda e hashtags copiadas'); } catch (_) { toast('Não consegui copiar'); } return; }
+  if (d.mpidea) { const i = S.data.ideas.find(x => x.id === d.mpidea); if (!i) return; const ex = S.data.myposts.find(m => m.ideaId === i.id);
+    if (ex) { openForm('myposts', ex.id); return; }
+    const id = newId(); await put('myposts', { id, title: i.title, notes: i.notes || '', ideaId: i.id, status: 'ideia', platform: 'Instagram', format: 'Reels', created: new Date().toISOString() });
+    if (i.status === 'nova' || !i.status) await put('ideas', { ...i, status: 'separada' });
+    openForm('myposts', id); toast('Virou post. Escolha o dia ✨'); return; }
+}, true);
+document.head.insertAdjacentHTML('beforeend', `<style>
+.mp-days{display:grid;gap:10px}@media (min-width:900px){.mp-days{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mp-day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px;display:grid;gap:8px}
+.mp-day.today{border-color:var(--accent,#420725);box-shadow:0 0 0 2px color-mix(in oklab, var(--accent,#420725) 14%, transparent)}
+.mp-dh{display:flex;justify-content:space-between;align-items:center}.mp-dh b{font-size:14.5px}
+.mp-empty{font-size:13px;color:var(--muted)}
+.mp-list{display:grid;gap:8px}
+.mp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.mp.done{opacity:.75}
+.mp-open{all:unset;cursor:pointer;display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:center;min-width:0}
+.mp-open b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mp-open small{display:block;font-size:12px;color:var(--muted)}
+.mp-ic{font-size:17px;text-align:center}
+.mp-r{display:flex;gap:6px;align-items:center}.mp-r .pill{border:0;cursor:pointer;white-space:nowrap}
+.mp-r .iconbtn.sm{width:32px;height:32px}.mp-r .iconbtn.sm svg{width:15px;height:15px}
 </style>`);
 connect();
 })();
