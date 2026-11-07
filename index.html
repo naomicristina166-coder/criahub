@@ -1811,7 +1811,7 @@ function payRow(p) {
 }
 
 /* ================= rotina: dia, metas, hábitos, semana ================= */
-const RVIEWS = [['hoje', 'Meu dia'], ['metas', 'Metas'], ['sonhos', 'Sonhos'], ['habitos', 'Hábitos'], ['semana', 'Semana'], ['conquistas', 'Conquistas']];
+const RVIEWS = [['hoje', 'Meu dia'], ['metas', 'Metas'], ['sonhos', 'Vision Board'], ['habitos', 'Hábitos'], ['semana', 'Semana'], ['conquistas', 'Conquistas']];
 const WD = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const WD_LONG = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const HABIT_SUGG = [
@@ -2455,7 +2455,7 @@ Responda em português do Brasil, texto simples sem markdown, com as ideias nume
 /* ================= fácil pra quem está começando: ferramentas que eu uso, boas-vindas, primeiros passos e "o que é isso?" ================= */
 /* cada tela interna é uma ferramenta; a primeira de cada aba é sempre visível. `has` mantém visível quem já tem dados ali */
 const TOOLS = {
-  rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Sonhos', 'Quadro dos sonhos com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
+  rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Vision Board', 'Seus sonhos e metas com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
   estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
@@ -4784,7 +4784,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => { if (e.target && e.target.id === 's_painel') { try { localStorage.setItem('criahub:hidepainel', e.target.checked ? '' : '1'); } catch (_) {} renderShell(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('painelLayer')) closePainel(); });
 var ADMIN_P = new Promise(r => setTimeout(() => adminCheck().then(r, r), 1500));
-/* ================= quadro dos sonhos (Rotina › Sonhos) ================= */
+/* ================= Vision Board (Rotina › Vision Board) ================= */
 const DREAM_AREAS = [['carreira', 'Carreira', '#420725', '#9C2F5E'], ['dinheiro', 'Dinheiro', '#1F5C45', '#3FA37A'], ['viagem', 'Viagem', '#1D4E7A', '#4C93C9'], ['casa', 'Casa', '#7A4A12', '#D08A3A'], ['saude', 'Saúde', '#5B2C7A', '#A06CC8'], ['familia', 'Amor e família', '#8A2440', '#E0607E'], ['pessoal', 'Pessoal', '#3B3B5C', '#7E7EB0']];
 const DREAM_SUGG = ['Viver só de conteúdo', 'Fechar com a marca dos sonhos', 'Viagem dos sonhos', 'Minha casa', 'Reserva de emergência', 'Equipamento novo', 'Trabalhar de onde eu quiser'];
 const dArea = k => DREAM_AREAS.find(a => a[0] === k) || DREAM_AREAS[6];
@@ -4823,7 +4823,7 @@ function dreamCard(x) {
 }
 function vDreams() {
   const all = S.data.dreams, open = all.filter(x => !x.done), done = all.filter(x => x.done);
-  if (!all.length) return `<div class="empty"><strong>Seu quadro dos sonhos começa aqui</strong>Coloque uma imagem pra cada sonho: a viagem, a casa, a marca que você quer fechar. Ver todo dia lembra por que você está criando.
+  if (!all.length) return `<div class="empty"><strong>Seu Vision Board começa aqui</strong>Coloque uma imagem pra cada sonho: a viagem, a casa, a marca que você quer fechar. Ver todo dia lembra por que você está criando.
     <div class="chips" style="justify-content:center;margin-top:12px">${DREAM_SUGG.map(t => `<button type="button" class="chip" data-dream-new="${esc(t)}">${esc(t)}</button>`).join('')}</div>
     <span class="sub" style="display:block;margin-top:12px;font-style:italic">Ex.: "Viagem pra Lisboa" com uma foto da cidade, pra julho de 2027.</span></div>`;
   return `<div class="stats"><div class="stat"><div class="l">Sonhos no quadro</div><div class="v">${open.length}</div></div><div class="stat"><div class="l">Realizados</div><div class="v">${done.length}</div></div></div>
@@ -4866,8 +4866,8 @@ function shrinkImg(file) {
 }
 function dreamFull() {
   const all = [...S.data.dreams.filter(x => !x.done), ...S.data.dreams.filter(x => x.done)];
-  const el = document.createElement('div'); el.className = 'dr-full'; el.id = 'dreamFull'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Quadro dos sonhos');
-  el.innerHTML = `<div class="dr-top"><h2>Quadro dos sonhos${S.profile.name ? ` <em>de ${esc(S.profile.name)}</em>` : ''}</h2><div class="acts"><button class="pri" data-dream-png="">Baixar imagem</button><button data-dream-fullclose="">Fechar</button></div></div><div class="dr-grid">${all.map(dreamCard).join('')}</div>`;
+  const el = document.createElement('div'); el.className = 'dr-full'; el.id = 'dreamFull'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Vision Board');
+  el.innerHTML = `<div class="dr-top"><h2>Vision Board${S.profile.name ? ` <em>de ${esc(S.profile.name)}</em>` : ''}</h2><div class="acts"><button class="pri" data-dream-png="">Baixar imagem</button><button data-dream-fullclose="">Fechar</button></div></div><div class="dr-grid">${all.map(dreamCard).join('')}</div>`;
   document.body.appendChild(el); document.body.style.overflow = 'hidden'; el.querySelector('[data-dream-fullclose]').focus();
 }
 function dreamFullClose() { document.getElementById('dreamFull')?.remove(); document.body.style.overflow = ''; }
@@ -4880,7 +4880,7 @@ async function dreamPng() {
   const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   g.fillStyle = '#420725'; g.fillRect(0, 0, W, H);
   const disp = '"Bricolage Grotesque", system-ui, sans-serif', body = 'Manrope, system-ui, sans-serif';
-  g.fillStyle = '#F4C9D8'; g.font = `800 30px ${body}`; g.fillText('MEU QUADRO DOS SONHOS', 72, 150);
+  g.fillStyle = '#F4C9D8'; g.font = `800 30px ${body}`; g.fillText('MEU VISION BOARD', 72, 150);
   g.fillStyle = '#FFFFFF'; g.font = `800 92px ${disp}`; g.fillText(String(new Date().getFullYear() + (new Date().getMonth() >= 10 ? 1 : 0)), 72, 250);
   if (S.profile.name) { g.fillStyle = '#F4C9D8'; g.font = `800 52px ${disp}`; g.fillText(S.profile.name, 72, 320); }
   const cols = list.length <= 4 ? 2 : 3, rows = Math.ceil(list.length / cols), gap = 24, top = 380, bottom = H - 170;
@@ -4903,7 +4903,7 @@ async function dreamPng() {
   g.fillStyle = '#F4C9D8'; g.font = `800 40px ${disp}`; g.fillText('criahub', 72, H - 92); g.fillStyle = 'rgba(255,255,255,0.7)'; g.font = `600 26px ${body}`; g.fillText('quem cria, se organiza.', 72, H - 54);
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); if (!blob) { toast('Não consegui montar a imagem.'); return; }
   const file = new File([blob], 'quadro-dos-sonhos.png', { type: 'image/png' });
-  try { if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Meu quadro dos sonhos' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Meu Vision Board' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quadro-dos-sonhos.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
   toast('Imagem salva! Dá pra usar de papel de parede 💗');
 }
@@ -4939,8 +4939,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
    Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
 const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
 const FREE_BRANDS = 10;
-const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Quadro dos sonhos', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
-const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Quadro dos sonhos com imagens', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
+const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Vision Board', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
+const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Vision Board com os seus sonhos e metas', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
 window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
@@ -5310,7 +5310,7 @@ var STORIES_DATA = {
   rotina: { name: 'Rotina', slides: [
     ['✅', 'Sua Rotina', 'Seu dia, suas metas, seus hábitos e o balanço da semana. Organiza a sua vida, não só o trabalho.'],
     ['📝', 'Meu dia', 'Escreva até 3 prioridades. Lista curta é lista que fecha. Dá pra colocar horário e tipo: trabalho, pessoal, saúde…'],
-    ['🎯', 'Metas, hábitos e sonhos', 'Metas com número, hábitos como beber água e o Quadro dos sonhos com as suas imagens.'],
+    ['🎯', 'Metas, hábitos e sonhos', 'Metas com número, hábitos como beber água e o Vision Board com as suas imagens.'],
     ['🗓️', 'Semana', 'No fim da semana, veja o que deu certo e replaneje o que ficou pra trás.']] },
   marcas: { name: 'Marcas', slides: [
     ['💼', 'Suas Marcas', 'Cada marca com quem você trabalha: contato, tipo de contrato (ciclo, pacote ou avulso) e quanto ela paga.'],
