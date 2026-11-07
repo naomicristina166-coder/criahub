@@ -1079,6 +1079,7 @@ const money = o => isFx(o) ? `${fmtCur(o.amount, o.currency)}<small class="conv"
 const fxFmt = r => 'R$ ' + (+r || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 const moneyV = (v, c) => CURS[c] ? fmtCur(v, c) : brl(v);
 const ICON = {
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/>',
   painel: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   inicio: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
   marcas: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
@@ -1304,13 +1305,14 @@ function renderShell() {
   setHTML($('#side'), `${LOGO}<div class="tagline">quem cria, se organiza.</div>
     ${TABS.map(([k, l]) => `<button class="nav" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}${l}</button>`).join('')}
     <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar UGC${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
+    <button class="nav" data-chat="1">${ic('chat')}Chat CriaHub</button>
     <button class="nav" data-learn="1">${ic('book')}Aprenda o CriaHub</button>
     <div class="spacer"></div>
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
     ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel admin</button>` : ''}
     <div class="sync">${syncTxt}</div>`);
-  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
+  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
 
@@ -5789,6 +5791,145 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .mp-ic{font-size:17px;text-align:center}
 .mp-r{display:flex;gap:6px;align-items:center}.mp-r .pill{border:0;cursor:pointer;white-space:nowrap}
 .mp-r .iconbtn.sm{width:32px;height:32px}.mp-r .iconbtn.sm svg{width:15px;height:15px}
+</style>`);
+/* ================= Chat CriaHub (Pro): conversa que organiza a rotina e lança as finanças ================= */
+const CH = { open: false, msgs: [], draft: '' };
+try { CH.msgs = JSON.parse(localStorage.getItem('criahub:chat') || '[]').slice(-40); } catch (_) {}
+const chSave = () => { try { localStorage.setItem('criahub:chat', JSON.stringify(CH.msgs.slice(-40))); } catch (_) {} };
+const CH_SUGG = [['🗓️', 'Monta uma rotina pra minha semana'], ['💸', 'Gastei R$ 80 num ring light hoje'], ['💰', 'A marca me pagou R$ 500'], ['📊', 'Quanto entrou e quanto gastei esse mês?'], ['🐷', 'Quanto eu devo guardar por mês?']];
+function chContext() {
+  const t = today(), wk = Array.from({ length: 7 }, (_, i) => addDays(t, i)), mk = monthKey(t), P = S.profile;
+  const tasks = S.data.tasks.filter(x => !x.done && x.date && x.date >= t && x.date <= wk[6]).slice(0, 30).map(x => `- ${x.date}${x.time ? ' ' + x.time : ''}: ${x.title}`).join('\n') || '(nenhuma)';
+  const got = fPays().filter(p => p.paid && monthKey(p.paidAt || p.due || '') === mk).reduce((a, p) => a + brlOf(p), 0) + S.data.extras.filter(x => monthKey(x.date) === mk && x.paid !== false).reduce((a, x) => a + brlOf(x), 0);
+  const pend = fPays().filter(p => !p.paid), pendTot = pend.reduce((a, p) => a + brlOf(p), 0);
+  const exp = S.data.expenses.filter(x => monthKey(x.date) === mk), byCat = {}; exp.forEach(x => { byCat[x.cat || 'Outro'] = (byCat[x.cat || 'Outro'] || 0) + brlOf(x); });
+  const m3 = [1, 2, 3].map(i => { const k = monthKey(addDays(t.slice(0, 8) + '01', -i * 28)); const g = fPays().filter(p => p.paid && monthKey(p.paidAt || p.due || '') === k).reduce((a, p) => a + brlOf(p), 0) + S.data.extras.filter(x => monthKey(x.date) === k && x.paid !== false).reduce((a, x) => a + brlOf(x), 0); const e = S.data.expenses.filter(x => monthKey(x.date) === k).reduce((a, x) => a + brlOf(x), 0); return `${k}: entrou ${brl(g)}, gastou ${brl(e)}`; }).join('; ');
+  return `Hoje: ${t} (${parse(t).toLocaleDateString('pt-BR', { weekday: 'long' })}). Nome: ${P.name || '?'}. Frentes de trabalho: ${fronts().join(', ')}.
+Trabalho fora (${workLabel()}): ${P.workMode ? wk.filter(isWorkDay).join(', ') || 'nenhum dia nesta semana' : 'não tem'}.
+Tarefas abertas dos próximos 7 dias:\n${tasks}
+Hábitos: ${activeHabits().map(h => h.name).join(', ') || 'nenhum'}. Metas: ${S.data.goals.filter(g => !g.doneAt).map(g => `${g.title}${g.kind === 'numero' ? ` (${g.current || 0} de ${g.target} ${g.unit || ''})` : ''}`).join('; ') || 'nenhuma'}.
+Marcas ativas: ${fBrands().filter(b => b.status === 'ativo').map(b => b.name).join(', ') || 'nenhuma'}.
+Pagamentos de marca a receber: ${pend.slice(0, 10).map(p => `${brandName(p.brandId)} ${brl(brlOf(p))}${p.due ? ' venc. ' + p.due : ''}`).join('; ') || 'nenhum'} (total ${brl(pendTot)}).
+Este mês (${mk}): entrou ${brl(got)}; gastos ${brl(exp.reduce((a, x) => a + brlOf(x), 0))}${Object.keys(byCat).length ? ' (' + Object.entries(byCat).map(([k, v]) => `${k} ${brl(v)}`).join(', ') + ')' : ''}. Meses anteriores: ${m3}.
+${P.mei ? 'É MEI (paga DAS todo mês).' : ''}`;
+}
+function chPrompt() {
+  const hist = CH.msgs.slice(-12).map(m => `${m.r === 'u' ? 'CREATOR' : 'CRIAHUB'}: ${m.t}`).join('\n');
+  return `Você é o Chat CriaHub, assistente de organização de rotina e de finanças de uma creator de UGC brasileira, dentro do app CriaHub. Fale como uma amiga organizada: português do Brasil, simples, acolhedor, frases curtas, sem markdown, sem asteriscos.
+
+DADOS DELA (use para responder; não invente nada além disso):
+${chContext()}
+
+CATEGORIAS DE GASTO: ${EXP_CATS.join(', ')}.
+TIPOS DE OUTRA RENDA: ${EXTRA_TYPES.join(', ')}.
+CATEGORIAS DE TAREFA: trabalho, pessoal, saude, estudos, casa, outro.
+
+O QUE VOCÊ FAZ
+1. Finanças: quando ela contar um gasto ou um dinheiro que entrou, proponha a ação certa. Nunca invente valor; se faltar o valor, pergunte. Data padrão: hoje. "A marca X pagou / caiu o pagamento da X" = tipo "recebi" com a marca. Dinheiro de afiliado, TikTok Shop, freela etc. = tipo "renda". Perguntas sobre os números dela: responda com os dados acima, fazendo as contas certinho.
+2. Quanto guardar e quando investir: dê uma orientação educativa e prática com base nos números dela (reserva de emergência de 3 a 6 meses de gastos, separar o DAS se for MEI, um percentual pra equipamento e cursos quando a renda for estável). Deixe claro, em 1 frase, que é uma orientação geral e não consultoria de investimento. Nunca indique produto financeiro específico.
+3. Rotina: quando ela pedir uma rotina ou contar como é a vida dela, monte uma rotina realista pros próximos 7 dias respeitando os dias de trabalho fora (dias mais leves), as tarefas que já existem e as metas. Proponha no máximo 15 tarefas novas, com dia e horário quando fizer sentido. Pode sugerir até 3 hábitos e até 2 metas, se ela pedir ou se fizer muito sentido.
+4. Se a mensagem for vaga, faça UMA pergunta curta antes de propor ações.
+
+RESPONDA APENAS COM JSON:
+{"resposta":"o que você diz pra ela (até 5 frases)","acoes":[
+ {"tipo":"gasto","desc":"...","valor":0,"categoria":"uma das categorias","data":"AAAA-MM-DD"},
+ {"tipo":"recebi","marca":"nome da marca como ela falou","valor":0,"data":"AAAA-MM-DD"},
+ {"tipo":"renda","nome":"...","tipoRenda":"um dos tipos","valor":0,"data":"AAAA-MM-DD"},
+ {"tipo":"tarefa","titulo":"...","data":"AAAA-MM-DD","hora":"HH:MM ou vazio","categoria":"uma das categorias de tarefa"},
+ {"tipo":"habito","nome":"..."},
+ {"tipo":"meta","titulo":"...","alvo":0,"unidade":"...","prazo":"AAAA-MM-DD ou vazio","dinheiro":false}
+]}
+Use "acoes": [] quando não houver nada pra lançar. Valores em reais, como número (ex.: 80.5).
+
+CONVERSA ATÉ AGORA:
+${hist}`;
+}
+const chMoney = v => brl(+v || 0);
+function chActLabel(a) {
+  if (a.tipo === 'gasto') return ['💸', `Gasto: ${a.desc || 'sem descrição'}`, `${chMoney(a.valor)} · ${a.categoria || 'Outro'} · ${fmtD(a.data || today())}`];
+  if (a.tipo === 'recebi') return ['💰', `Recebi de ${a.marca || 'marca'}`, `${chMoney(a.valor)} · ${fmtD(a.data || today())}`];
+  if (a.tipo === 'renda') return ['🪙', `Outra renda: ${a.nome || ''}`, `${chMoney(a.valor)} · ${a.tipoRenda || 'Outro'} · ${fmtD(a.data || today())}`];
+  if (a.tipo === 'tarefa') return ['✅', a.titulo || 'Tarefa', `${fmtD(a.data || today())}${a.hora ? ' · ' + a.hora : ''}${a.categoria ? ' · ' + a.categoria : ''}`];
+  if (a.tipo === 'habito') return ['🌱', `Hábito: ${a.nome || ''}`, 'Todo dia, em Rotina › Hábitos'];
+  if (a.tipo === 'meta') return ['🎯', `Meta: ${a.titulo || ''}`, `${a.alvo ? (a.dinheiro ? chMoney(a.alvo) : `${a.alvo} ${a.unidade || ''}`) : ''}${a.prazo ? ' até ' + fmtD(a.prazo) : ''}`];
+  return ['•', a.tipo, ''];
+}
+const chDate = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || '')) ? d : today();
+async function chApply(a) {
+  const now = new Date().toISOString(), v = Math.round((+a.valor || 0) * 100) / 100;
+  if (a.tipo === 'gasto') { if (!v) return 'sem valor'; await put('expenses', { id: newId(), desc: String(a.desc || 'Gasto').slice(0, 120), cat: EXP_CATS.includes(a.categoria) ? a.categoria : 'Outro', amount: v, currency: 'BRL', date: chDate(a.data), created: now }); return 'Gasto lançado em Finanças › Gastos'; }
+  if (a.tipo === 'recebi') { if (!v) return 'sem valor'; const nm = String(a.marca || '').toLowerCase().trim(), b = nm && S.data.brands.find(x => String(x.name).toLowerCase() === nm) || (nm && S.data.brands.find(x => String(x.name).toLowerCase().includes(nm) || nm.includes(String(x.name).toLowerCase())));
+    if (b) { const pend = S.data.payments.filter(p => p.brandId === b.id && !p.paid).sort((p1, p2) => Math.abs(brlOf(p1) - v) - Math.abs(brlOf(p2) - v) || String(p1.due).localeCompare(String(p2.due)))[0];
+      if (pend && Math.abs(brlOf(pend) - v) <= Math.max(1, v * 0.05)) { await put('payments', { ...pend, paid: true, paidAt: chDate(a.data) }); return `Pagamento de ${b.name} marcado como recebido`; }
+      await put('payments', { id: newId(), brandId: b.id, desc: `${b.name}: pagamento`, amount: v, currency: 'BRL', due: chDate(a.data), paid: true, paidAt: chDate(a.data), created: now }); return `Pagamento de ${b.name} lançado como recebido`; }
+    await put('extras', { id: newId(), name: String(a.marca || 'Pagamento').slice(0, 80), type: 'Outro', amount: v, currency: 'BRL', date: chDate(a.data), paid: true, created: now }); return 'Lançado em Outras rendas (não achei essa marca cadastrada)'; }
+  if (a.tipo === 'renda') { if (!v) return 'sem valor'; await put('extras', { id: newId(), name: String(a.nome || 'Renda').slice(0, 80), type: EXTRA_TYPES.includes(a.tipoRenda) ? a.tipoRenda : 'Outro', amount: v, currency: 'BRL', date: chDate(a.data), paid: true, created: now }); return 'Lançado em Outras rendas'; }
+  if (a.tipo === 'tarefa') { const tt = ['trabalho', 'pessoal', 'saude', 'estudos', 'casa', 'outro'].includes(a.categoria) ? a.categoria : 'pessoal'; await put('tasks', { id: newId(), title: String(a.titulo || 'Tarefa').slice(0, 140), date: chDate(a.data), time: /^\d{2}:\d{2}$/.test(a.hora || '') ? a.hora : '', ttype: tt, done: false, created: now }); return 'Tarefa na sua Rotina'; }
+  if (a.tipo === 'habito') { await put('habits', { id: newId(), name: String(a.nome || 'Hábito').slice(0, 60), kind: 'check', remind: '0', active: true, created: now }); return 'Hábito em Rotina › Hábitos'; }
+  if (a.tipo === 'meta') { await put('goals', { id: newId(), title: String(a.titulo || 'Meta').slice(0, 120), kind: +a.alvo ? 'numero' : 'check', target: +a.alvo || 1, unit: String(a.unidade || ''), current: 0, deadline: /^\d{4}-\d{2}-\d{2}$/.test(a.prazo || '') ? a.prazo : '', money: !!a.dinheiro, created: now }); return 'Meta em Rotina › Metas'; }
+  return 'ok';
+}
+function chRender() {
+  let el = document.getElementById('chatLayer'); if (!CH.open) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'chatLayer'; el.className = 'chat'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Chat CriaHub'); document.body.appendChild(el); }
+  const pro = !window.criahubIsPro || window.criahubIsPro(), busy = S.ct.busy === 'chat';
+  const msgs = CH.msgs.map((m, i) => m.r === 'u' ? `<div class="ch-m u">${esc(m.t)}</div>` : `<div class="ch-m a">${esc(m.t).replace(/\n/g, '<br>')}${(m.acts || []).length ? `<div class="ch-acts">${m.acts.map((a, j) => { const [e, t1, t2] = chActLabel(a); return `<div class="ch-act ${a.done ? 'done' : a.skip ? 'skip' : ''}"><span class="ch-e" aria-hidden="true">${e}</span><span style="min-width:0"><b>${esc(t1)}</b><small>${esc(a.done ? a.done : a.skip ? 'Ignorado' : t2)}</small></span>${a.done || a.skip ? '' : `<span class="ch-ab"><button class="btn sm ch-ok" data-chok="${i}|${j}" aria-label="Confirmar">✓</button><button class="iconbtn sm" data-chno="${i}|${j}" aria-label="Ignorar">${ic('x')}</button></span>`}</div>`; }).join('')}${m.acts.filter(a => !a.done && !a.skip).length > 1 ? `<button class="btn sm soft" data-chall="${i}">Confirmar tudo (${m.acts.filter(a => !a.done && !a.skip).length})</button>` : ''}</div>` : ''}</div>`).join('');
+  el.innerHTML = `<div class="ch-top"><div><b>Chat CriaHub ✨</b><small>Sua rotina e o seu dinheiro, conversando</small></div>${CH.msgs.length ? '<button class="link" data-chclear="1">Limpar</button>' : ''}<button class="iconbtn" data-chclose="1" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="ch-body" id="chBody">${CH.msgs.length ? '' : `<div class="ch-hi"><b>Oi${S.profile.name ? ', ' + esc(String(S.profile.name).split(' ')[0]) : ''}! 💬</b><span>Me conta como é a sua rotina que eu monto a sua semana. Ou me fala o que gastou e o que entrou que eu já lanço nas suas Finanças, sem formulário.</span></div>
+      <div class="ch-sugg">${CH_SUGG.map(([e, t]) => `<button class="chip" data-chsugg="${esc(t)}">${e} ${esc(t)}</button>`).join('')}</div>`}${msgs}${busy ? '<div class="ch-m a typing"><i></i><i></i><i></i></div>' : ''}${S.ct.err && S.ct.chErr ? `<div class="err">${esc(S.ct.err)}</div>` : ''}</div>
+    ${pro ? `<form class="ch-in" id="chForm"><textarea id="chText" rows="1" maxlength="1200" placeholder="Escreve aqui… ex.: gastei 45 de uber pra gravar" aria-label="Mensagem">${esc(CH.draft)}</textarea><button class="btn" ${busy ? 'disabled' : ''} aria-label="Enviar">Enviar</button></form>`
+      : `<div class="ch-pro"><b>O Chat CriaHub é do plano Pro ✨</b><span>Converse pra montar a sua rotina e lançar gastos e pagamentos sem formulário.</span><button class="btn" data-chpro="1">Conhecer o Pro</button></div>`}`;
+  const b = document.getElementById('chBody'); if (b) b.scrollTop = b.scrollHeight;
+}
+async function chSend(text) {
+  text = String(text || '').trim(); if (!text || S.ct.busy) return;
+  CH.msgs.push({ r: 'u', t: text.slice(0, 1200) }); CH.draft = ''; S.ct.chErr = false; chSave(); chRender();
+  let out = null; await gated('msg', async () => { out = await askJson('chat', chPrompt()); });
+  if (out && (out.resposta || (out.acoes || []).length)) {
+    const acts = (Array.isArray(out.acoes) ? out.acoes : []).filter(a => a && ['gasto', 'recebi', 'renda', 'tarefa', 'habito', 'meta'].includes(a.tipo)).slice(0, 20);
+    CH.msgs.push({ r: 'a', t: String(out.resposta || 'Separei isso aqui pra você confirmar:').slice(0, 2000), acts }); chSave();
+  } else S.ct.chErr = true;
+  chRender(); setTimeout(() => document.getElementById('chText')?.focus(), 50);
+}
+function chOpen(text) { CH.open = true; S.ct.chErr = false; chRender(); if (text) chSend(text); else setTimeout(() => document.getElementById('chText')?.focus(), 80); }
+window.criahubOpenChat = chOpen;
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-chat],[data-chclose],[data-chclear],[data-chsugg],[data-chok],[data-chno],[data-chall],[data-chpro]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+  if (d.chat) { if (sheet) closeForm(); chOpen(); return; }
+  if (d.chclose) { CH.open = false; chRender(); return; }
+  if (d.chclear) { CH.msgs = []; chSave(); chRender(); return; }
+  if (d.chpro) { CH.open = false; chRender(); if (window.criahubOpenPro) window.criahubOpenPro('ia'); return; }
+  if (d.chsugg) { const x = d.chsugg; if (/^Gastei|^A marca/.test(x)) { CH.draft = x; chRender(); const ta = document.getElementById('chText'); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } } else chSend(x); return; }
+  const one = async (i, j) => { const a = CH.msgs[i] && CH.msgs[i].acts[j]; if (!a || a.done || a.skip) return; try { a.done = await chApply(a); } catch (_) { a.done = 'Não consegui salvar. Tenta de novo.'; } };
+  if (d.chok) { const [i, j] = d.chok.split('|').map(Number); t.disabled = true; await one(i, j); chSave(); chRender(); toast('Feito ✓'); return; }
+  if (d.chno) { const [i, j] = d.chno.split('|').map(Number); const a = CH.msgs[i] && CH.msgs[i].acts[j]; if (a) a.skip = true; chSave(); chRender(); return; }
+  if (d.chall) { const i = +d.chall; t.disabled = true; for (let j = 0; j < CH.msgs[i].acts.length; j++) await one(i, j); chSave(); chRender(); toast('Tudo lançado ✓'); return; }
+}, true);
+document.addEventListener('submit', e => { if (e.target.id !== 'chForm') return; e.preventDefault(); e.stopImmediatePropagation(); chSend(document.getElementById('chText').value); }, true);
+document.addEventListener('input', e => { if (e.target.id !== 'chText') return; CH.draft = e.target.value; e.target.style.height = 'auto'; e.target.style.height = Math.min(140, e.target.scrollHeight) + 'px'; });
+document.addEventListener('keydown', e => { if (e.target.id === 'chText' && e.key === 'Enter' && !e.shiftKey && matchMedia('(pointer:fine)').matches) { e.preventDefault(); chSend(e.target.value); } if (e.key === 'Escape' && CH.open) { CH.open = false; chRender(); } });
+document.head.insertAdjacentHTML('beforeend', `<style>
+.chat{position:fixed;inset:0;z-index:140;background:var(--bg);display:flex;flex-direction:column;max-width:720px;margin:0 auto;padding-top:env(safe-area-inset-top,0px)}
+@media (min-width:760px){.chat{inset:16px auto 16px 50%;transform:translateX(-50%);width:min(720px,calc(100vw - 32px));border-radius:22px;box-shadow:0 20px 60px rgb(0 0 0 / .25);border:1px solid var(--line)}}
+.ch-top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ch-top > div{flex:1;min-width:0}.ch-top b{display:block;font-size:17px}.ch-top small{display:block;font-size:12.5px;color:var(--muted)}
+.ch-body{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.ch-hi{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:4px}.ch-hi span{color:var(--muted);font-size:14.5px}
+.ch-sugg{display:flex;flex-wrap:wrap;gap:6px}
+.ch-m{max-width:88%;padding:10px 13px;border-radius:18px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.ch-m.u{align-self:flex-end;background:var(--accent,#420725);color:#fff;border-bottom-right-radius:6px}
+.ch-m.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px;white-space:normal}
+.ch-acts{display:grid;gap:6px;margin-top:10px}
+.ch-act{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.ch-act b{display:block;font-size:14px}.ch-act small{display:block;font-size:12px;color:var(--muted)}
+.ch-act.done{border-color:color-mix(in oklab, var(--ok,#1F8A5B) 40%, var(--line))}.ch-act.done small{color:var(--ok,#1F8A5B);font-weight:700}.ch-act.skip{opacity:.55}
+.ch-e{font-size:18px;text-align:center}.ch-ok{min-width:40px;padding:0 10px;font-size:16px}.ch-ab{display:flex;gap:4px;align-items:center}.ch-ab .iconbtn.sm{width:32px;height:32px}
+.ch-in{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
+.ch-in textarea{flex:1;resize:none;min-height:44px;max-height:140px;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--surface);color:var(--fg);font:inherit;font-size:16px}
+.ch-pro{padding:16px;border-top:1px solid var(--line);display:grid;gap:6px;text-align:center}.ch-pro span{color:var(--muted);font-size:14px}
+.typing{display:flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:chb 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes chb{0%,80%,100%{opacity:.3}40%{opacity:1}}
 </style>`);
 connect();
 })();
