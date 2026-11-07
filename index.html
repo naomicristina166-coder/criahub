@@ -3150,7 +3150,7 @@ function acBrandBar() {
 }
 function vAccounts() {
   const accs = S.data.accounts;
-  if (accs.length) { const bf = acBrandSel(); return acBrandBar() + warmPanel(bf) + top3Card('contas') + vAccountsGrid(bf); }
+  if (accs.length) { const bf = acBrandSel(); return acBrandBar() + warmPanel(bf) + warmChart(bf) + top3Card('contas') + vAccountsGrid(bf); }
   if (!accs.length) return `<div class="empty"><strong>Cadastre as contas que você administra</strong>TikTok, Instagram, YouTube… cada perfil ligado à marca. Aí eu monto a grade da semana: qual vídeo foi postado em qual conta, a meta de posts e as views de cada perfil.<button class="btn sm" data-new="accounts">${ic('plus')}Nova conta</button></div>`;
   return vAccountsGrid();
 }
@@ -5667,6 +5667,60 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .mt-out{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
 .dv:has(.dv-file){grid-template-columns:52px minmax(0,1fr) auto auto}
 .dv-file{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);color:var(--muted);flex:none}.dv-file svg{width:16px;height:16px}
+</style>`);
+/* ================= Gráfico do aquecimento (Pro): minutos por dia, dias completos, sequência e efeito nas views ================= */
+function warmChart(bf) {
+  if (proLocked('marcas.contas')) return '';
+  const byB = bf && bf !== 'todas', accs = S.data.accounts.filter(a => !byB || acKey(a) === bf); if (!accs.length) return '';
+  const N = S.f.wcR === 30 ? 30 : 14, t = today(), ids = new Set(accs.map(a => a.id)), per = wPlan().sessions.length;
+  const logs = S.data.warm.filter(x => ids.has(x.aid) && x.slot !== 'post');
+  const actOn = d => accs.filter(a => (a.phase || 'ativa') !== 'pausada' && (!a.created || String(a.created).slice(0, 10) <= d)).length || accs.length;
+  const day = d => { const L = logs.filter(x => x.date === d); return { d, mins: L.reduce((s, x) => s + (+x.mins || 0), 0), n: L.filter(x => x.slot !== 'pos' && x.slot !== 'pre').length, need: actOn(d) * per }; };
+  const days = Array.from({ length: N }, (_, i) => day(addDays(t, i - N + 1)));
+  if (!logs.length) return `<section class="card section wc"><div class="row-h"><h2>Seu aquecimento</h2></div><div class="sub">Quando você aquecer pelo cronômetro, aparece aqui quantos minutos foram por dia, os dias completos e a sua sequência.</div></section>`;
+  const full = x => x.need && x.n >= x.need;
+  let streak = 0; for (let i = days.length - 1 - (full(days[days.length - 1]) ? 0 : 1); i >= 0 && full(days[i]); i--) streak++;
+  const total = days.reduce((s, x) => s + x.mins, 0), nFull = days.filter(full).length, max = Math.max(15, ...days.map(x => x.mins));
+  /* views: posts dessas contas no dia de aquecimento completo x nos outros */
+  const fullSet = new Set(); for (let i = 0; i < 90; i++) { const d = addDays(t, -i), x = day(d); if (full(x)) fullSet.add(d); }
+  const posts = []; S.data.deliveries.forEach(dl => Object.entries(postsOf(dl)).forEach(([aid, p]) => { if (ids.has(aid) && p && p.date && +p.views > 0 && p.date >= addDays(t, -90)) posts.push({ d: p.date, v: +p.views }); }));
+  const A = posts.filter(p => fullSet.has(p.d)), B = posts.filter(p => !fullSet.has(p.d)), avg = L => Math.round(L.reduce((s, p) => s + p.v, 0) / L.length);
+  const cmp = A.length >= 3 && B.length >= 3 ? (() => { const a = avg(A), b = avg(B), pct = b ? Math.round((a - b) / b * 100) : 0;
+      return `<div class="wc-cmp"><b>${pct > 0 ? `+${pct}%` : pct < 0 ? `${pct}%` : 'Igual'}</b><span>Nos dias de aquecimento completo, seus posts tiveram em média <b>${a.toLocaleString('pt-BR')}</b> views, contra <b>${b.toLocaleString('pt-BR')}</b> nos outros dias (${A.length + B.length} posts, últimos 90 dias).</span></div>`; })()
+    : `<div class="sub">Registre as views dos posts na grade abaixo e, com uns 6 posts, eu comparo os dias de aquecimento completo com os outros.</div>`;
+  const W = 300, H = 120, gap = N > 20 ? 2 : 4, bw = (W - gap * (N - 1)) / N, sel = S.f.wcSel && days.find(x => x.d === S.f.wcSel) || days[days.length - 1];
+  const bars = days.map((x, i) => { const h = x.mins ? Math.max(4, Math.round(x.mins / max * (H - 8))) : 0, X = (i * (bw + gap)).toFixed(1), r = Math.min(4, bw / 2);
+    return `<g class="wc-b${x.d === sel.d ? ' on' : ''}${x.d === t ? ' today' : ''}" data-wcd="${x.d}" role="button" tabindex="0" aria-label="${esc(fmtD(x.d))}: ${x.mins} minutos, ${x.n} de ${x.need} aquecimentos"><rect x="${X}" y="0" width="${bw.toFixed(1)}" height="${H}" fill="transparent"/>${h ? `<path d="M${X},${H} v${-(h - r)} q0,${-r} ${r},${-r} h${(bw - 2 * r).toFixed(1)} q${r},0 ${r},${r} v${h - r} z" class="${full(x) ? 'full' : ''}"/>` : `<rect x="${X}" y="${H - 2}" width="${bw.toFixed(1)}" height="2" class="zero"/>`}</g>`; }).join('');
+  const lab = d => parse(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  return `<section class="card section wc" style="gap:12px"><div class="row-h"><h2>Seu aquecimento</h2><div class="chips"><button class="chip" data-wcr="14" aria-pressed="${N === 14}">14 dias</button><button class="chip" data-wcr="30" aria-pressed="${N === 30}">30 dias</button></div></div>
+    <div class="wc-k"><div><b class="num">${total.toLocaleString('pt-BR')}</b><span>minutos aquecidos</span></div><div><b class="num">${nFull}<small> de ${N}</small></b><span>dias completos</span></div><div><b class="num">${streak}${streak ? ' 🔥' : ''}</b><span>${streak === 1 ? 'dia seguido' : 'dias seguidos'}</span></div></div>
+    <div class="wc-plot"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Minutos de aquecimento por dia nos últimos ${N} dias"><line x1="0" x2="${W}" y1="${H - 0.5}" y2="${H - 0.5}" class="base"/>${bars}</svg>
+      <div class="wc-x"><span>${lab(days[0].d)}</span><span>hoje</span></div></div>
+    <div class="wc-tip" aria-live="polite"><b>${esc(sel.d === t ? 'Hoje' : parse(sel.d).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }))}</b> · ${sel.mins} min · ${sel.n} de ${sel.need} aquecimentos${full(sel) ? ' ✓ completo' : ''}</div>
+    <div class="wc-leg"><span><i class="lf"></i>Dia completo (${per} horários em todas as contas)</span><span><i></i>Dia incompleto</span></div>
+    ${cmp}</section>`;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-wcr],[data-wcd]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.wcr) { S.f.wcR = +t.dataset.wcr; S.f.wcSel = ''; } else S.f.wcSel = t.dataset.wcd; render();
+}, true);
+document.addEventListener('keydown', e => { const t = e.target.closest && e.target.closest('[data-wcd]'); if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); S.f.wcSel = t.dataset.wcd; render(); } });
+document.head.insertAdjacentHTML('beforeend', `<style>
+.wc-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wc-k div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.wc-k b{font-size:22px;font-weight:800;line-height:1.1}.wc-k b small{font-size:13px;opacity:.7}.wc-k span{font-size:12px;color:var(--muted)}
+.wc-plot svg{width:100%;height:130px;display:block;overflow:visible}
+.wc-b path,.wc-b rect.zero{fill:color-mix(in oklab, var(--accent,#420725) 38%, var(--surface))}
+.wc-b path.full{fill:var(--accent,#420725)}
+.wc-b.on path,.wc-b.on rect.zero{fill:#FF5C8A}
+.wc-b{cursor:pointer;outline:none}.wc-b:focus-visible rect:first-child{stroke:var(--accent,#420725);stroke-width:1}
+.wc-plot .base{stroke:var(--line);stroke-width:1}
+.wc-x{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:4px}
+.wc-tip{font-size:13.5px;color:var(--fg)}
+.wc-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.wc-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:color-mix(in oklab, var(--accent,#420725) 38%, var(--surface))}.wc-leg i.lf{background:var(--accent,#420725)}
+.wc-cmp{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.wc-cmp > b{font-size:22px;font-weight:800;color:var(--accent,#420725)}.wc-cmp span{font-size:13.5px}
 </style>`);
 connect();
 })();
