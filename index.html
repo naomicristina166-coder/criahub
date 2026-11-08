@@ -272,6 +272,7 @@ window.CRIAHUB_CONFIG = {
   });
   async function callAI(prompt, opts, json) {
     opts = opts || {};
+    if (window.criahubPlanWait) { const w = window.criahubPlanWait(); if (w) await w; }
     if (window.criahubIsPro && !window.criahubIsPro()) { if (window.criahubOpenPro) setTimeout(() => window.criahubOpenPro('ia'), 0); throw aiErr('pro_only'); }
     const { data } = await sb.auth.getSession(); const s = data && data.session; if (!s) throw aiErr('session_expired');
     const images = opts.images && opts.images.length ? await Promise.all([...opts.images].slice(0, 5).map(toImg)) : [];
@@ -1210,6 +1211,7 @@ async function connect() {
     const base = db.doc(`data/users/${uid}/profile`);
     remote = { base };
     S.mode = 'remote';
+    setTimeout(() => { if (window.criahubPlanLoad) window.criahubPlanLoad(); }, 0);
     setTimeout(() => { mailLoad(); if (mailHash) { mailHash = false; openMail(); } }, 0);
     COLS.forEach(k => S.data[k] = []); S.profile = {};
     const seen = new Set(); const need = COLS.length + 1;
@@ -1358,6 +1360,24 @@ function dvRow(d) {
 }
 
 /* ================= painel do Início: 4 números do dia, sem excesso ================= */
+/* a Início de quem acabou de chegar: um card pra cada coisa que ela escolheu organizar, sem dado inventado */
+const homeShowsBrands = () => { const fs = myFocus(), k = arr(S.profile.obKinds); return !fs.length || fs.includes('marcas') || k.includes('ugc') || k.includes('canvas') || fDeliv().length > 0; };
+function homeStart() {
+  const fs = myFocus(), C = {
+    rotina: ['🗓️', 'Sua rotina', 'Escreva a primeira tarefa de hoje e crie um hábito de cuidado, como beber água.', 'data-rview="hoje"', 'Planejar meu dia'],
+    marcas: ['🤝', 'Suas marcas', 'Cadastre a marca com que você trabalha, o contrato e as entregas com prazo.', 'data-new="brands"', 'Adicionar primeira marca'],
+    dinheiro: ['💸', 'Seu dinheiro', 'Anote o que entrou e o que saiu no mês, e descubra quanto cobrar por vídeo.', 'data-new="extras"', 'Anotar uma renda'],
+  };
+  return `<div class="welcome"><h2>Seu CriaHub começa aqui</h2><p>Montei a sua Início com o que você escolheu organizar. O resto fica nas abas, quando você precisar.</p></div>
+    <div class="hs-g">${fs.map(f => { const [e, h, d, a, b] = C[f]; return `<div class="card hs-c"><span class="hs-e" aria-hidden="true">${e}</span><b>${h}</b><span class="sub">${d}</span><button class="btn sm" ${a}>${b}</button></div>`; }).join('')}</div>
+    ${homeWhatsNew()}${homeNews()}`;
+}
+(() => { const st = document.createElement('style'); st.textContent = `
+.hs-g{display:grid;gap:10px}
+.hs-c{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.hs-e{font-size:22px}
+@media (min-width:700px){.hs-g{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}}
+`; document.head.appendChild(st); })();
 function homePanel(upcoming, toReceive, gotMonth) {
   const t = today(), list = tasksOn(t), done = list.filter(x => x.done).length, wk = addDays(t, 7);
   const week = upcoming.filter(d => d.due && d.due <= wk), next = upcoming[0];
@@ -1367,11 +1387,13 @@ function homePanel(upcoming, toReceive, gotMonth) {
   if (!four) { const hs = activeHabits(); if (hs.length) { const ok = hs.filter(h => hDone(h, t)).length; four = { l: 'Hábitos', v: `${ok}<small> de ${hs.length}</small>`, sub: ok === hs.length ? 'todos feitos ✨' : 'cuidar de você também conta', bar: pct(ok, hs.length), a: 'data-rview="habitos"' }; } }
   if (!four) { const n = S.data.ideas.filter(i => (i.status || 'nova') === 'nova').length; four = { l: 'Ideias novas', v: String(n), sub: n ? 'esperando pra virar vídeo' : 'anote a próxima', a: 'data-tab="ideias"' }; }
   const tile = x => `<button class="ph-t" ${x.a}><span class="ph-l">${x.l}</span><span class="ph-v num">${x.v}</span>${x.bar != null ? `<span class="ph-bar"><i style="width:${x.bar}%"></i></span>` : ''}<span class="ph-s">${esc(x.sub)}</span></button>`;
-  const T = [
+  const fs = myFocus(), T0 = [
     { l: 'Tarefas de hoje', v: list.length ? `${done}<small> de ${list.length}</small>` : '0', sub: !list.length ? 'anote a prioridade' : done === list.length ? 'tudo feito ✨' : `${list.length - done} pra fazer`, bar: list.length ? pct(done, list.length) : null, a: 'data-rview="hoje"' },
     { l: 'Entregas da semana', v: String(week.length), sub: next ? `próxima${next.due ? ' ' + fmtD(next.due) : ''}: ${String(next.title || '').slice(0, 30)}` : 'nenhuma pendente', a: 'data-tab="agenda"' },
     { l: 'A receber', v: brl(toReceive).replace(/,00$/, ''), sub: `${brl(gotMonth).replace(/,00$/, '')} recebido no mês`, a: 'data-fview="marcas"' },
     four];
+  /* com foco escolhido nas boas-vindas, o painel mostra só o que ela quis organizar */
+  const T = fs.length ? T0.filter((x, i) => [fs.includes('rotina'), fs.includes('marcas') || week.length > 0, fs.includes('dinheiro') || toReceive > 0, true][i]) : T0;
   return `<section class="ph" aria-label="Seu painel de hoje"><div class="ph-h"><span>Seu painel de hoje</span></div><div class="ph-g">${T.map(tile).join('')}</div></section>`;
 }
 (() => { const st = document.createElement('style'); st.textContent = `
@@ -1409,7 +1431,7 @@ function vHome() {
   ${homePerso()}
   ${!name ? `<div class="card section"><div><b>Como você quer ser chamada?</b><div class="sub">Seu nome aparece na saudação.</div></div>
     <form class="namecard" data-form="name"><input type="text" id="nm" name="name" placeholder="Seu nome" autocomplete="given-name" required><button class="btn">Salvar</button></form></div>` : ''}
-  ${isEmpty() ? `<div class="welcome">
+  ${isEmpty() && myFocus().length ? homeStart() : isEmpty() ? `<div class="welcome">
       <h2>Seu painel de creator começa aqui</h2>
       <p>Cadastre as marcas com que você trabalha, os ciclos de cada contrato, suas entregas e quanto falta receber. Tudo num lugar só.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-new="brands">${ic('plus')}Adicionar primeira marca</button><button class="btn ghost" data-act="examples">Ver com exemplos</button></div>
@@ -1417,10 +1439,10 @@ function vHome() {
   ${nudgeHtml()}
   ${homePend()}
   ${homeDay()}
-  <section class="section">
+  ${homeShowsBrands() ? `<section class="section">
     <div class="row-h"><h2>Próximas entregas</h2><button class="link" data-tab="agenda">Ver agenda</button></div>
     ${upcoming.length ? `<div class="list">${upcoming.slice(0, 2).map(dvRow).join('')}</div>` : `<div class="empty"><strong>Nenhuma entrega pendente</strong>Quando fechar um vídeo com uma marca, cadastre aqui com o prazo.<span class="ex">Exemplo: 3 Reels pra marca de skincare, prazo na sexta.</span><button class="btn sm" data-new="deliveries" style="margin-top:10px">${ic('plus')}Nova entrega</button></div>`}
-  </section>
+  </section>` : ''}
   ${idea ? `<section class="section"><div class="row-h"><h2>Ideia do dia</h2><button class="link" data-tab="ideias">Banco de ideias</button></div>
     <div class="card idea-day"><div class="q">${esc(idea.title)}</div>${idea.notes ? `<div class="sub" style="margin-top:6px">${esc(idea.notes)}</div>` : ''}</div></section>` : ''}
   ${homeWhatsNew()}
@@ -1462,7 +1484,7 @@ function vNews() {
     ${ed.headline ? `<h2>${esc(ed.headline)}</h2>` : ''}</div>
   <div class="chips">${['todas', 'Brasil', 'Mundo', ...topics].map(k => `<button class="chip" data-newsf="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
   ${items.length ? `<div class="list" style="gap:12px">${items.map(newsCard).join('')}</div>` : `<div class="empty">Nada nesse filtro hoje.</div>`}
-  ${eds.length > 1 ? `<section class="section"><div class="row-h"><h2>Edições anteriores</h2></div><div class="chips">${eds.map(e => `<button class="chip" data-newsday="${esc(e.date)}" aria-pressed="${e.date === day}">${esc(fmtD(e.date))}</button>`).join('')}</div></section>` : ''}
+  ${eds.length > 1 ? `<details class="section news-old" ${day !== eds[0].date ? 'open' : ''}><summary>Ver edições anteriores</summary><div class="chips" style="margin-top:10px">${eds.map(e => `<button class="chip" data-newsday="${esc(e.date)}" aria-pressed="${e.date === day}">${esc(fmtD(e.date))}</button>`).join('')}</div></details>` : ''}
   <div class="sub" style="text-align:center;font-weight:600">Notícias do mundo UGC, atualizadas todos os dias.</div>`}`;
 }
 function homeDay() {
@@ -2406,6 +2428,9 @@ async function setTaskDone(x, done) {
 const NICHES = [['beleza', 'Beleza e skincare'], ['moda', 'Moda'], ['fitness', 'Fitness e saúde'], ['alimentacao', 'Alimentação'], ['maternidade', 'Maternidade'], ['casa', 'Casa e decoração'], ['pets', 'Pets'], ['tech', 'Tecnologia e apps'], ['financas', 'Finanças'], ['games', 'Games'], ['viagem', 'Viagem'], ['lifestyle', 'Lifestyle e humor']];
 const myNiches = () => arr(S.profile.niches).filter(k => NICHES.some(n => n[0] === k));
 const nicheName = k => (NICHES.find(n => n[0] === k) || [k, k])[1];
+const nicheOther = () => String(S.profile.nicheOther || '').trim().slice(0, 60);
+const focusList = f => (Array.isArray(f) ? f : f ? [f] : []).filter(x => ['rotina', 'marcas', 'dinheiro'].includes(x));
+const myFocus = () => focusList(S.profile.obFocus);
 window.criahubOpenAlta = () => { if (sheet) closeForm(); S.tab = 'estudio'; S.f.sview = 'alta'; render(); window.scrollTo(0, 0); };
 window.criahubSetTrends = list => { S.trends = list; S.trendsReady = true; render(); };
 function trItem(x, kind, key) {
@@ -2472,8 +2497,9 @@ function toolsFor(kinds, focus) {
   if (kinds.includes('rendas')) on.push('financeiro.gastos');
   if (kinds.includes('perfil') || kinds.includes('comecando')) on.push('estudio.ganchos');
   on.push('estudio.posts', 'financeiro.plano');
-  if (focus === 'rotina') on.push('rotina.semana');
-  if (focus === 'dinheiro') on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
+  const fs = focusList(focus);
+  if (fs.includes('rotina')) on.push('rotina.semana');
+  if (fs.includes('dinheiro')) on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
   return Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, on.includes(tab + '.' + v)])));
 }
 function toolsSettings() {
@@ -2486,55 +2512,84 @@ function toolsSettings() {
 const OB_KINDS = [['comecando', 'Estou começando', 'Quero me organizar e conquistar as primeiras marcas'], ['ugc', 'UGC com marcas', 'Faço vídeos pra marcas, com prazos e pagamentos'], ['canvas', 'Perfis de marca (Tech Canvas)', 'Posto nos perfis da marca, em ciclos com meta de views'], ['perfil', 'Conteúdo pro meu perfil', 'Crio pro meu Instagram, TikTok ou YouTube, de qualquer nicho'], ['rendas', 'Outras rendas', 'TikTok Shop, afiliados, clipes, memes…']];
 const OB_FOCUS = [['rotina', 'Minha rotina', 'Tarefas, hábitos e semana'], ['marcas', 'Minhas marcas', 'Clientes, entregas e prazos'], ['dinheiro', 'Meu dinheiro', 'Quanto cobrar, receber e gastar']];
 let OB = null;
+(() => { const st = document.createElement('style'); st.textContent = `
+.ob-search{display:flex;align-items:center;gap:8px;border-radius:12px;padding:0 12px;background:#fff;color:#22141A;min-height:46px}
+.ob .ob-search input{border:0;outline:0;background:transparent;flex:1;min-width:0;padding:12px 0;font:inherit;font-size:16px;color:#22141A;box-shadow:none;min-height:0}
+.ob .ob-search input::placeholder{color:#8A7580}
+.ob-search:focus-within{outline:2px solid #FF8FB1;outline-offset:2px}
+.ob-nnew{margin-top:-2px;color:#F4DCE5}
+.ob-note{border-radius:14px;padding:12px 14px;background:color-mix(in oklab, var(--accent,#420725) 10%, transparent);font-size:14px}
+`; document.head.appendChild(st); })();
 function checkOnboard() {
   if (S.loading || OB || S.profile.onboarded) return;
   if (!isEmpty()) { saveProfile({ onboarded: 'antes' }); return; } /* quem já usa o app não vê */
-  OB = { i: 0, name: S.profile.name || '', kinds: [], work: '', days: [], label: '', focus: '' }; obRender();
+  OB = { i: 0, name: S.profile.name || '', kinds: [], work: '', days: [], label: '', focus: [], niches: [], nicheTxt: '', plan: '' }; obRender();
 }
 function obRender() {
   let el = document.getElementById('ob'); if (!el) { el = document.createElement('div'); el.id = 'ob'; el.className = 'ob'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Boas-vindas'); document.body.appendChild(el); }
-  const o = OB, dots = [0, 1, 2].map(k => `<i class="${k <= o.i ? 'on' : ''}"></i>`).join(''), opt = (attr, k, l, d, on) => `<button type="button" class="ob-opt" ${attr}="${k}" aria-pressed="${on}"><b>${l}</b>${d ? `<span>${d}</span>` : ''}</button>`;
+  const o = OB, dots = [0, 1, 2, 3].map(k => `<i class="${k <= o.i ? 'on' : ''}"></i>`).join(''), opt = (attr, k, l, d, on) => `<button type="button" class="ob-opt" ${attr}="${k}" aria-pressed="${on}"><b>${l}</b>${d ? `<span>${d}</span>` : ''}</button>`;
   let body = '';
-  if (o.i === 0) body = `<h2>Oi! Vamos deixar o CriaHub do seu jeito</h2><p>3 perguntas rápidas. Dá pra mudar tudo depois em Ajustes.</p>
+  if (o.i === 0) body = `<h2>Oi! Vamos deixar o CriaHub do seu jeito</h2><p>4 perguntas rápidas. Dá pra mudar tudo depois em Ajustes.</p>
     <label class="ob-f">Como quer ser chamada?<input type="text" id="ob_name" value="${esc(o.name)}" placeholder="Seu nome" autocomplete="given-name"></label>
     <label class="ob-f">Seu @ do Instagram <small>opcional</small><input type="text" id="ob_ig" value="${esc(o.ig ? '@' + o.ig : '')}" placeholder="@seuperfil" autocomplete="off" autocapitalize="none"></label>
     <div class="ob-q">Como você trabalha hoje? <small>pode marcar mais de um</small></div><div class="ob-opts">${OB_KINDS.map(([k, l, d]) => opt('data-obkind', k, l, d, o.kinds.includes(k))).join('')}</div>`;
   else if (o.i === 1) body = `<h2>Você tem outro trabalho?</h2><p>Assim eu deixo gravar e editar pros seus dias livres.</p>
-    <div class="ob-opts two">${opt('data-obwork', 'nao', 'Não tenho', '', o.work === 'nao')}${opt('data-obwork', 'sim', 'Tenho sim', 'CLT, clínica, faculdade…', o.work === 'sim')}</div>
+    <div class="ob-opts two">${opt('data-obwork', 'nao', 'Não tenho', '', o.work === 'nao')}${opt('data-obwork', 'sim', 'Tenho sim', 'CLT, faculdade…', o.work === 'sim')}</div>
     ${o.work === 'sim' ? `<div class="ob-q">Em quais dias você trabalha nele?</div><div class="ob-days">${[1, 2, 3, 4, 5, 6, 0].map(d => `<button type="button" class="chip" data-obday="${d}" aria-pressed="${o.days.includes(d)}">${WD[d]}</button>`).join('')}</div>
-      <label class="ob-f">Nome desse trabalho<input type="text" id="ob_label" value="${esc(o.label)}" placeholder="Ex.: Clínica"></label>` : ''}`;
-  else body = `<h2>O que você quer organizar primeiro?</h2><p>Eu monto os primeiros passos a partir daqui.</p><div class="ob-opts">${OB_FOCUS.map(([k, l, d]) => opt('data-obfocus', k, l, d, o.focus === k)).join('')}</div>
-    <div class="ob-q">Seu nicho <small>opcional, pra te mostrar o que está em alta</small></div><div class="ob-days">${NICHES.map(([k, l]) => `<button type="button" class="chip" data-obniche="${k}" aria-pressed="${(o.niches || []).includes(k)}">${l}</button>`).join('')}</div>`;
-  const can = o.i === 0 ? o.kinds.length : o.i === 1 ? o.work && (o.work === 'nao' || o.days.length) : o.focus;
-  el.innerHTML = `<div class="ob-box"><div class="ob-top"><span class="logo-w">cr<span class="ii">ı<b></b></span>a<em>hub</em></span><div class="ob-dots" aria-label="Passo ${o.i + 1} de 3">${dots}</div></div>${body}
-    <div class="ob-acts">${o.i ? '<button type="button" class="ob-link" data-ob="back">Voltar</button>' : '<button type="button" class="ob-link" data-ob="skip">Pular</button>'}<button type="button" class="ob-go" data-ob="${o.i === 2 ? 'finish' : 'next'}" ${can ? '' : 'disabled'}>${o.i === 2 ? 'Começar' : 'Continuar'}</button></div></div>`;
+      <label class="ob-f">Nome desse trabalho<input type="text" id="ob_label" value="${esc(o.label)}" placeholder="Ex.: Faculdade"></label>` : ''}`;
+  else if (o.i === 2) body = `<h2>O que você quer organizar?</h2><p>Pode escolher um, dois ou os três. Eu monto a sua Início a partir daqui.</p><div class="ob-opts">${OB_FOCUS.map(([k, l, d]) => opt('data-obfocus', k, l, d, o.focus.includes(k))).join('')}</div>
+    <div class="ob-q">Seu nicho <small>opcional, pode marcar mais de um</small></div>
+    <label class="ob-search"><span aria-hidden="true">🔍</span><input type="search" id="ob_nsearch" value="${esc(o.nicheTxt || '')}" placeholder="Procure ou escreva o seu nicho" autocomplete="off" aria-label="Procurar ou escrever o seu nicho"></label>
+    <div class="ob-days" id="ob_nchips">${NICHES.map(([k, l]) => `<button type="button" class="chip" data-obniche="${k}" data-nl="${esc(l.toLowerCase())}" aria-pressed="${(o.niches || []).includes(k)}">${l}</button>`).join('')}</div>
+    <div class="sub ob-nnew" id="ob_nnew" ${obNicheNew(o.nicheTxt) ? '' : 'hidden'}>Não achou? Pode deixar escrito que eu guardo o seu nicho assim.</div>`;
+  else body = `<h2>Qual plano é pra você?</h2><p>Dá pra mudar quando quiser. Tudo que você cadastrar continua igual.</p><div class="ob-opts">
+    ${opt('data-obplan', 'free', 'Grátis', 'Rotina, agenda, finanças e até 10 marcas', o.plan === 'free')}
+    ${opt('data-obplan', 'pro', 'Pro · R$ 24,90 por mês', 'Marcas ilimitadas, IA, Vision Board, Em alta e tudo que chegar de novo', o.plan === 'pro')}</div>
+    ${o.plan === 'pro' ? `<div class="ob-note">As assinaturas do Pro abrem em 15/12. Até lá você usa o Grátis, e eu te aviso aqui quando abrir.</div>` : ''}`;
+  const can = o.i === 0 ? o.kinds.length : o.i === 1 ? o.work && (o.work === 'nao' || o.days.length) : o.i === 2 ? o.focus.length : o.plan;
+  el.innerHTML = `<div class="ob-box"><div class="ob-top"><span class="logo-w">cr<span class="ii">ı<b></b></span>a<em>hub</em></span><div class="ob-dots" aria-label="Passo ${o.i + 1} de 4">${dots}</div></div>${body}
+    <div class="ob-acts">${o.i ? '<button type="button" class="ob-link" data-ob="back">Voltar</button>' : '<button type="button" class="ob-link" data-ob="skip">Pular</button>'}<button type="button" class="ob-go" data-ob="${o.i === 3 ? 'finish' : 'next'}" ${can ? '' : 'disabled'}>${o.i === 3 ? 'Começar' : 'Continuar'}</button></div></div>`;
 }
-function obRead() { const n = $('#ob_name'), l = $('#ob_label'), g = $('#ob_ig'); if (g) OB.ig = igClean(g.value); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); }
+function obRead() { const n = $('#ob_name'), l = $('#ob_label'), g = $('#ob_ig'), ns = $('#ob_nsearch'); if (g) OB.ig = igClean(g.value); if (n) OB.name = n.value.trim(); if (l) OB.label = l.value.trim(); if (ns) OB.nicheTxt = ns.value.trim().slice(0, 60); }
+/* nicho escrito que não está na lista vira o nicho dela */
+const obNicheNew = txt => { const q = String(txt || '').trim().toLowerCase(); return q.length >= 2 && !NICHES.some(([, l]) => l.toLowerCase() === q); };
+document.addEventListener('input', e => {
+  if (!e.target || e.target.id !== 'ob_nsearch' || !OB) return;
+  const q = e.target.value.trim().toLowerCase(); OB.nicheTxt = e.target.value.trim().slice(0, 60);
+  document.querySelectorAll('#ob_nchips [data-obniche]').forEach(b => { b.hidden = !!q && !b.dataset.nl.includes(q) && b.getAttribute('aria-pressed') !== 'true'; });
+  const nn = document.getElementById('ob_nnew'); if (nn) nn.hidden = !obNicheNew(q);
+});
 async function obFinish(skip) {
   const o = OB; OB = null; document.getElementById('ob')?.remove();
   if (skip) { await saveProfile({ onboarded: o.keep ? 'antes' : today(), ...(o.name ? { name: o.name } : {}), ...(o.ig ? { ig: o.ig } : {}) }); return; }
-  const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
+  const patch = { onboarded: o.keep ? 'antes' : today(), ...((o.niches || []).length ? { niches: o.niches } : {}), ...(obNicheNew(o.nicheTxt) ? { nicheOther: o.nicheTxt } : {}), ...(o.plan ? { planWish: o.plan } : {}), obKinds: o.kinds, obFocus: o.focus, tools: toolsFor(o.kinds, o.focus), ...(o.keep ? {} : { fronts: o.kinds.includes('canvas') ? ['UGC', 'UGC Tech Canvas'] : ['UGC'] }) };
   if (o.name) patch.name = o.name;
   if (o.ig) patch.ig = o.ig;
   if (o.work === 'sim' && o.days.length) Object.assign(patch, { workMode: 'semana', workDays: o.days, workLabel: o.label || 'outro trabalho' });
   await saveProfile(patch);
   S.tab = 'inicio'; render(); window.scrollTo(0, 0);
+  if (o.plan === 'pro' && !isPro()) setTimeout(() => openPro('escolha'), 600);
   toast(o.keep ? `Pronto${o.name ? ', ' + o.name : ''}! O CriaHub está do seu jeito. Telas com dados seus continuam aparecendo.` : `Pronto${o.name ? ', ' + o.name : ''}! Seus primeiros passos estão na Início.`);
 }
 
 /* ---------- primeiros passos (Início) ---------- */
 function firstSteps() {
-  const k = arr(S.profile.obKinds), f = S.profile.obFocus || '', A = [];
+  const k = arr(S.profile.obKinds), fs = myFocus(), A = [];
   const st = (key, l, done, attrs, grp) => A.push({ key, l, done: !!done, attrs, grp });
   if (k.includes('comecando')) { st('kit', 'Monte seu mídia kit', kit().bio, 'data-gomv="kit"', 'marcas'); st('lead', 'Anote uma marca que você quer conquistar', S.data.leads.length, 'data-new="leads"', 'marcas'); st('preco', 'Descubra quanto cobrar por vídeo', S.profile.basePrice, 'data-fview="preco"', 'dinheiro'); }
   if (k.includes('ugc') || k.includes('canvas')) { st('marca', 'Cadastre sua primeira marca', S.data.brands.length, 'data-new="brands"', 'marcas'); st('entrega', 'Crie uma entrega com prazo', S.data.deliveries.length, 'data-new="deliveries"', 'marcas'); }
   if (k.includes('canvas')) st('conta', 'Cadastre os perfis da marca (@ e link)', S.data.accounts.length, 'data-tab="marcas"', 'marcas');
-  if (k.includes('rendas')) st('renda', 'Cadastre uma outra renda', S.data.extras.length, 'data-new="extras"', 'dinheiro');
+  if (k.includes('rendas') || fs.includes('dinheiro')) st('renda', 'Cadastre uma renda (marca, afiliado, salário…)', S.data.extras.length || S.data.payments.length, 'data-new="extras"', 'dinheiro');
+  if (fs.includes('dinheiro')) st('gasto', 'Anote um gasto do trabalho', S.data.expenses.length, 'data-fview="gastos"', 'dinheiro');
+  if (fs.includes('marcas') && !k.includes('ugc') && !k.includes('canvas') && !k.includes('comecando')) st('marca', 'Cadastre sua primeira marca', S.data.brands.length, 'data-new="brands"', 'marcas');
   st('tarefa', 'Planeje seu dia: escreva 1 tarefa', S.data.tasks.length, 'data-rview="hoje"', 'rotina');
   st('habito', 'Crie um hábito de cuidado (água, sono…)', S.data.habits.length, 'data-rview="habitos"', 'rotina');
   if (!k.includes('comecando') && !k.includes('rendas')) st('preco', 'Descubra quanto cobrar por vídeo', S.profile.basePrice, 'data-fview="preco"', 'dinheiro');
   st('push', 'Ligue as notificações', window.criahubPushOn && window.criahubPushOn(), 'data-act="settings"', 'zz');
-  const seen = new Set(); return A.filter(x => !seen.has(x.key) && seen.add(x.key)).sort((a, b) => (a.grp === f ? 0 : 1) - (b.grp === f ? 0 : 1)).slice(0, 5);
+  const seen = new Set(), U = A.filter(x => !seen.has(x.key) && seen.add(x.key));
+  if (!fs.length) return U.slice(0, 5);
+  const mine = U.filter(x => fs.includes(x.grp) || x.grp === 'zz');
+  return (mine.length >= 3 ? mine : U.sort((a, b) => (fs.includes(a.grp) ? 0 : 1) - (fs.includes(b.grp) ? 0 : 1))).slice(0, 5);
 }
 /* quem já usava o app ganha um convite (uma vez) pra personalizar */
 function homePerso() {
@@ -4297,7 +4352,7 @@ function openSettings() {
       <select name="workMode" id="s_wmode" aria-label="Outro trabalho"><option value="">Não tenho outro trabalho</option><option value="semana" ${S.profile.workMode === 'semana' ? 'selected' : ''}>Trabalho em dias fixos da semana</option><option value="alternado" ${S.profile.workMode === 'alternado' ? 'selected' : ''}>Trabalho dia sim, dia não</option></select>
       <div class="chips" data-wm="semana" ${S.profile.workMode === 'semana' ? '' : 'hidden'}>${[1, 2, 3, 4, 5, 6, 0].map(i => `<label class="chip wdchip"><input type="checkbox" name="wd" value="${i}" ${(S.profile.workDays || []).includes(i) ? 'checked' : ''}>${WD[i]}</label>`).join('')}</div>
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
-      <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
+      <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Faculdade)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
     </div>
     <div class="card section" style="gap:8px"><b>Aprenda o CriaHub</b><span class="sub">Os stories que explicam cada aba, pra rever quando quiser.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-learn="1">Ver os stories</button></div></div>
     <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
@@ -4466,16 +4521,17 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
   if (d.act === 'tradapt') { if (!(S.trends || []).length) { toast('A lista da semana ainda não saiu'); return; } await gated('studio', () => ask('trOut', trendPrompt())); return; }
   if (d.help) { openHelp(d.help); return; }
   if (d.tool) { const cur = allTools(), on = !cur[d.tool]; await saveProfile({ tools: { ...cur, [d.tool]: on } }); t.setAttribute('aria-pressed', toolOn(...d.tool.split('.'))); if (!on && toolOn(...d.tool.split('.'))) toast('Essa tela tem dados seus, então continua aparecendo.'); return; }
-  if (d.act === 'obredo') { closeForm(); OB = { keep: !isEmpty(), i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '' }; obRender(); return; }
+  if (d.act === 'obredo') { closeForm(); OB = { keep: !isEmpty(), i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: myFocus(), niches: myNiches(), nicheTxt: nicheOther(), plan: S.profile.planWish || '' }; obRender(); return; }
   if (d.act === 'persono') { await saveProfile({ persoSeen: today() }); toast('Tudo bem! Quando quiser: Ajustes › Ferramentas que eu uso.'); return; }
-  if (d.act === 'persogo') { await saveProfile({ persoSeen: today() }); OB = { i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: S.profile.obFocus || '', keep: true }; obRender(); return; }
+  if (d.act === 'persogo') { await saveProfile({ persoSeen: today() }); OB = { i: 0, name: S.profile.name || '', kinds: arr(S.profile.obKinds), work: S.profile.workMode ? 'sim' : '', days: S.profile.workDays || [], label: S.profile.workLabel || '', focus: myFocus(), niches: myNiches(), nicheTxt: nicheOther(), plan: S.profile.planWish || '', keep: true }; obRender(); return; }
   if (d.act === 'stepshide') { await saveProfile({ stepsHidden: true }); toast('Escondido. Dá pra ver tudo em Ajustes.'); return; }
   if (d.ob) { obRead(); if (d.ob === 'next') { OB.i++; obRender(); } else if (d.ob === 'back') { OB.i--; obRender(); } else if (d.ob === 'skip') await obFinish(true); else if (d.ob === 'finish') await obFinish(false); return; }
   if (d.obkind) { obRead(); const k = d.obkind, a = OB.kinds; OB.kinds = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
   if (d.obwork) { obRead(); OB.work = d.obwork; obRender(); return; }
   if (d.obday) { obRead(); const n = +d.obday; OB.days = OB.days.includes(n) ? OB.days.filter(x => x !== n) : [...OB.days, n]; obRender(); return; }
-  if (d.obfocus) { obRead(); OB.focus = d.obfocus; obRender(); return; }
-  if (d.obniche) { const a = OB.niches || [], k = d.obniche; OB.niches = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
+  if (d.obfocus) { obRead(); const k = d.obfocus, a = OB.focus; OB.focus = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; obRender(); return; }
+  if (d.obplan) { obRead(); OB.plan = d.obplan; obRender(); return; }
+  if (d.obniche) { obRead(); const a = OB.niches || [], k = d.obniche; OB.niches = a.includes(k) ? a.filter(x => x !== k) : [...a, k]; t.setAttribute('aria-pressed', OB.niches.includes(k)); return; }
   if (d.ttype) { const f = t.closest('form'); if (!f) return; f.querySelectorAll('[data-ttype]').forEach(b => b.setAttribute('aria-pressed', b === t)); f.elements.ttype.value = d.ttype; const ci = f.elements.cat; if (ci) { ci.value = d.tcat || ''; ci.hidden = !(d.ttype === 'outro' && !d.tcat); if (!ci.hidden) ci.focus(); } if (f.dataset.form === 'quicktask') { S.ct.qtype = d.ttype; S.ct.qcat = d.tcat || ''; } else applyWhen(f); return; }
   if (d.tfilter !== undefined) { S.f.ttype = d.tfilter; render(); return; }
   if (d.bpage) { S.f.bpage = d.bpage; S.f.btab = 'geral'; S.f.mview = 'clientes'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
@@ -4943,7 +4999,7 @@ const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos'
 const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Vision Board com os seus sonhos e metas', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
-window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
+window.criahubIsPro = () => S.mode !== 'remote' || (PLAN_READY && isPro());
 function proLocked(key) { return PLAN_READY && S.mode === 'remote' && !isPro() && !!PRO_TOOLS[key]; }
 function brandCapHit() { return PLAN_READY && S.mode === 'remote' && !isPro() && S.data.brands.filter(b => !b.example && b.status !== 'encerrado').length >= FREE_BRANDS; }
 async function planLoad() {
@@ -4991,7 +5047,12 @@ document.addEventListener('click', e => {
   const t = e.target.closest && e.target.closest('[data-pro]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); if (sheet) closeForm(); openPro(t.dataset.pro);
 }, true);
-ADMIN_P.then(planLoad);
+/* o plano carrega assim que a conta conecta (e de novo depois de saber se é a fundadora) */
+var PLAN_P = null;
+window.criahubPlanLoad = () => (PLAN_P = planLoad());
+window.criahubPlanWait = () => PLAN_READY ? null : Promise.race([PLAN_P || window.criahubPlanLoad(), new Promise(r => setTimeout(r, 8000))]);
+if (S.mode === 'remote') window.criahubPlanLoad();
+ADMIN_P.then(() => window.criahubPlanLoad());
 /* ================= Início = painel da creator: o que está pendente, com bolinha ================= */
 function homePend() {
   const t = today(), it = [];
@@ -5503,6 +5564,7 @@ const NI_GOALS = [['crescer', 'Crescer seguidores'], ['marcas', 'Atrair marcas']
 const NI_FMTS = [['misto', 'Misturar'], ['reels', 'Reels/TikTok'], ['carrossel', 'Carrossel'], ['stories', 'Stories']];
 const niSt = () => { const c = S.ct; c.ni = c.ni || { goal: S.profile.niGoal || 'crescer', fmt: 'misto', topic: '', res: null, saved: [], seen: [] }; return c.ni; };
 function niCard() {
+  if (S.mode === 'remote' && !(window.criahubIsPro && window.criahubIsPro())) return `<section class="card section ni" style="gap:10px"><div><b>Ideias pro seu nicho ✨</b> <span class="pill p-acc">Pro</span><div class="sub">No Pro, a IA pensa em ideias pro <i>seu</i> perfil, com gancho e roteiro, a partir do seu nicho e do que já deu certo pra você.</div></div><div class="row-btns"><button type="button" class="btn sm" data-pro="ia">Conhecer o Pro</button></div></section>`;
   const n = niSt(), mine = myNiches(), busy = S.ct.busy === 'niAi';
   const chips = (L, cur, attr) => `<div class="chips">${L.map(([k, l]) => `<button type="button" class="chip" ${attr}="${k}" aria-pressed="${cur === k}">${l}</button>`).join('')}</div>`;
   const res = Array.isArray(n.res) ? n.res : [];
@@ -5530,7 +5592,7 @@ function niPrompt() {
   const brands = S.data.brands.filter(b => b.status !== 'encerrado').map(b => b.name).filter(Boolean).slice(0, 8);
   const goal = (NI_GOALS.find(g => g[0] === n.goal) || NI_GOALS[0])[1], fmt = n.fmt === 'misto' ? 'misture Reels/TikTok, carrossel e stories' : 'todas em ' + (NI_FMTS.find(f => f[0] === n.fmt) || [])[1];
   return `Você ajuda uma creator brasileira a ter ideias de conteúdo pro PRÓPRIO perfil dela (não é vídeo pra marca).
-Nicho: ${mine.length ? mine.map(nicheName).join(', ') : 'não informado'}${k.niches ? ` (ela se descreve assim: ${k.niches})` : ''}.
+Nicho: ${[...mine.map(nicheName), nicheOther()].filter(Boolean).join(', ') || 'não informado'}${k.niches ? ` (ela se descreve assim: ${k.niches})` : ''}.
 Frentes de trabalho: ${fronts}. ${k.bio ? 'Bio dela: ' + String(k.bio).slice(0, 300) : ''}
 Objetivo agora: ${goal}.
 ${n.topic.trim() ? `Assunto que ela quer explorar: ${n.topic.trim().slice(0, 160)}\n` : ''}${brands.length ? `Marcas com quem ela trabalha: ${brands.join(', ')}.\n` : ''}${vids.length ? `Os vídeos dela que mais deram views (use como pista do que o público dela gosta):\n${vids.map(v => `- ${v.t || ''}${v.h ? ` · gancho: "${v.h}"` : ''}${v.ty ? ' · tipo: ' + v.ty : ''} · ${v.v} views`).join('\n')}\n` : ''}${ideas.length || n.seen.length ? `Ideias que ela já tem (NÃO repita nem faça parecidas):\n${[...ideas, ...n.seen].slice(0, 40).map(t => '- ' + t).join('\n')}\n` : ''}
@@ -5872,6 +5934,27 @@ async function chApply(a) {
   if (a.tipo === 'meta') { await put('goals', { id: newId(), title: String(a.titulo || 'Meta').slice(0, 120), kind: +a.alvo ? 'numero' : 'check', target: +a.alvo || 1, unit: String(a.unidade || ''), current: 0, deadline: /^\d{4}-\d{2}-\d{2}$/.test(a.prazo || '') ? a.prazo : '', money: !!a.dinheiro, created: now }); return 'Meta em Rotina › Metas'; }
   return 'ok';
 }
+const chMicOk = () => !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+function chMic() {
+  if (CH.rec) { try { CH.rec.stop(); } catch (_) {} return; }
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition; if (!R) { toast('Seu navegador não tem ditado por voz. Use o microfone do teclado do celular.'); return; }
+  const ta = document.getElementById('chText'), base = ta ? ta.value.trim() : String(CH.draft || '').trim();
+  const r = new R(); r.lang = 'pt-BR'; r.interimResults = true; r.continuous = true;
+  r.onresult = e => { let txt = ''; for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript; CH.draft = (base ? base + ' ' : '') + txt.trim(); const el = document.getElementById('chText'); if (el) el.value = CH.draft; };
+  r.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Libere o microfone pro CriaHub nas permissões do navegador.'); };
+  r.onend = () => { CH.rec = null; chRender(); const el = document.getElementById('chText'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } };
+  CH.rec = r; try { r.start(); } catch (_) { CH.rec = null; } chRender();
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-chmic]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); chMic(); }, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.ch-mic{flex:none;font-size:18px}.ch-mic.on{background:var(--accent,#420725);color:#fff;animation:chPulse 1.2s ease-in-out infinite}
+@keyframes chPulse{50%{box-shadow:0 0 0 6px color-mix(in oklab, var(--accent,#420725) 25%, transparent)}}
+@media (prefers-reduced-motion:reduce){.ch-mic.on{animation:none}}
+.ch-rec{font-size:12.5px;color:var(--mute,#777);padding:0 14px 10px}
+.news-old summary{cursor:pointer;font-weight:700;list-style:none;display:inline-flex;gap:6px;align-items:center}
+.news-old summary::before{content:"▸";transition:transform .15s}.news-old[open] summary::before{transform:rotate(90deg)}
+.news-old summary::-webkit-details-marker{display:none}
+`; document.head.appendChild(st); })();
 function chRender() {
   let el = document.getElementById('chatLayer'); if (!CH.open) { el?.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'chatLayer'; el.className = 'chat'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Chat CriaHub'); document.body.appendChild(el); }
@@ -5880,7 +5963,7 @@ function chRender() {
   el.innerHTML = `<div class="ch-top"><div><b>Chat CriaHub ✨</b><small>Sua rotina e o seu dinheiro, conversando</small></div>${CH.msgs.length ? '<button class="link" data-chclear="1">Limpar</button>' : ''}<button class="iconbtn" data-chclose="1" aria-label="Fechar">${ic('x')}</button></div>
     <div class="ch-body" id="chBody">${CH.msgs.length ? '' : `<div class="ch-hi"><b>Oi${S.profile.name ? ', ' + esc(String(S.profile.name).split(' ')[0]) : ''}! 💬</b><span>Me conta como é a sua rotina que eu monto a sua semana. Ou me fala o que gastou e o que entrou que eu já lanço nas suas Finanças, sem formulário.</span></div>
       <div class="ch-sugg">${CH_SUGG.map(([e, t]) => `<button class="chip" data-chsugg="${esc(t)}">${e} ${esc(t)}</button>`).join('')}</div>`}${msgs}${busy ? '<div class="ch-m a typing"><i></i><i></i><i></i></div>' : ''}${S.ct.err && S.ct.chErr ? `<div class="err">${esc(S.ct.err)}</div>` : ''}</div>
-    ${pro ? `<form class="ch-in" id="chForm"><textarea id="chText" rows="1" maxlength="1200" placeholder="Escreve aqui… ex.: gastei 45 de uber pra gravar" aria-label="Mensagem">${esc(CH.draft)}</textarea><button class="btn" ${busy ? 'disabled' : ''} aria-label="Enviar">Enviar</button></form>`
+    ${pro ? `<form class="ch-in" id="chForm"><textarea id="chText" rows="1" maxlength="1200" placeholder="Escreve aqui… ex.: gastei 45 de uber pra gravar" aria-label="Mensagem">${esc(CH.draft)}</textarea>${chMicOk() ? `<button type="button" class="iconbtn ch-mic ${CH.rec ? 'on' : ''}" data-chmic="1" aria-label="${CH.rec ? 'Parar de gravar' : 'Falar em vez de digitar'}" aria-pressed="${!!CH.rec}">🎙️</button>` : ''}<button class="btn" ${busy ? 'disabled' : ''} aria-label="Enviar">Enviar</button></form>${CH.rec ? '<div class="ch-rec">Ouvindo… fale e toque no microfone de novo quando terminar.</div>' : ''}`
       : `<div class="ch-pro"><b>O Chat CriaHub é do plano Pro ✨</b><span>Converse pra montar a sua rotina e lançar gastos e pagamentos sem formulário.</span><button class="btn" data-chpro="1">Conhecer o Pro</button></div>`}`;
   const b = document.getElementById('chBody'); if (b) b.scrollTop = b.scrollHeight;
 }
