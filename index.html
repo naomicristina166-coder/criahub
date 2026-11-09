@@ -4937,7 +4937,47 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
 /* ================= planos: Grátis e Pro =================
    O que já existia no Grátis continua no Grátis. O que é mais elaborado (e tudo que é novo) é Pro.
    Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
-const PRO_URL = ''; /* quando o pagamento estiver no ar, coloque aqui o link de assinar */
+/* pagamento pelo Asaas: links em public.pay_links (função "pagamento"); quem está na lista paga o preço de fundadora */
+const PAY = { links: {}, founder: false, email: '', ready: false };
+const PAY_OPEN_LIST = '2026-12-15', PAY_OPEN_ALL = '2026-12-17', PAY_FOUNDER_END = '2026-12-21';
+async function payLoad() {
+  const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  try { const { data } = await sb.from('pay_links').select('key,url,value'); PAY.links = Object.fromEntries((data || []).map(x => [x.key, x])); } catch (_) {}
+  try { const { data } = await sb.rpc('pay_is_founder'); PAY.founder = data === true; } catch (_) {}
+  try { const { data } = await sb.auth.getSession(); PAY.email = (data && data.session && data.session.user && data.session.user.email) || ''; } catch (_) {}
+  PAY.ready = true; if (sheet && sheet.col === 'pro') openPro(sheet.reason);
+}
+function payButtons() {
+  const t = today(), fund = PAY.founder && t <= PAY_FOUNDER_END, tier = fund ? 'fund' : 'pro';
+  const open = ADMIN || t >= (PAY.founder ? PAY_OPEN_LIST : PAY_OPEN_ALL);
+  const m = PAY.links[tier + '_mensal'], a = PAY.links[tier + '_anual'];
+  const brl = v => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+  let h = '';
+  if (!open) h = `<button type="button" class="btn" disabled>Assinaturas abrem em ${PAY.founder ? '15/12' : '17/12'}</button>`;
+  else if (!m || !a) h = '<button type="button" class="btn" disabled>Assinaturas abrem em breve</button>';
+  else h = `<a class="btn" href="${esc(m.url)}" target="_blank" rel="noopener">Assinar mensal · ${brl(m.value)}</a><a class="btn ghost" href="${esc(a.url)}" target="_blank" rel="noopener">Anual · ${brl(a.value)}</a>`;
+  const note = open && m && a ? `<div class="sub" style="text-align:left">Na hora de pagar, use o mesmo e-mail da sua conta${PAY.email ? `: <b>${esc(PAY.email)}</b>` : ''}. Assim que o pagamento cair, o Pro libera sozinho. <button type="button" class="link" data-act="paycheck">Já paguei</button></div>` : '';
+  const adm = ADMIN ? `<div class="sub" style="text-align:left">Fundadora: <button type="button" class="link" data-act="paysetup">${m ? 'Atualizar' : 'Criar'} links no Asaas</button> <span id="paymsg"></span></div>` : '';
+  return { btns: h, note, adm, fund };
+}
+async function paySetup() {
+  const sb = window.criahubSupabase, msg = $('#paymsg'); if (!sb) return;
+  if (msg) msg.textContent = 'criando…';
+  try {
+    const { data: s } = await sb.auth.getSession(), tok = s && s.session && s.session.access_token;
+    const cfg = window.CRIAHUB_CONFIG || {};
+    const r = await fetch((cfg.url || '') + '/functions/v1/pagamento', { method: 'POST', headers: { Authorization: 'Bearer ' + tok, apikey: cfg.key || '', 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setup' }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || ('erro ' + r.status));
+    await payLoad(); toast('Links do Asaas prontos ✨');
+  } catch (e) { const m2 = $('#paymsg'); if (m2) m2.textContent = String(e.message || e); }
+}
+async function payCheck() {
+  const sb = window.criahubSupabase; if (!sb) return;
+  try { await sb.rpc('pay_claim'); } catch (_) {}
+  await planLoad();
+  if (isPro()) { closeForm(); toast('Bem-vinda ao Pro! ✨'); } else toast('Ainda não chegou. Pode levar alguns minutos no Pix e no boleto.');
+}
 const FREE_BRANDS = 10;
 const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Vision Board', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
 const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Vision Board com os seus sonhos e metas', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
@@ -4948,6 +4988,7 @@ function proLocked(key) { return PLAN_READY && S.mode === 'remote' && !isPro() &
 function brandCapHit() { return PLAN_READY && S.mode === 'remote' && !isPro() && S.data.brands.filter(b => !b.example && b.status !== 'encerrado').length >= FREE_BRANDS; }
 async function planLoad() {
   const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  try { await sb.rpc('pay_claim'); } catch (_) {}
   try { const { data, error } = await sb.from('plans').select('plan,until').maybeSingle(); PLAN = error ? null : data; } catch (_) { PLAN = null; }
   PLAN_READY = true; render();
 }
@@ -4976,14 +5017,15 @@ function proDecorate(v) {
 }
 function openPro(reason) {
   const why = reason === 'marcas' ? `Você chegou nas ${FREE_BRANDS} marcas ativas do plano Grátis. No Pro, as marcas são ilimitadas.` : reason === 'ia' ? 'A IA do CriaHub é do plano Pro.' : PRO_TOOLS[reason] ? `${PRO_TOOLS[reason]} é do plano Pro.` : 'Tudo do Grátis e mais um monte de coisa pra quem já vive de conteúdo.';
-  sheet = { col: 'pro' };
+  sheet = { col: 'pro', reason }; const pb = payButtons(); if (!PAY.ready) payLoad();
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet pro-sheet" role="dialog" aria-modal="true" aria-label="CriaHub Pro">
     <div class="sh"><h2>CriaHub Pro ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="sub">${esc(why)}</div>
     <ul>${PRO_LIST.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${today() <= '2026-12-21' ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 21/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
+    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${PAY.founder && today() <= PAY_FOUNDER_END ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 21/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
     <div class="sub">Pix, boleto, cartão de crédito ou débito. Tudo que você cadastrou continua igual quando muda de plano.</div>
-    <div class="foot"><div class="r">${PRO_URL ? `<a class="btn" href="${PRO_URL}" target="_blank" rel="noopener">Assinar o Pro</a>` : '<button type="button" class="btn" disabled>Assinaturas abrem em 15/12</button>'}</div></div>
+    ${pb.note}${pb.adm}
+    <div class="foot"><div class="r">${pb.btns}</div></div>
   </div></div>`;
 }
 window.criahubOpenPro = r => { if (sheet) closeForm(); openPro(r); };
@@ -4992,6 +5034,10 @@ document.addEventListener('click', e => {
   e.stopImmediatePropagation(); e.preventDefault(); if (sheet) closeForm(); openPro(t.dataset.pro);
 }, true);
 ADMIN_P.then(planLoad);
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-act="paysetup"],[data-act="paycheck"]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault(); if (t.dataset.act === 'paysetup') paySetup(); else payCheck();
+}, true);
 /* ================= Início = painel da creator: o que está pendente, com bolinha ================= */
 function homePend() {
   const t = today(), it = [];
