@@ -4959,7 +4959,7 @@ function payButtons() {
   else {
     const mp = PAY.links[tier + '_mensal_pix'], ap = PAY.links[tier + '_anual_pix'];
     const row = (lbl, sub, pix, other, otherLbl) => `<div class="pay-row"><div><b>${lbl}</b><span class="sub">${sub}</span></div><div class="pay-btns">${pix ? `<a class="btn sm" href="${esc(pix.url)}" target="_blank" rel="noopener">Pix</a>` : ''}<a class="btn sm ${pix ? 'ghost' : ''}" href="${esc(other.url)}" target="_blank" rel="noopener">${otherLbl}</a></div></div>`;
-    box = `<div class="pay-box">${row('Mensal · ' + brl(m.value), 'renova todo mês, cancela quando quiser', mp, m, 'Cartão ou boleto')}${row('Anual · ' + brl(a.value), 'Pix à vista ou até 12x no cartão', ap, a, 'Cartão em até 12x')}</div>`;
+    box = `<div class="pay-box">${row('Mensal · ' + brl(m.value), (mp ? 'no Pix, você paga a cada mês · no cartão, renova sozinho' : 'renova todo mês, cancela quando quiser'), mp, m, 'Cartão ou boleto')}${row('Anual · ' + brl(a.value), 'Pix à vista ou até 12x no cartão', ap, a, 'Cartão em até 12x')}</div>`;
   }
   const note = open && m && a ? `<div class="sub" style="text-align:left">Na hora de pagar, use o mesmo e-mail da sua conta${PAY.email ? `: <b>${esc(PAY.email)}</b>` : ''}. Assim que o pagamento cair, o Pro libera sozinho. <button type="button" class="link" data-act="paycheck">Já paguei</button></div>` : '';
   const adm = ADMIN ? `<div class="sub" style="text-align:left">Fundadora: <button type="button" class="link" data-act="paysetup">${m ? 'Atualizar' : 'Criar'} links no Asaas</button> <span id="paymsg"></span></div>` : '';

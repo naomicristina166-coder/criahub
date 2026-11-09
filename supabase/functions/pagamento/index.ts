@@ -51,7 +51,7 @@ async function setup(req: Request) {
     const base = { name: p.name, description: 'Assinatura do CriaHub Pro. Use o mesmo e-mail da sua conta do CriaHub.', value: p.value, dueDateLimitDays: 3, notificationEnabled: true, externalReference: key };
     const pix = key.endsWith('_pix');
     const tries = pix
-      ? (p.annual ? [{ ...base, billingType: 'PIX', chargeType: 'DETACHED' }] : [{ ...base, billingType: 'PIX', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }])
+      ? (p.annual ? [{ ...base, billingType: 'PIX', chargeType: 'DETACHED' }] : [{ ...base, billingType: 'PIX', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }, { ...base, billingType: 'PIX', chargeType: 'DETACHED', description: 'CriaHub Pro por 1 mês, no Pix. Use o mesmo e-mail da sua conta do CriaHub.' }])
       : p.annual
       ? [{ ...base, billingType: 'UNDEFINED', chargeType: 'INSTALLMENT', maxInstallmentCount: 12 }, { ...base, billingType: 'CREDIT_CARD', chargeType: 'INSTALLMENT', maxInstallmentCount: 12 }]
       : [{ ...base, billingType: 'UNDEFINED', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }, { ...base, billingType: 'CREDIT_CARD', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }];
