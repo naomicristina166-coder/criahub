@@ -4953,13 +4953,17 @@ function payButtons() {
   const open = ADMIN || t >= (PAY.founder ? PAY_OPEN_LIST : PAY_OPEN_ALL);
   const m = PAY.links[tier + '_mensal'], a = PAY.links[tier + '_anual'];
   const brl = v => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
-  let h = '';
+  let h = '', box = '';
   if (!open) h = `<button type="button" class="btn" disabled>Assinaturas abrem em ${PAY.founder ? '15/12' : '17/12'}</button>`;
   else if (!m || !a) h = '<button type="button" class="btn" disabled>Assinaturas abrem em breve</button>';
-  else h = `<a class="btn" href="${esc(m.url)}" target="_blank" rel="noopener">Assinar mensal · ${brl(m.value)}</a><a class="btn ghost" href="${esc(a.url)}" target="_blank" rel="noopener">Anual · ${brl(a.value)}</a>`;
+  else {
+    const mp = PAY.links[tier + '_mensal_pix'], ap = PAY.links[tier + '_anual_pix'];
+    const row = (lbl, sub, pix, other, otherLbl) => `<div class="pay-row"><div><b>${lbl}</b><span class="sub">${sub}</span></div><div class="pay-btns">${pix ? `<a class="btn sm" href="${esc(pix.url)}" target="_blank" rel="noopener">Pix</a>` : ''}<a class="btn sm ${pix ? 'ghost' : ''}" href="${esc(other.url)}" target="_blank" rel="noopener">${otherLbl}</a></div></div>`;
+    box = `<div class="pay-box">${row('Mensal · ' + brl(m.value), 'renova todo mês, cancela quando quiser', mp, m, 'Cartão ou boleto')}${row('Anual · ' + brl(a.value), 'Pix à vista ou até 12x no cartão', ap, a, 'Cartão em até 12x')}</div>`;
+  }
   const note = open && m && a ? `<div class="sub" style="text-align:left">Na hora de pagar, use o mesmo e-mail da sua conta${PAY.email ? `: <b>${esc(PAY.email)}</b>` : ''}. Assim que o pagamento cair, o Pro libera sozinho. <button type="button" class="link" data-act="paycheck">Já paguei</button></div>` : '';
   const adm = ADMIN ? `<div class="sub" style="text-align:left">Fundadora: <button type="button" class="link" data-act="paysetup">${m ? 'Atualizar' : 'Criar'} links no Asaas</button> <span id="paymsg"></span></div>` : '';
-  return { btns: h, note, adm, fund };
+  return { btns: h, box, note, adm, fund };
 }
 async function paySetup() {
   const sb = window.criahubSupabase, msg = $('#paymsg'); if (!sb) return;
@@ -5004,6 +5008,10 @@ async function planLoad() {
 .pro-sheet li::before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent,#420725);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
 .pro-price{border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:4px}
 .pro-price b{font-family:var(--display);font-size:24px}
+.pay-box{display:grid;gap:10px;width:100%}
+.pay-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left}
+.pay-row>div:first-child{display:flex;flex-direction:column;gap:2px}
+.pay-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 `; document.head.appendChild(st); })();
 function proDecorate(v) {
   if (!PLAN_READY || S.mode !== 'remote' || isPro()) return;
@@ -5025,8 +5033,8 @@ function openPro(reason) {
     <ul>${PRO_LIST.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${PAY.founder && today() <= PAY_FOUNDER_END ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 21/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
     <div class="sub">Pix, boleto, cartão de crédito ou débito. Tudo que você cadastrou continua igual quando muda de plano.</div>
-    ${pb.note}${pb.adm}
-    <div class="foot"><div class="r">${pb.btns}</div></div>
+    ${pb.box}${pb.note}${pb.adm}
+    ${pb.btns ? `<div class="foot"><div class="r">${pb.btns}</div></div>` : ''}
   </div></div>`;
 }
 window.criahubOpenPro = r => { if (sheet) closeForm(); openPro(r); };

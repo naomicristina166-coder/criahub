@@ -27,6 +27,8 @@ const PRICES: Record<string, { name: string; value: number; months: number; note
   pro_mensal: { name: 'CriaHub Pro (mensal)', value: 29.90, months: 1, note: 'Pro mensal', annual: false },
   pro_anual: { name: 'CriaHub Pro (anual)', value: 239.00, months: 12, note: 'Pro anual', annual: true },
 };
+// versões só Pix: mensal (assinatura no Pix) e anual à vista no Pix
+for (const k of Object.keys(PRICES)) PRICES[k + '_pix'] = { ...PRICES[k], name: PRICES[k].name.replace(')', ' · Pix)'), note: PRICES[k].note + ' · Pix' };
 
 async function asaas(path: string, init: RequestInit = {}) {
   const r = await fetch(API + path, { ...init, headers: { access_token: KEY, 'Content-Type': 'application/json', 'User-Agent': 'CriaHub', ...(init.headers || {}) } });
@@ -47,7 +49,10 @@ async function setup(req: Request) {
   const out: Record<string, string> = {};
   for (const [key, p] of Object.entries(PRICES)) {
     const base = { name: p.name, description: 'Assinatura do CriaHub Pro. Use o mesmo e-mail da sua conta do CriaHub.', value: p.value, dueDateLimitDays: 3, notificationEnabled: true, externalReference: key };
-    const tries = p.annual
+    const pix = key.endsWith('_pix');
+    const tries = pix
+      ? (p.annual ? [{ ...base, billingType: 'PIX', chargeType: 'DETACHED' }] : [{ ...base, billingType: 'PIX', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }])
+      : p.annual
       ? [{ ...base, billingType: 'UNDEFINED', chargeType: 'INSTALLMENT', maxInstallmentCount: 12 }, { ...base, billingType: 'CREDIT_CARD', chargeType: 'INSTALLMENT', maxInstallmentCount: 12 }]
       : [{ ...base, billingType: 'UNDEFINED', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }, { ...base, billingType: 'CREDIT_CARD', chargeType: 'RECURRENT', subscriptionCycle: 'MONTHLY' }];
     let link: any = null, err = '';
@@ -57,6 +62,7 @@ async function setup(req: Request) {
         break;
       } catch (e) { err = String(e); }
     }
+    if (!link && pix) { console.warn('pix', key, err); continue; }   // Pix é extra: se o Asaas recusar, segue sem ele
     if (!link) return json({ error: `não consegui criar ${key}: ${err}` }, 502);
     await sb.from('pay_links').upsert({ key, asaas_id: link.id, url: link.url, value: p.value, updated_at: new Date().toISOString() });
     out[key] = link.url;
