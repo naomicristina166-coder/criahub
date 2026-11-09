@@ -7,12 +7,14 @@
 --   • pay_events: histórico de cada pagamento (só a fundadora vê, pelo painel).
 
 create table if not exists public.pay_links (
-  key        text primary key check (key in ('fund_mensal', 'fund_anual', 'pro_mensal', 'pro_anual')),
+  key        text primary key,
   asaas_id   text not null,
   url        text not null,
   value      numeric not null,
   updated_at timestamptz not null default now()
 );
+alter table public.pay_links drop constraint if exists pay_links_key_check;
+alter table public.pay_links add constraint pay_links_key_check check (key ~ '^(fund|pro)_(mensal|anual)(_pix)?$');
 alter table public.pay_links enable row level security;
 drop policy if exists "pay_links: todas veem" on public.pay_links;
 create policy "pay_links: todas veem" on public.pay_links for select to authenticated using (true);
