@@ -78,12 +78,15 @@ async function webhook(evt: any) {
   if (!key && pay.externalReference in PRICES) key = pay.externalReference;
   if (!key) key = Number(pay.value) >= 150 ? (Number(pay.value) < 220 ? 'fund_anual' : 'pro_anual') : (Number(pay.value) < 27 ? 'fund_mensal' : 'pro_mensal');
   const p = PRICES[key];
-  // anual parcelado: só a 1ª parcela confirmada dá os 12 meses (as outras não somam)
-  const ref = p.annual && pay.installment ? 'parc:' + pay.installment : pay.id;
+  // anual parcelado: no cartão, a 1ª parcela confirmada já garante os 12 meses (as outras não somam);
+  // no boleto (cada parcela é um boleto), cada parcela paga libera 1 mês, pra ninguém pagar 1 e levar 12.
+  const card = pay.billingType === 'CREDIT_CARD';
+  const months = p.annual && pay.installment && !card ? 1 : p.months;
+  const ref = p.annual && pay.installment && card ? 'parc:' + pay.installment : pay.id;
   const cust = await asaas('/customers/' + encodeURIComponent(pay.customer));
   const email = String(cust.email || '').trim();
   if (!email) return json({ ok: false, error: 'cliente sem e-mail' });
-  const { data, error } = await sb.rpc('pay_grant', { p_email: email, p_months: p.months, p_note: p.note, p_payment: ref, p_link: key, p_value: Number(pay.value) });
+  const { data, error } = await sb.rpc('pay_grant', { p_email: email, p_months: months, p_note: p.note, p_payment: ref, p_link: key, p_value: Number(pay.value) });
   if (error) throw error;
   return json({ ok: true, key, result: data });
 }
