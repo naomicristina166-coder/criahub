@@ -4276,43 +4276,58 @@ function openSettings() {
   sheet = { col: 'settings' };
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="settings" role="dialog" aria-modal="true" aria-label="Ajustes">
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    ${S.mode === 'remote' ? `<div class="card section" style="gap:8px"><b>Seu plano</b><span class="sub">${ADMIN ? 'Veja a tela do Pro e os links do Asaas.' : isPro() ? `Você é Pro${PLAN && PLAN.until ? ` até ${String(PLAN.until).slice(0, 10).split('-').reverse().join('/')}` : ''} ✨` : 'Você está no plano Grátis.'}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-pro="">${ADMIN ? 'Abrir tela do Pro' : isPro() ? 'Ver o que tem no Pro' : 'Conhecer o Pro'}</button></div></div>` : ''}
+    <details class="set-g"><summary><span class="set-i">👤</span><span><b>Perfil</b><small>Nome, @ e aniversário</small></span></summary><div class="set-b">
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
     <div class="field"><label for="s_ig">Seu @ do Instagram <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="s_ig" name="ig" value="${esc(S.profile.ig ? '@' + S.profile.ig : '')}" placeholder="@seuperfil" autocomplete="off" autocapitalize="none"></div>
-    <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula. Ex.: UGC, UGC Tech Canvas</span></div> <div class="field"><label for="s_cats">Suas categorias de tarefa</label><input type="text" id="s_cats" name="taskCats" value="${esc(taskCats().join(', '))}" placeholder="Ex.: Faculdade, Curso, Academia"><span class="hint">Além de Trabalho, Pessoal, Saúde, Estudos e Casa. Separe por vírgula. Pode renomear ou apagar quando quiser.</span></div> <div class="field"><label for="s_itags">Etiquetas do banco de ideias</label><input type="text" id="s_itags" name="ideaTags" value="${esc(ideaTags().join(', '))}"><span class="hint">Separe por vírgula. Ex.: Gancho, Roteiro, Trend de áudio. Deixe vazio pra voltar às etiquetas padrão.</span></div>
-    <div class="field"><label>Seu aniversário <span class="hint" style="display:inline;margin:0">(opcional)</span></label><div class="bd-sel">${bdSelects('s_bd', S.profile.bday)}</div><span class="hint">Só dia e mês. No dia, o CriaHub comemora com você 🎂</span></div>
-    ${toolsSettings()}
-    <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div><span class="hint">Automático segue o modo do seu celular ou computador.</span></div>
+    <div class="field"><label>Seu aniversário <span class="hint" style="display:inline;margin:0">(dia e mês)</span></label><div class="bd-sel">${bdSelects('s_bd', S.profile.bday)}</div></div>
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">🎨</span><span><b>Aparência</b><small>Claro ou escuro e a cor do app</small></span></summary><div class="set-b">
+    <div class="field"><label>Aparência</label><div class="chips">${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([k, l]) => `<button type="button" class="chip" data-themeset="${k}" aria-pressed="${themePref() === k}">${l}</button>`).join('')}</div></div>
     <div class="field"><label>Cor do app <span class="sw-name" id="sw_name">${esc(colorName(cur))}</span></label>
       ${COLOR_FAMS.map(([fam, a]) => `<div class="sw-fam"><span>${fam}</span><div class="swatches">${a.map(([n, c]) => `<button type="button" class="sw" style="background:${c}" data-color="${c}" data-cname="${esc(n)}" aria-label="${esc(n)}" title="${esc(n)}" aria-pressed="${cur === c.toLowerCase()}"></button>`).join('')}</div></div>`).join('')}
       <div class="sw-fam"><span>Qualquer outra</span><div class="swatches"><input type="color" id="s_color" value="${esc(cur)}" aria-label="Escolher outra cor"><span class="hint" style="margin:0">Toque pra escolher no seletor</span></div></div>
-      <span class="hint">O vinho é a cor padrão do CriaHub. A cor muda na hora; toque em Salvar pra guardar.</span></div>
-    <div class="card section" style="gap:10px"><b>MEI e cofrinho</b>
+      <span class="hint">A cor muda na hora; toque em Salvar pra guardar.</span></div>
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">🗂️</span><span><b>Abas e organização</b><small>Ferramentas, frentes, categorias e etiquetas</small></span></summary><div class="set-b">
+    ${toolsSettings()}
+    <div class="field"><label for="s_fronts">Frentes de trabalho</label><input type="text" id="s_fronts" name="fronts" value="${esc(fronts().join(', '))}"><span class="hint">Separe por vírgula.</span></div>
+    <div class="field"><label for="s_cats">Suas categorias de tarefa</label><input type="text" id="s_cats" name="taskCats" value="${esc(taskCats().join(', '))}" placeholder="Ex.: Faculdade, Curso, Academia"><span class="hint">Além das 5 padrão. Separe por vírgula.</span></div>
+    <div class="field"><label for="s_itags">Etiquetas do banco de ideias</label><input type="text" id="s_itags" name="ideaTags" value="${esc(ideaTags().join(', '))}"><span class="hint">Separe por vírgula. Vazio volta pro padrão.</span></div>
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">💸</span><span><b>Dinheiro e MEI</b><small>CNPJ, DAS e quanto separar</small></span></summary><div class="set-b">
+    
       <label class="checkline"><input type="checkbox" name="mei" ${S.profile.mei ? 'checked' : ''}>Sou MEI</label>
       <div class="field"><label for="s_cnpj">Seu CNPJ (aparece no recibo)</label><input type="text" id="s_cnpj" name="meiCnpj" inputmode="numeric" value="${esc(S.profile.meiCnpj || '')}" placeholder="00.000.000/0001-00"></div>
       <div class="grid2"><div class="field"><label for="s_das">Valor do DAS (R$)</label><input type="number" id="s_das" name="dasValue" step="0.01" min="0" value="${esc(S.profile.dasValue || 86.05)}"></div><div class="field"><label for="s_lim">Limite anual (R$)</label><input type="number" id="s_lim" name="meiLimit" step="1" min="0" value="${esc(S.profile.meiLimit || 81000)}"></div></div>
-      <span class="hint">Valores de 2026 para MEI de serviços. Confira no Portal do Empreendedor se mudarem.</span>
+      <span class="hint">Valores de 2026, MEI de serviços.</span>
       <div class="field"><label>Quanto separar de cada ganho (%)</label><div class="grid3"><input type="number" name="potReserve" min="0" max="100" value="${esc(S.profile.potReserve ?? 10)}" aria-label="Reserva %" placeholder="Reserva"><input type="number" name="potGear" min="0" max="100" value="${esc(S.profile.potGear ?? 5)}" aria-label="Equipamento %" placeholder="Equipamento"><input type="number" name="potTax" min="0" max="100" value="${esc(S.profile.potTax ?? 0)}" aria-label="Impostos %" placeholder="Impostos"></div><span class="hint">Reserva · Equipamento · Impostos</span></div>
-    </div>
-    <div class="card section" style="gap:10px"><b>Outro trabalho</b><span class="sub">Se você tem outro emprego, o planejamento joga gravação e edição para os dias livres.</span>
+    
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">🗓️</span><span><b>Outro trabalho</b><small>Seus dias de trabalho fora do digital</small></span></summary><div class="set-b">
+    <span class="sub">O planejamento joga gravação e edição pros dias livres.</span>
       <select name="workMode" id="s_wmode" aria-label="Outro trabalho"><option value="">Não tenho outro trabalho</option><option value="semana" ${S.profile.workMode === 'semana' ? 'selected' : ''}>Trabalho em dias fixos da semana</option><option value="alternado" ${S.profile.workMode === 'alternado' ? 'selected' : ''}>Trabalho dia sim, dia não</option></select>
       <div class="chips" data-wm="semana" ${S.profile.workMode === 'semana' ? '' : 'hidden'}>${[1, 2, 3, 4, 5, 6, 0].map(i => `<label class="chip wdchip"><input type="checkbox" name="wd" value="${i}" ${(S.profile.workDays || []).includes(i) ? 'checked' : ''}>${WD[i]}</label>`).join('')}</div>
       <div class="field" data-wm="alternado" ${S.profile.workMode === 'alternado' ? '' : 'hidden'}><label for="s_wstart">Um dia em que você trabalha</label><input type="date" id="s_wstart" name="workStart" value="${esc(S.profile.workStart || '')}"></div>
       <input type="text" name="workLabel" value="${esc(S.profile.workLabel || '')}" placeholder="Nome do trabalho (ex.: Clínica)" aria-label="Nome do outro trabalho" ${S.profile.workMode ? '' : 'hidden'} data-wm="semana alternado">
-    </div>
-    <div class="card section" style="gap:8px"><b>Aprenda o CriaHub</b><span class="sub">Os stories que explicam cada aba, pra rever quando quiser.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-learn="1">Ver os stories</button></div></div>
-    <div class="card section" style="gap:8px"><b>Fale com o CriaHub</b><span class="sub">Deu algum erro, teve uma ideia ou ficou com dúvida? Manda aqui que a Naomi lê tudo e responde por aqui mesmo.</span><div class="row-btns"><button type="button" class="btn sm" data-act="feedback">Mandar mensagem</button></div></div>
-    <div class="card section" style="gap:8px"><b>Seus dados</b><span class="sub">Baixe uma cópia de tudo ou traga dados de outra versão do CriaHub.</span>
-      <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
-      ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
-    </div>
+    
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">🔔</span><span><b>Avisos</b><small>Notificações e e-mails importantes</small></span></summary><div class="set-b">
     ${window.criahubPushUI ? window.criahubPushUI('ajustes') : ''}
-    <div class="sub" style="text-align:center"><a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> · <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a> · <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a></div>
-    ${S.mode === 'remote' ? `<div class="card section" style="gap:8px"><b>Seu plano</b><span class="sub">${ADMIN ? 'Fundadora: veja a tela do Pro como as creators veem e crie ou atualize os links de pagamento do Asaas.' : isPro() ? `Você é Pro${PLAN && PLAN.until ? ` até ${String(PLAN.until).slice(0, 10).split('-').reverse().join('/')}` : ''} ✨` : 'Você está no plano Grátis.'}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-pro="">${ADMIN ? 'Abrir tela do Pro' : isPro() ? 'Ver o que tem no Pro' : 'Conhecer o Pro'}</button></div></div>` : ''}
-    <div class="card section" style="gap:8px"><b>E-mails importantes</b><span class="sub">Propostas, cobranças do MEI e pagamentos aparecem na Início, com lembrete se ficarem sem abrir.</span><div class="row-btns"><button type="button" class="btn sm ghost" data-act="mail">Configurar</button></div></div>
-    <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Dados de exemplo</b><span class="sub">Itens marcados como “exemplo” servem pra você ver o app funcionando.</span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
+    <div class="set-row"><span><b>E-mails importantes</b><small>Propostas, MEI e pagamentos na Início</small></span><button type="button" class="btn sm ghost" data-act="mail">Configurar</button></div>
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">🗄️</span><span><b>Seus dados</b><small>Exportar, importar, exemplos e conta</small></span></summary><div class="set-b">
     <div class="sub">${S.mode === 'remote' ? 'Seus dados ficam salvos na sua conta e aparecem igual no celular e no computador. Só você vê os seus dados.' : 'Neste modo, os dados ficam salvos só neste navegador.'}</div>
-    ${ADMIN ? `<div class="card section" style="gap:8px"><b>Painel admin</b><span class="sub">Só você vê. Aqui ficam as creators, o feedback, as finanças e a lista de espera.</span><div class="row-btns"><button type="button" class="btn sm" data-act="painel">${ic('painel')} Abrir o Painel admin</button></div><label class="checkline"><input type="checkbox" id="s_painel" ${painelHidden() ? '' : 'checked'}>Mostrar também no menu do computador, abaixo de Ajustes</label></div>` : ''}
+    <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
+    <div class="set-row"><span><b>Dados de exemplo</b><small>Pra ver o app funcionando</small></span><div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
+    ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
+    </div></details>
+    <details class="set-g"><summary><span class="set-i">💬</span><span><b>Ajuda</b><small>Stories das abas, falar com o CriaHub e termos</small></span></summary><div class="set-b">
+    <div class="set-row"><span><b>Aprenda o CriaHub</b><small>Os stories de cada aba</small></span><button type="button" class="btn sm ghost" data-learn="1">Ver</button></div>
+    <div class="set-row"><span><b>Fale com o CriaHub</b><small>Erro, ideia ou dúvida: a Naomi responde</small></span><button type="button" class="btn sm" data-act="feedback">Mandar</button></div>
+    <div class="sub" style="text-align:center"><a href="/termos/" target="_blank" rel="noopener">Termos de uso</a> · <a href="/privacidade/" target="_blank" rel="noopener">Política de privacidade</a> · <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a></div>
+    </div></details>
+    ${ADMIN ? `<div class="card section" style="gap:8px"><b>Painel admin</b><span class="sub">Só você vê.</span><div class="row-btns"><button type="button" class="btn sm" data-act="painel">${ic('painel')} Abrir o Painel admin</button></div><label class="checkline"><input type="checkbox" id="s_painel" ${painelHidden() ? '' : 'checked'}>Mostrar também no menu do computador, abaixo de Ajustes</label></div>` : ''}
     <div class="foot"><div class="r"><button class="btn">Salvar</button></div></div>
   </form></div>`;
 }
@@ -5009,6 +5024,18 @@ async function planLoad() {
 .pro-price{border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:4px}
 .pro-price b{font-family:var(--display);font-size:24px}
 .pay-box{display:grid;gap:10px;width:100%}
+.set-g{border:1px solid var(--line);border-radius:16px;background:var(--card,transparent)}
+.set-g>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+.set-g>summary::-webkit-details-marker{display:none}
+.set-g>summary::after{content:"›";margin-left:auto;font-size:20px;opacity:.5;transition:transform .2s}
+.set-g[open]>summary::after{transform:rotate(90deg)}
+.set-g>summary b,.set-row b{display:block;font-size:15px}
+.set-g>summary small,.set-row small{display:block;font-size:12.5px;opacity:.65;margin-top:1px}
+.set-i{font-size:20px;width:28px;text-align:center}
+.set-b{display:flex;flex-direction:column;gap:14px;padding:4px 14px 16px}
+.set-b>.card{border:0;padding:0;background:none;box-shadow:none}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.set-row .row-btns,.set-row>div{flex:none}
 .pay-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left}
 .pay-row>div:first-child{display:flex;flex-direction:column;gap:2px}
 .pay-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
