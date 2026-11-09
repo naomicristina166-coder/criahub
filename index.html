@@ -4320,7 +4320,7 @@ function openSettings() {
     <div class="sub">${S.mode === 'remote' ? 'Seus dados ficam salvos na sua conta e aparecem igual no celular e no computador. Só você vê os seus dados.' : 'Neste modo, os dados ficam salvos só neste navegador.'}</div>
     <div class="row-btns"><button type="button" class="btn sm ghost" data-act="export">Exportar meus dados</button><label class="btn sm ghost" style="cursor:pointer">Importar dados<input type="file" id="imp_file" accept="application/json,.json" hidden></label></div>
     <div class="set-row"><span><b>Dados de exemplo</b><small>Pra ver o app funcionando</small></span><div style="display:flex;gap:8px;flex-wrap:wrap">${hasExamples() ? `<button type="button" class="btn sm danger" data-act="clearex">Apagar exemplos</button>` : `<button type="button" class="btn sm ghost" data-act="examples">Carregar exemplos</button>`}</div></div>
-    ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app no celular</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
+    ${window.criahubInstall || window.CRIAHUB_STANDALONE ? `<div class="row-btns"><button type="button" class="btn sm" data-act="install">Instalar o app (passo a passo)</button>${window.criahubLogout ? '<button type="button" class="btn sm danger" data-act="logout">Sair da conta</button>' : ''}</div>` : ''}
     </div></details>
     <details class="set-g"><summary><span class="set-i">💬</span><span><b>Ajuda</b><small>Stories das abas, falar com o CriaHub e termos</small></span></summary><div class="set-b">
     <div class="set-row"><span><b>Aprenda o CriaHub</b><small>Os stories de cada aba</small></span><button type="button" class="btn sm ghost" data-learn="1">Ver</button></div>
@@ -4431,7 +4431,7 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
     else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' })); a.download = fn; document.body.appendChild(a); a.click(); a.remove(); toast('Backup baixado'); }
     return; }
   if (d.act === 'logout') { if (window.criahubLogout) await window.criahubLogout(); return; }
-  if (d.act === 'install') { if (window.criahubInstall) { const ok = await window.criahubInstall(); if (!ok) toast(/iphone|ipad/i.test(navigator.userAgent) ? 'No iPhone: abra no Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".' : 'Use o menu do navegador e toque em "Instalar app" ou "Adicionar à tela inicial".'); } else toast('No iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início".'); return; }
+  if (d.act === 'install') { const ok = window.criahubInstall ? await window.criahubInstall() : false; if (!ok) window.open('/instalar/', '_blank', 'noopener'); return; }
   if (d.goag) { S.f.aview = d.goag; S.tab = 'agenda'; render(); window.scrollTo(0, 0); return; }
   if (d.gogolpe) { S.f.mview = 'contratos'; S.ct.sub = 'golpe'; S.tab = 'marcas'; render(); window.scrollTo(0, 0); return; }
   if (d.act === 'wnclose') { await saveProfile({ seenWhatsNew: NEWS_V }); return; }

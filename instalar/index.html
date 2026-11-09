@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instalar o CriaHub</title><meta name="description" content="Passo a passo pra colocar o CriaHub na tela do seu celular, tablet ou computador."><meta name="theme-color" content="#420725"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Manrope:wght@400;700;800&display=swap"><style>
+:root{--vinho:#420725;--rosa:#F4C9D8;--rosa-2:#FBE7EE;--bg:#FAF6F7;--ink:#22141A;--muted:#7A5A64;--line:#EEDFE4}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16.5px/1.6 Manrope,ui-sans-serif,system-ui,sans-serif}
+header{background:var(--vinho);color:#fff;padding:22px 16px 26px}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0}
+.logo{font:800 26px/1 "Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;letter-spacing:-.035em;color:#fff;text-decoration:none}.logo .c{color:var(--rosa)}
+h1{font:800 30px/1.1 "Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;letter-spacing:-.02em;margin:18px 0 6px}
+header p{margin:0;color:var(--rosa)}
+main.wrap{padding:22px 16px 60px}
+h2{font:800 20px/1.25 "Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;margin:0 0 12px;color:var(--vinho)}
+.q{font-weight:800;margin:0 0 10px}
+.devs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:22px}
+.dev{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border:2px solid var(--line);border-radius:16px;background:#fff;font:700 15px Manrope,sans-serif;color:var(--ink);cursor:pointer}
+.dev span{font-size:28px;line-height:1}
+.dev small{font-weight:400;color:var(--muted);font-size:12.5px}
+.dev[aria-pressed="true"]{border-color:var(--vinho);background:var(--rosa-2)}
+.guide{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px 18px}
+.guide[hidden]{display:none}
+.warn{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:15px;margin:0 0 14px}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:s}
+ol li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;counter-increment:s}
+ol li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--vinho);color:#fff;display:grid;place-items:center;font:800 16px Manrope,sans-serif}
+.ic{display:inline-flex;align-items:center;justify-content:center;vertical-align:-6px;width:28px;height:28px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);margin:0 2px}
+.ic svg{width:17px;height:17px}
+.done{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.btn{display:inline-block;margin-top:10px;background:var(--vinho);color:#fff;text-decoration:none;font-weight:800;padding:12px 18px;border-radius:999px}
+.help{margin-top:22px;font-size:15px;color:var(--muted)}
+a{color:var(--vinho);font-weight:700}
+</style></head>
+<body><header><div class="wrap"><a class="logo" href="/"><span class="c">cria</span>hub</a><h1>Coloque o CriaHub na sua tela</h1><p>Leva menos de 1 minuto e não precisa de loja de apps.</p></div></header>
+<main class="wrap">
+  <p class="q">Qual aparelho você está usando?</p>
+  <div class="devs" role="group" aria-label="Escolha seu aparelho">
+    <button class="dev" data-d="iphone" aria-pressed="false"><span>📱</span>iPhone<small>Apple / iOS</small></button>
+    <button class="dev" data-d="ipad" aria-pressed="false"><span>🍎</span>iPad<small>tablet Apple</small></button>
+    <button class="dev" data-d="android" aria-pressed="false"><span>🤖</span>Celular Android<small>Samsung, Motorola, Xiaomi…</small></button>
+    <button class="dev" data-d="tablet" aria-pressed="false"><span>📲</span>Tablet Android<small>Samsung Tab e outros</small></button>
+    <button class="dev" data-d="pc" aria-pressed="false"><span>💻</span>Computador<small>Windows ou Mac</small></button>
+  </div>
+
+  <section class="guide" data-g="iphone" hidden>
+    <h2>No iPhone</h2>
+    <p class="warn">⚠️ Tem que ser pelo <b>Safari</b> (a bússola azul). Pelo Instagram, WhatsApp ou Chrome não aparece a opção.</p>
+    <ol>
+      <li><div>Abra o <b>Safari</b> e entre em <b>criahub.app.br</b>.</div></li>
+      <li><div>Toque no botão de <b>Compartilhar</b> <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg></span> na barra de baixo. (Se a barra sumiu, toque uma vez na parte de baixo da tela.)</div></li>
+      <li><div>Role a lista pra baixo e toque em <b>Adicionar à Tela de Início</b> <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span>.</div></li>
+      <li><div>Toque em <b>Adicionar</b>, no canto de cima. Pronto: o ícone do CriaHub aparece junto com seus apps.</div></li>
+    </ol>
+    <div class="done">💡 Abra sempre pelo <b>ícone</b>, não pelo Safari. É assim que as <b>notificações</b> funcionam no iPhone (precisa do iOS 16.4 ou mais novo). Depois, no app: <b>Ajustes › Avisos</b> e ligue as notificações.</div>
+  </section>
+
+  <section class="guide" data-g="ipad" hidden>
+    <h2>No iPad</h2>
+    <p class="warn">⚠️ Tem que ser pelo <b>Safari</b>.</p>
+    <ol>
+      <li><div>Abra o <b>Safari</b> e entre em <b>criahub.app.br</b>.</div></li>
+      <li><div>Toque no botão de <b>Compartilhar</b> <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg></span>, no <b>canto de cima, à direita</b>, ao lado da barra de endereço.</div></li>
+      <li><div>Toque em <b>Adicionar à Tela de Início</b>.</div></li>
+      <li><div>Toque em <b>Adicionar</b>. O ícone aparece na tela do iPad.</div></li>
+    </ol>
+    <div class="done">💡 Abra sempre pelo ícone. Depois, no app: <b>Ajustes › Avisos</b> pra ligar as notificações.</div>
+  </section>
+
+  <section class="guide" data-g="android" hidden>
+    <h2>No celular Android</h2>
+    <p class="warn">Use o <b>Chrome</b> (a bolinha colorida). Se abriu pelo Instagram ou WhatsApp, toque nos três pontinhos e em <b>Abrir no Chrome</b>.</p>
+    <ol>
+      <li><div>Abra o <b>Chrome</b> e entre em <b>criahub.app.br</b>.</div></li>
+      <li><div>Se aparecer o aviso <b>"Instalar app"</b> embaixo da tela, toque nele e pule pro passo 4.</div></li>
+      <li><div>Se não aparecer, toque nos <b>três pontinhos</b> <span class="ic"><svg viewBox="0 0 24 24" fill="#420725"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span> no canto de cima e depois em <b>Instalar app</b> (ou <b>Adicionar à tela inicial</b>).</div></li>
+      <li><div>Toque em <b>Instalar</b>. O ícone do CriaHub aparece na tela inicial.</div></li>
+    </ol>
+    <div class="done">💡 <b>Samsung Internet</b> também funciona: toque no menu <b>☰</b> e em <b>Adicionar página a › Tela inicial</b>. Depois, no app: <b>Ajustes › Avisos</b> pra ligar as notificações.</div>
+  </section>
+
+  <section class="guide" data-g="tablet" hidden>
+    <h2>No tablet Android</h2>
+    <p class="warn">Use o <b>Chrome</b>.</p>
+    <ol>
+      <li><div>Abra o <b>Chrome</b> e entre em <b>criahub.app.br</b>.</div></li>
+      <li><div>Na barra de endereço, toque no ícone de <b>instalar</b> <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 8v6M9 11l3 3 3-3M8 21h8"/></svg></span>, se aparecer.</div></li>
+      <li><div>Se não aparecer, toque nos <b>três pontinhos</b> <span class="ic"><svg viewBox="0 0 24 24" fill="#420725"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span> (canto de cima, à direita) › <b>Instalar app</b>.</div></li>
+      <li><div>Confirme em <b>Instalar</b>.</div></li>
+    </ol>
+    <div class="done">💡 Depois, no app: <b>Ajustes › Avisos</b> pra ligar as notificações.</div>
+  </section>
+
+  <section class="guide" data-g="pc" hidden>
+    <h2>No computador</h2>
+    <ol>
+      <li><div>Abra <b>criahub.app.br</b> no <b>Chrome</b> ou no <b>Edge</b>.</div></li>
+      <li><div>Na barra de endereço, do lado direito, clique no ícone de <b>instalar</b> <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#420725" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 8v6M9 11l3 3 3-3M8 21h8"/></svg></span>.</div></li>
+      <li><div>Se não aparecer: menu <b>⋮</b> › <b>Transmitir, salvar e compartilhar</b> › <b>Instalar página como app</b> (no Edge: <b>⋯ › Aplicativos › Instalar este site</b>).</div></li>
+      <li><div>Clique em <b>Instalar</b>. O CriaHub abre numa janela própria e ganha um atalho.</div></li>
+    </ol>
+    <div class="done">💡 <b>No Mac com Safari</b>: menu <b>Arquivo › Adicionar ao Dock</b>.</div>
+  </section>
+
+  <p class="help">Não deu certo? Manda uma mensagem pra <a href="mailto:criahubb@gmail.com">criahubb@gmail.com</a> com o modelo do seu aparelho que a gente te ajuda.</p>
+  <a class="btn" href="/">Abrir o CriaHub</a>
+</main>
+<script>
+(() => {
+  const ua = navigator.userAgent, ipad = /ipad/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  const guess = ipad ? 'ipad' : /iphone|ipod/i.test(ua) ? 'iphone' : /android/i.test(ua) ? (/mobile/i.test(ua) ? 'android' : 'tablet') : 'pc';
+  const want = new URLSearchParams(location.search).get('d');
+  const show = d => {
+    document.querySelectorAll('.dev').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.d === d)));
+    document.querySelectorAll('.guide').forEach(g => { g.hidden = g.dataset.g !== d; });
+  };
+  document.querySelectorAll('.dev').forEach(b => b.addEventListener('click', () => { show(b.dataset.d); document.querySelector('.guide[data-g="' + b.dataset.d + '"]').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  show(['iphone', 'ipad', 'android', 'tablet', 'pc'].includes(want) ? want : guess);
+})();
+</script>
+</body></html>
