@@ -4981,7 +4981,7 @@ function openPro(reason) {
     <div class="sh"><h2>CriaHub Pro ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="sub">${esc(why)}</div>
     <ul>${PRO_LIST.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 199, em até 12x de R$ 16,58 no cartão</span></div>
+    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${today() <= '2026-12-21' ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 21/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
     <div class="sub">Pix, boleto, cartão de crédito ou débito. Tudo que você cadastrou continua igual quando muda de plano.</div>
     <div class="foot"><div class="r">${PRO_URL ? `<a class="btn" href="${PRO_URL}" target="_blank" rel="noopener">Assinar o Pro</a>` : '<button type="button" class="btn" disabled>Assinaturas abrem em 15/12</button>'}</div></div>
   </div></div>`;

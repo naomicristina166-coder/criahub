@@ -42,7 +42,7 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
     '',
     'O que acontece agora:',
     `1. No dia ${LAUNCH}, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`,
-    '2. Preço de Cria Fundadora: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual.',
+    '2. Preço de Cria Fundadora: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 199 no anual. Depois, o Pro passa a custar R$ 29,90 por mês.',
     '3. Até lá, eu mostro os bastidores no Instagram: @criahubapp e @naomicristinna_',
     ...(GROUP_URL ? ['', `Entra no grupo VIP das Crias no WhatsApp, onde saem os spoilers: ${GROUP_URL}`] : []),
     ...(row.pain ? ['', `Você me contou que o que mais te atrapalha é: "${String(row.pain).trim()}". Anotei. É exatamente pra isso que o CriaHub existe.`] : []),
@@ -75,7 +75,7 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
     <p style="margin:0 0 14px;font:700 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#7A4A53">O que acontece agora</p>
     <table role="presentation" cellpadding="0" cellspacing="0">
       ${step('1', `No dia <b>${LAUNCH}</b>, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`)}
-      ${step('2', 'Preço de <b>Cria Fundadora</b>: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 149 no anual.')}
+      ${step('2', 'Preço de <b>Cria Fundadora</b>: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 199 no anual. Depois, o Pro passa a custar R$ 29,90 por mês.')}
       ${step('3', 'Até lá, eu mostro os bastidores no Instagram.')}
     </table>
     ${GROUP_URL ? `<div style="margin:6px 0 14px;padding:16px 18px;border-radius:16px;background:#E3F5EC;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218"><b>Grupo VIP das Crias</b><br>É lá que saem os spoilers do app e o aviso na hora que as portas abrirem.<div style="margin-top:10px">${btn(GROUP_URL, 'Entrar no grupo VIP', '#1F8A5B', '#FFFFFF')}</div></div>` : ''}
