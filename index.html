@@ -2193,9 +2193,9 @@ function workBanner(d) {
 }
 
 /* ================= estúdio ================= */
-const STVIEWS = [['briefing', 'Briefing'], ['posts', 'Meus posts'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
-const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros', 'posts'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
-function vStudio() { return ({ posts: vMyPosts, alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
+const STVIEWS = [['briefing', 'Briefing'], ['prontos', 'Prontos pra postar'], ['posts', 'Meus posts'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
+const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros', 'posts', 'prontos'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
+function vStudio() { return ({ prontos: vReady, posts: vMyPosts, alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
 function studioUsage() {
   if (window.CRIAHUB_STANDALONE) return '';
   const u = usage(), used = u.studio || 0, max = LIMITS.studio, pct = Math.min(100, Math.round(used / max * 100));
@@ -2458,7 +2458,7 @@ const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Vision Board', 'Seus sonhos e metas com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['prontos', 'Prontos pra postar', 'Seus vídeos editados, guardados na ordem de postar', () => RD.n > 0, true], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e pra quê', null, true], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
@@ -6111,6 +6111,140 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .pl-pot b{font-size:20px}.pl-pot b small{font-size:12px;font-weight:600;color:var(--muted)}.pl-pot > small{font-size:12px;color:var(--muted)}
 .pl-ready.ok{border-color:color-mix(in oklab, var(--ok,#1F8A5B) 45%, var(--line))}
 </style>`);
+
+
+/* ================= Prontos pra postar: vídeos editados guardados NESTE aparelho (IndexedDB), sem custo de nuvem =================
+   O arquivo fica igualzinho ao original (sem comprimir). Cada vídeo tem destino (meu perfil, conta do Canvas ou marca),
+   dia, legenda e ordem. "Postar" abre a tela de compartilhar do celular (Instagram, TikTok…) ou salva na galeria. */
+const RD = { list: [], n: 0, ready: false, uid: 'local', f: 'todos', file: null, url: null, est: null };
+const rdDb = () => new Promise((ok, no) => { const r = indexedDB.open('criahub-prontos', 1); r.onupgradeneeded = () => { const s = r.result.createObjectStore('videos', { keyPath: 'id' }); s.createIndex('uid', 'uid'); }; r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+async function rdTx(mode, fn) { const db = await rdDb(); return new Promise((ok, no) => { const tx = db.transaction('videos', mode), st = tx.objectStore('videos'); let out; Promise.resolve(fn(st)).then(v => out = v); tx.oncomplete = () => { db.close(); ok(out); }; tx.onerror = () => { db.close(); no(tx.error); }; tx.onabort = () => { db.close(); no(tx.error || new Error('abort')); }; }); }
+const rdReq = r => new Promise((ok, no) => { r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+/* a lista guarda só os dados (sem o arquivo), pra ficar leve */
+async function rdLoad() {
+  try { const sb = window.criahubSupabase; if (sb) { const { data } = await sb.auth.getSession(); RD.uid = data?.session?.user?.id || 'local'; } } catch (_) {}
+  try {
+    const db = await rdDb(); const all = await new Promise((ok, no) => { const out = [], tx = db.transaction('videos'), c = tx.objectStore('videos').index('uid').openCursor(IDBKeyRange.only(RD.uid));
+      c.onsuccess = () => { const cur = c.result; if (!cur) return; const { file, ...m } = cur.value; out.push(m); cur.continue(); }; tx.oncomplete = () => ok(out); tx.onerror = () => no(tx.error); }); db.close();
+    RD.list = all.sort((a, b) => (a.order || 0) - (b.order || 0)); RD.n = RD.list.filter(v => v.status !== 'postado').length;
+  } catch (_) { RD.list = []; RD.n = 0; }
+  try { RD.est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; } catch (_) { RD.est = null; }
+  RD.ready = true; if (S.tab === 'estudio' && S.f.sview === 'prontos') render();
+}
+async function rdPut(m) { await rdTx('readwrite', async st => { const cur = await rdReq(st.get(m.id)); st.put({ ...(cur || {}), ...m }); }); }
+const rdGet = id => rdTx('readonly', st => rdReq(st.get(id)));
+const rdDel = id => rdTx('readwrite', st => st.delete(id));
+setTimeout(rdLoad, 1500);
+const rdMB = b => b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', ',') + ' GB' : Math.max(1, Math.round(b / 1e6)) + ' MB';
+const rdDests = () => [['perfil', 'Meu perfil'], ...S.data.accounts.map(a => ['conta:' + a.id, (a.handle || 'Conta') + (a.brandId ? ' · ' + brandName(a.brandId) : '')]), ...S.data.brands.map(b => ['marca:' + b.id, b.name])];
+const rdDestName = k => (rdDests().find(x => x[0] === k) || [0, 'Meu perfil'])[1];
+const rdDestIc = k => String(k || '').startsWith('conta:') ? '📱' : String(k || '').startsWith('marca:') ? '🏷️' : '🙋‍♀️';
+/* miniatura: pega um quadro do começo do vídeo (se o navegador deixar) */
+function rdThumb(file) {
+  return new Promise(ok => { let done = false; const fin = v => { if (done) return; done = true; try { URL.revokeObjectURL(u); } catch (_) {} ok(v); };
+    const u = URL.createObjectURL(file), v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = u;
+    const grab = () => { try { const w = 240, h = Math.round(w * (v.videoHeight || 16) / (v.videoWidth || 9)) || 426, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(v, 0, 0, w, h); fin({ thumb: c.toDataURL('image/jpeg', .7), dur: v.duration || 0 }); } catch (_) { fin({ thumb: '', dur: v.duration || 0 }); } };
+    v.onloadeddata = () => { try { v.currentTime = Math.min(0.5, (v.duration || 1) / 3); } catch (_) { grab(); } }; v.onseeked = grab; v.onerror = () => fin({ thumb: '', dur: 0 }); setTimeout(() => fin({ thumb: '', dur: 0 }), 6000); });
+}
+async function rdAdd(files) {
+  if (!files || !files.length) return;
+  try { navigator.storage && navigator.storage.persist && await navigator.storage.persist(); } catch (_) {}
+  const dest = RD.f !== 'todos' ? RD.f : 'perfil'; let ord = RD.list.reduce((m, v) => Math.max(m, v.order || 0), 0), ok = 0;
+  toast(files.length > 1 ? `Guardando ${files.length} vídeos…` : 'Guardando o vídeo…');
+  for (const f of files) {
+    try { const th = await rdThumb(f);
+      await rdPut({ id: newId(), uid: RD.uid, title: f.name.replace(/\.[^.]+$/, '').slice(0, 80), dest, date: '', time: '', caption: '', tags: '', status: 'pronto', order: ++ord, name: f.name, type: f.type || 'video/mp4', size: f.size, created: new Date().toISOString(), ...th, file: f }); ok++;
+    } catch (e) { toast(/quota/i.test(String(e && e.name)) ? 'O celular está sem espaço pra guardar mais vídeos.' : 'Não consegui guardar ' + f.name); }
+  }
+  await rdLoad(); if (ok) toast(ok > 1 ? `${ok} vídeos guardados ✨` : 'Vídeo guardado ✨');
+}
+function rdCard(v, i, L) {
+  const late = v.date && v.date < today() && v.status !== 'postado';
+  return `<div class="rd${v.status === 'postado' ? ' done' : ''}">
+    <button class="rd-th" data-rdpost="${v.id}" aria-label="Abrir ${esc(v.title)}">${v.thumb ? `<img src="${v.thumb}" alt="">` : '<span>🎬</span>'}${v.dur ? `<small>${Math.floor(v.dur / 60)}:${pad(Math.round(v.dur % 60))}</small>` : ''}</button>
+    <div class="rd-b"><b>${esc(v.title)}</b><small>${rdDestIc(v.dest)} ${esc(rdDestName(v.dest))}</small>
+      <small${late ? ' style="color:var(--warn)"' : ''}>${v.status === 'postado' ? '✓ Postado' : v.date ? `📅 ${fmtD(v.date)}${v.time ? ' · ' + esc(v.time) : ''}${late ? ' · atrasado' : ''}` : 'Sem dia'} · ${rdMB(v.size || 0)}</small>
+      <div class="rd-a"><button class="btn sm" data-rdpost="${v.id}">${v.status === 'postado' ? 'Ver' : 'Postar'}</button><button class="link" data-rdedit="${v.id}">Editar</button></div></div>
+    <div class="rd-o">${i > 0 ? `<button class="iconbtn sm" data-rdmv="${v.id}|-1" aria-label="Subir na fila">↑</button>` : ''}${i < L.length - 1 ? `<button class="iconbtn sm" data-rdmv="${v.id}|1" aria-label="Descer na fila">↓</button>` : ''}</div></div>`;
+}
+function vReady() {
+  if (!RD.ready) { rdLoad(); }
+  const all = RD.list, F = RD.f, inF = v => F === 'todos' || v.dest === F;
+  const L = all.filter(v => inF(v) && v.status !== 'postado'), P = all.filter(v => inF(v) && v.status === 'postado');
+  const used = all.reduce((s, v) => s + (v.size || 0), 0), free = RD.est && RD.est.quota ? RD.est.quota - RD.est.usage : 0;
+  const dests = [...new Set(all.map(v => v.dest))];
+  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Gravou e editou tudo num dia? Guarde aqui os vídeos prontos, na ordem, e na hora é só tocar em Postar.</div></div><label class="btn" style="cursor:pointer">${ic('plus')}Adicionar vídeos<input type="file" accept="video/*" multiple data-rdfile="1" hidden></label></div>${studioSeg()}
+  ${dests.length > 1 || F !== 'todos' ? `<div class="chips" role="group" aria-label="Filtrar por destino"><button class="chip" data-rdf="todos" aria-pressed="${F === 'todos'}">Todos</button>${[...new Set(['perfil', ...dests])].map(k => `<button class="chip" data-rdf="${esc(k)}" aria-pressed="${F === k}">${rdDestIc(k)} ${esc(rdDestName(k))}</button>`).join('')}</div>` : ''}
+  ${L.length ? `<section class="section"><div class="row-h"><h2>Na fila (${L.length})</h2><span class="sub">na ordem de postar</span></div><div class="rd-list">${L.map(rdCard).join('')}</div></section>`
+    : `<section class="card section" style="gap:8px;align-items:flex-start"><b>${all.length ? 'Nada na fila aqui 🎉' : 'Nenhum vídeo guardado ainda'}</b><span class="sub">Toque em <b>Adicionar vídeos</b> e escolha os vídeos já editados. Dá pra escolher vários de uma vez. Depois arrume a ordem, o dia e a legenda de cada um.</span></section>`}
+  ${P.length ? `<section class="section"><div class="row-h"><h2>Postados (${P.length})</h2><button class="link" data-rdclean="1">Apagar os postados do app</button></div><div class="rd-list">${P.map(rdCard).join('')}</div></section>` : ''}
+  <div class="wnote">📱 <span>Os vídeos ficam guardados <b>só neste aparelho</b>, na qualidade original. Ocupam ${rdMB(used)}${free ? ` · livre pro app: ${rdMB(free)}` : ''}. Depois de postar, apague pra liberar espaço.</span></div>`;
+}
+function rdForm(v) {
+  sheet = { col: 'rdedit' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-rdform="${v.id}" role="dialog" aria-modal="true" aria-label="Editar vídeo">
+    <div class="sh"><h2>Editar vídeo</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="field"><label for="rd_t">Nome</label><input id="rd_t" name="title" maxlength="80" value="${esc(v.title)}" required></div>
+    <div class="field"><label for="rd_d">Pra onde vai</label><select id="rd_d" name="dest">${rdDests().map(([k, l]) => `<option value="${esc(k)}"${k === v.dest ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+    <div class="grid2"><div class="field"><label for="rd_dt">Dia de postar</label><input id="rd_dt" type="date" name="date" value="${esc(v.date || '')}"></div><div class="field"><label for="rd_h">Horário</label><input id="rd_h" type="time" name="time" value="${esc(v.time || '')}"></div></div>
+    <div class="field"><label for="rd_c">Legenda</label><textarea id="rd_c" name="caption" rows="4" maxlength="2200">${esc(v.caption || '')}</textarea></div>
+    <div class="field"><label for="rd_g">Hashtags</label><input id="rd_g" name="tags" maxlength="500" value="${esc(v.tags || '')}" placeholder="#ugc #creator"></div>
+    <div class="foot"><button type="button" class="btn danger" data-rddel="${v.id}">Apagar vídeo</button><div class="r"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn">Salvar</button></div></div>
+  </form></div>`;
+}
+async function rdOpen(id) {
+  const v = await rdGet(id).catch(() => null); if (!v || !v.file) { toast('Não achei esse vídeo neste aparelho.'); rdLoad(); return; }
+  try { RD.url && URL.revokeObjectURL(RD.url); } catch (_) {}
+  RD.file = v.file instanceof File ? v.file : new File([v.file], v.name || 'video.mp4', { type: v.type || 'video/mp4' }); RD.url = URL.createObjectURL(RD.file);
+  const cap = [v.caption, v.tags].filter(Boolean).join('\n\n'), canShare = !!(navigator.canShare && navigator.canShare({ files: [RD.file] }));
+  sheet = { col: 'rdpost' };
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet rd-sheet" role="dialog" aria-modal="true" aria-label="Postar vídeo">
+    <div class="sh"><h2>${esc(v.title)}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <span class="sub">${rdDestIc(v.dest)} ${esc(rdDestName(v.dest))}${v.date ? ' · ' + fmtD(v.date) : ''}${v.time ? ' · ' + esc(v.time) : ''}</span>
+    <video src="${RD.url}" controls playsinline preload="metadata" class="rd-vid"></video>
+    ${cap ? `<div class="card section" style="gap:6px"><b>Legenda</b><span class="sub" style="white-space:pre-wrap">${esc(cap)}</span><button type="button" class="btn sm ghost" data-rdcap="${v.id}" style="align-self:flex-start">Copiar legenda</button></div>` : ''}
+    <div class="row-btns" style="flex-wrap:wrap">${canShare ? `<button type="button" class="btn" data-rdshare="${v.id}">Postar (Instagram, TikTok…)</button>` : ''}<a class="btn ${canShare ? 'ghost' : ''}" href="${RD.url}" download="${esc(v.name || 'video.mp4')}">Salvar na galeria</a></div>
+    ${canShare ? `<span class="sub" style="font-size:12.5px">${cap ? 'A legenda é copiada junto: no Instagram é só colar. ' : ''}No iPhone, pra salvar na galeria, toque em Postar › Salvar vídeo.</span>` : ''}
+    ${v.status === 'postado' ? `<button type="button" class="link" data-rdundo="${v.id}" style="align-self:flex-start">Voltar pra fila</button>` : `<button type="button" class="btn ghost" data-rddone="${v.id}">✓ Já postei</button>`}
+  </div></div>`;
+  const cl = e => { if (!document.querySelector('.rd-sheet')) { try { URL.revokeObjectURL(RD.url); } catch (_) {} RD.url = null; RD.file = null; obs.disconnect(); } }; const obs = new MutationObserver(cl); obs.observe($('#layer'), { childList: true });
+}
+async function rdMove(id, dir) {
+  const F = RD.f, L = RD.list.filter(v => (F === 'todos' || v.dest === F) && v.status !== 'postado'), i = L.findIndex(v => v.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= L.length) return; const a = L[i], b = L[j], oa = a.order, ob = b.order === oa ? oa + dir : b.order;
+  await rdPut({ id: a.id, order: ob }); await rdPut({ id: b.id, order: oa }); await rdLoad();
+}
+document.addEventListener('change', async e => { const t = e.target; if (!t.matches || !t.matches('[data-rdfile]')) return; const fs = [...(t.files || [])]; t.value = ''; await rdAdd(fs); }, true);
+document.addEventListener('submit', async e => { const f = e.target; if (!f.dataset || !f.dataset.rdform) return; e.preventDefault(); e.stopImmediatePropagation();
+  const g = n => (f.elements[n].value || '').trim(); await rdPut({ id: f.dataset.rdform, title: g('title') || 'Vídeo', dest: g('dest'), date: g('date'), time: g('time'), caption: g('caption'), tags: g('tags') }); closeForm(); await rdLoad(); toast('Salvo'); }, true);
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-rdpost],[data-rdedit],[data-rdmv],[data-rdf],[data-rdshare],[data-rdcap],[data-rddone],[data-rdundo],[data-rddel],[data-rdclean]'); if (!t) return;
+  const d = t.dataset;
+  if (d.rdshare) { e.preventDefault(); e.stopImmediatePropagation();   /* tudo síncrono: o celular só deixa compartilhar logo depois do toque */
+    const v = RD.list.find(x => x.id === d.rdshare), cap = v ? [v.caption, v.tags].filter(Boolean).join('\n\n') : '';
+    if (cap && navigator.clipboard) navigator.clipboard.writeText(cap).catch(() => {});
+    if (!RD.file) return; navigator.share({ files: [RD.file] }).then(() => { const b = document.querySelector('[data-rddone]'); if (b) { b.classList.remove('ghost'); b.textContent = '✓ Já postei: marcar como postado'; } }).catch(err => { if (err && err.name !== 'AbortError') toast('Não consegui abrir o compartilhar. Use Salvar na galeria.'); }); return; }
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (d.rdpost) { rdOpen(d.rdpost); return; }
+  if (d.rdedit) { const v = RD.list.find(x => x.id === d.rdedit); if (v) rdForm(v); return; }
+  if (d.rdmv) { const [id, dir] = d.rdmv.split('|'); rdMove(id, +dir); return; }
+  if (d.rdf) { RD.f = d.rdf; render(); return; }
+  if (d.rdcap) { const v = RD.list.find(x => x.id === d.rdcap); try { await navigator.clipboard.writeText([v.caption, v.tags].filter(Boolean).join('\n\n')); toast('Legenda copiada'); } catch (_) { toast('Não consegui copiar'); } return; }
+  if (d.rddone) { await rdPut({ id: d.rddone, status: 'postado', postedAt: new Date().toISOString() }); closeForm(); await rdLoad(); toast('Postado ✓ Quando quiser, apague os postados pra liberar espaço'); return; }
+  if (d.rdundo) { await rdPut({ id: d.rdundo, status: 'pronto' }); closeForm(); await rdLoad(); return; }
+  if (d.rddel) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Toque de novo pra apagar'; return; } await rdDel(d.rddel); closeForm(); await rdLoad(); toast('Vídeo apagado do app'); return; }
+  if (d.rdclean) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Toque de novo: apagar os postados'; return; } for (const v of RD.list.filter(x => x.status === 'postado')) await rdDel(v.id); await rdLoad(); toast('Espaço liberado ✨'); return; }
+}, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.rd-list{display:grid;gap:10px}@media(min-width:900px){.rd-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rd{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px}
+.rd.done{opacity:.6}
+.rd-th{flex:none;width:64px;height:96px;border-radius:12px;overflow:hidden;border:0;padding:0;background:var(--line);position:relative;display:grid;place-items:center;font-size:24px;cursor:pointer}
+.rd-th img{width:100%;height:100%;object-fit:cover}.rd-th small{position:absolute;right:4px;bottom:4px;background:rgb(0 0 0/.6);color:#fff;font-size:10.5px;border-radius:6px;padding:1px 4px}
+.rd-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rd-b b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-b small{font-size:12.5px;opacity:.75}
+.rd-a{display:flex;gap:12px;align-items:center;margin-top:6px}.rd-o{display:flex;flex-direction:column;gap:4px}
+.rd-vid{width:100%;max-height:60vh;border-radius:14px;background:#000}
+`; document.head.appendChild(st); })();
 
 /* ================= programa de afiliadas ================= */
 (() => { try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[a-z0-9_-]{2,30}$/i.test(r)) localStorage.setItem('criahub:ref', r.toLowerCase()); } catch (_) {} })();
