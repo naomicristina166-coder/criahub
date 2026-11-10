@@ -7,6 +7,29 @@
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
+-- chave do agendador e funções que a "caixa" usa (as mesmas do emails.sql; aqui pra o alarme funcionar
+-- mesmo sem o e-mail configurado)
+create schema if not exists private;
+create table if not exists private.mail_key (id int primary key default 1, hook text not null, cron text not null);
+alter table private.mail_key enable row level security;
+revoke all on private.mail_key from anon, authenticated;
+insert into private.mail_key (id, hook, cron)
+  values (1, replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''),
+             replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''))
+  on conflict (id) do nothing;
+create or replace function public.mail_key_ok(p_kind text, p_val text) returns boolean
+  language sql security definer set search_path = private as $$
+  select coalesce((select case p_kind when 'hook' then hook when 'cron' then cron end from private.mail_key where id = 1) = p_val, false)
+$$;
+revoke all on function public.mail_key_ok(text, text) from public, anon, authenticated;
+grant execute on function public.mail_key_ok(text, text) to service_role;
+create or replace function public.mail_vapid() returns jsonb
+  language sql security definer set search_path = private as $$
+  select jsonb_build_object('pub', to_jsonb(pub), 'priv', to_jsonb(priv)) from private.push_vapid order by id desc limit 1
+$$;
+revoke all on function public.mail_vapid() from public, anon, authenticated;
+grant execute on function public.mail_vapid() to service_role;
+
 create table if not exists public.warm_alerts (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null default auth.uid() references auth.users on delete cascade,
@@ -42,5 +65,8 @@ select cron.schedule('aquecimento-criahub', '* * * * *', $cron$
     body := jsonb_build_object('action', 'aquecer', 'key', (select cron from private.mail_key where id = 1)))
   where exists (select 1 from public.warm_alerts where sent_at is null and send_at <= now());
 $cron$);
+
+-- alarmes antigos que ficaram presos: não manda mais (seria uma enxurrada de avisos velhos)
+update public.warm_alerts set sent_at = now() where sent_at is null and send_at < now() - interval '10 minutes';
 
 select jobname, schedule from cron.job where jobname = 'aquecimento-criahub';
