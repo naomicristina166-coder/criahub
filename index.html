@@ -5167,7 +5167,8 @@ function warmPanel(bf) {
 function warmBar() {
   let el = document.getElementById('warmBar');
   if (!WT) { el?.remove(); clearInterval(wTick); wTick = null; return; }
-  const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { WT = null; wSave(); el?.remove(); return; }
+  /* ao reabrir o app, as contas ainda estão carregando: espera, sem apagar o cronômetro */
+  const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { if (!S.loading && S.data.accounts.length) { WT = null; wSave(); el?.remove(); } return; }
   const now = WT.pausedAt || Date.now(), open = !WT.end, left = open ? now - WT.start : Math.max(0, WT.end - now), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
   if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
   wNotify(false);
