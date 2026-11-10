@@ -4277,6 +4277,7 @@ function openSettings() {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="settings" role="dialog" aria-modal="true" aria-label="Ajustes">
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     ${S.mode === 'remote' ? `<div class="card section" style="gap:8px"><b>Seu plano</b><span class="sub">${ADMIN ? 'Veja a tela do Pro e os links do Asaas.' : isPro() ? `Você é Pro${PLAN && PLAN.until ? ` até ${String(PLAN.until).slice(0, 10).split('-').reverse().join('/')}` : ''} ✨` : 'Você está no plano Grátis.'}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-pro="">${ADMIN ? 'Abrir tela do Pro' : isPro() ? 'Ver o que tem no Pro' : 'Conhecer o Pro'}</button></div></div>` : ''}
+    ${AFF ? `<div class="set-row card section" style="gap:8px"><span><b>Painel de afiliada 💸</b><small>Seu link, suas indicadas e quanto você tem a receber</small></span><button type="button" class="btn sm" data-act="aff">Abrir</button></div>` : ''}
     <details class="set-g"><summary><span class="set-i">👤</span><span><b>Perfil</b><small>Nome, @ e aniversário</small></span></summary><div class="set-b">
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
     <div class="field"><label for="s_ig">Seu @ do Instagram <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" id="s_ig" name="ig" value="${esc(S.profile.ig ? '@' + S.profile.ig : '')}" placeholder="@seuperfil" autocomplete="off" autocapitalize="none"></div>
@@ -5010,7 +5011,7 @@ async function planLoad() {
   const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
   try { await sb.rpc('pay_claim'); } catch (_) {}
   try { const { data, error } = await sb.from('plans').select('plan,until').maybeSingle(); PLAN = error ? null : data; } catch (_) { PLAN = null; }
-  PLAN_READY = true; render();
+  PLAN_READY = true; render(); affLoad();
 }
 (() => { const st = document.createElement('style'); st.textContent = `
 .pro-pill{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:800;letter-spacing:.06em;background:var(--accent,#420725);color:#fff;border-radius:99px;padding:1px 6px;vertical-align:2px}
@@ -6109,6 +6110,71 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .pl-pot b{font-size:20px}.pl-pot b small{font-size:12px;font-weight:600;color:var(--muted)}.pl-pot > small{font-size:12px;color:var(--muted)}
 .pl-ready.ok{border-color:color-mix(in oklab, var(--ok,#1F8A5B) 45%, var(--line))}
 </style>`);
+
+/* ================= programa de afiliadas ================= */
+(() => { try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[a-z0-9_-]{2,30}$/i.test(r)) localStorage.setItem('criahub:ref', r.toLowerCase()); } catch (_) {} })();
+var AFF = null, AFF_READY = false;
+async function affLoad() {
+  const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  let ref = null; try { ref = localStorage.getItem('criahub:ref'); } catch (_) {}
+  if (ref) { try { await sb.rpc('aff_claim', { p_code: ref }); localStorage.removeItem('criahub:ref'); } catch (_) {} }
+  try { const { data, error } = await sb.rpc('aff_me'); AFF = error ? null : data; } catch (_) { AFF = null; }
+  AFF_READY = true; if (sheet && sheet.col === 'aff') openAff();
+}
+const affBrl = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+const affMonth = m => { const d = new Date(String(m).slice(0, 10) + 'T12:00:00'); const t = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); return t.charAt(0).toUpperCase() + t.slice(1); };
+function affLinks() {
+  const c = AFF ? AFF.code : '';
+  return { lista: `https://criahub.app.br/lista?origem=${c}`, app: `https://criahub.app.br/?ref=${c}` };
+}
+function openAff() {
+  sheet = { col: 'aff' };
+  const A = AFF; if (!A) { $('#layer').innerHTML = ''; sheet = null; return; }
+  const L = affLinks(), launched = today() >= '2026-12-17';
+  const rule = Number(A.rate_first) !== Number(A.rate_after) ? `${A.rate_first}% de cada mensalidade nos primeiros ${A.first_months} meses de cada indicada, depois ${A.rate_after}% enquanto ela continuar assinando.` : `${A.rate_after}% de cada mensalidade, enquanto a indicada continuar assinando.`;
+  const tile = (l, v, d) => `<div class="aff-t"><span>${l}</span><b>${v}</b>${d ? `<small>${d}</small>` : ''}</div>`;
+  const people = (A.people || []);
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet aff-sheet" role="dialog" aria-modal="true" aria-label="Painel de afiliada">
+    <div class="sh"><h2>Seu painel de afiliada 💸</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+    <div class="aff-tiles">${tile('Indicadas', A.referred, 'criaram conta')}${tile('No Pro', A.pro_active, 'assinando agora')}${tile('Este mês', affBrl(A.month_amount), 'de comissão')}${tile('A receber', affBrl(A.to_pay), 'pago até o dia 10')}</div>
+    <div class="card section" style="gap:8px"><b>Seu link</b>
+      <span class="sub">${launched ? 'Mande esse link: quem criar a conta por ele vira sua indicada.' : 'Até o lançamento (17/12), use o link da lista. Quem entrar na lista por ele e assinar depois vira sua indicada.'}</span>
+      <div class="aff-link"><code>${esc(launched ? L.app : L.lista)}</code><button type="button" class="btn sm" data-affcopy="${esc(launched ? L.app : L.lista)}">Copiar</button></div>
+      ${launched ? '' : `<span class="sub" style="font-size:12.5px">Depois do lançamento: <code>${esc(L.app)}</code> <button type="button" class="link" data-affcopy="${esc(L.app)}">copiar</button></span>`}
+    </div>
+    <div class="card section" style="gap:6px"><b>Como você ganha</b>
+      <span class="sub">${esc(rule)} Vale pra plano mensal e anual (no anual parcelado, conta cada parcela paga). A comissão de cada mês é paga por Pix até o dia 10 do mês seguinte.</span></div>
+    <div class="card section" style="gap:8px"><b>Onde você recebe</b>
+      <div class="aff-pix"><select id="aff_pt" aria-label="Tipo de chave Pix">${['cpf', 'cnpj', 'email', 'celular', 'aleatória'].map(t => `<option value="${t}"${A.pix_type === t ? ' selected' : ''}>${t === 'cpf' ? 'CPF' : t === 'cnpj' ? 'CNPJ' : t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}</select>
+      <input id="aff_pk" placeholder="Sua chave Pix" maxlength="120" value="${esc(A.pix_key || '')}"><button type="button" class="btn sm ghost" data-act="affpix">Salvar</button></div>
+      ${A.pix_key ? '' : '<span class="sub" style="font-size:12.5px">Sem chave Pix, a fundadora não consegue te pagar.</span>'}</div>
+    <div class="card section" style="gap:8px"><b>Suas indicadas</b>
+      ${people.length ? `<div class="aff-list">${people.map(p => `<div class="aff-row"><span><b>${esc(p.name)}</b><small>desde ${esc(String(p.since).slice(8, 10) + '/' + String(p.since).slice(5, 7))}</small></span><span class="pill${p.pro ? ' pro' : ''}">${p.pro ? 'Pro' : 'Grátis'}</span><span class="aff-v">${affBrl(p.earned)}</span></div>`).join('')}</div>` : '<span class="sub">Ninguém ainda. Manda o seu link pras amigas creators 🍒</span>'}</div>
+    ${(A.history || []).length ? `<div class="card section" style="gap:8px"><b>Histórico</b><div class="aff-list">${A.history.map(h => `<div class="aff-row"><span><b>${esc(affMonth(h.month))}</b></span><span class="pill${h.status === 'pago' ? ' pro' : ''}">${h.status === 'pago' ? 'Pago' : 'A receber'}</span><span class="aff-v">${affBrl(h.amount)}</span></div>`).join('')}</div></div>` : ''}
+  </div></div>`;
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-act="aff"],[data-act="affpix"],[data-affcopy]'); if (!t) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.affcopy) { try { await navigator.clipboard.writeText(t.dataset.affcopy); toast('Link copiado 🍒'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
+  if (t.dataset.act === 'aff') { if (sheet) closeForm(); openAff(); return; }
+  const sb = window.criahubSupabase; if (!sb) return;
+  const k = ($('#aff_pk')?.value || '').trim(); if (!k) { toast('Coloque a sua chave Pix'); return; }
+  const { error } = await sb.rpc('aff_set_pix', { p_type: $('#aff_pt').value, p_key: k });
+  if (error) { toast('Não consegui salvar agora.'); return; }
+  AFF.pix_type = $('#aff_pt').value; AFF.pix_key = k; toast('Chave Pix salva ✨'); openAff();
+}, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.aff-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:560px){.aff-tiles{grid-template-columns:repeat(4,1fr)}}
+.aff-t{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.aff-t span{font-size:12px;opacity:.7}.aff-t b{font-size:20px}.aff-t small{font-size:11.5px;opacity:.6}
+.aff-link{display:flex;gap:8px;align-items:center}.aff-link code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.aff-pix{display:flex;gap:8px;flex-wrap:wrap}.aff-pix select{flex:none;width:auto}.aff-pix input{flex:1;min-width:160px}
+.aff-list{display:flex;flex-direction:column}.aff-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.aff-row:first-child{border-top:0}.aff-row>span:first-child{flex:1;display:flex;flex-direction:column}.aff-row small{font-size:12px;opacity:.6}.aff-v{font-weight:700;min-width:70px;text-align:right}
+`; document.head.appendChild(st); })();
+
 connect();
 })();
 </script>
