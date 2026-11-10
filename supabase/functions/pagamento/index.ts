@@ -94,7 +94,9 @@ async function webhook(evt: any) {
   if (!email) return json({ ok: false, error: 'cliente sem e-mail' });
   const { data, error } = await sb.rpc('pay_grant', { p_email: email, p_months: months, p_note: p.note, p_payment: ref, p_link: key, p_value: Number(pay.value) });
   if (error) throw error;
-  return json({ ok: true, key, result: data });
+  // comissão da afiliada (cada cobrança paga conta uma vez; parcelas do anual contam cada uma)
+  const { data: com } = await sb.rpc('aff_commission', { p_email: email, p_payment: pay.id, p_value: Number(pay.value) });
+  return json({ ok: true, key, result: data, commission: com });
 }
 
 Deno.serve(async req => {
