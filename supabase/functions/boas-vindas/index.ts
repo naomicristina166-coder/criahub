@@ -1,6 +1,8 @@
-/* CriaHub · e-mail de boas-vindas da lista de espera
-   Quem chama: o gatilho do banco (supabase/boas-vindas.sql) sempre que alguém entra em public.waitlist.
-   O que faz: busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
+/* CriaHub · e-mails automáticos
+   • Lista de espera: o gatilho do banco (supabase/boas-vindas.sql) chama sempre que alguém entra em public.waitlist.
+     Busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
+   • Virou Pro: o gatilho de supabase/pro-boas-vindas.sql chama quando uma conta passa pro Pro (pagou ou ganhou).
+     Manda o e-mail de boas-vindas ao Pro e marca o recado como enviado na aba Momentos do painel.
 
    Por onde o e-mail sai:
    • Gmail do CriaHub (criahubb@gmail.com), com a foto do perfil, se GMAIL_APP_PASSWORD estiver nos segredos
@@ -93,12 +95,82 @@ export function welcomeEmail(row: { name: string; pain?: string | null }) {
   return { subject, html, text };
 }
 
+
+const fmtBR = (d: string) => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${dd}/${m}/${y}`; };
+export function proEmail(row: { name: string; until?: string | null }) {
+  const nome = firstName(row.name), until = row.until ? fmtBR(row.until) : '';
+  const subject = `Seu CriaHub Pro está liberado, ${nome}! ✨`;
+  const perks = ['Marcas ilimitadas', 'IA: briefing vira plano, revisor, ideias pro seu nicho e tradução de contrato', 'Vision Board, Em alta e os ganchos que mais deram views pra você', 'Contas de marca e métricas por plataforma', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Tudo que chegar de novo no CriaHub'];
+  const text = [
+    `Oi, ${nome}!`, '',
+    'Bem-vinda ao CriaHub Pro! ✨ Obrigada demais por apoiar o app.', '',
+    'O que você liberou:', ...perks.map(p => `• ${p}`), '',
+    ...(until ? [`Seu Pro vale até ${until}.`, ''] : []),
+    'É só abrir o app: tudo já está liberado na sua conta. https://criahub.app.br', '',
+    'Qualquer dúvida, é só responder este e-mail que eu te ajudo.', '',
+    'Com carinho,', 'Naomi', 'Fundadora do CriaHub',
+  ].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">Tudo do Pro já está liberado na sua conta.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:36px 32px 32px">
+    <div style="font:700 40px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.5px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span> <span style="font-size:16px;letter-spacing:1px;color:#420725;background:#F2C9CF;border-radius:999px;padding:4px 10px;vertical-align:middle">PRO</span></div>
+    <div style="font:700 30px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:26px">Bem-vinda ao Pro, <em style="color:#F2C9CF">${esc(nome)}</em>!</div>
+    <div style="font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;margin-top:12px">Obrigada demais por apoiar o app.</div>
+  </td></tr>
+  <tr><td style="padding:32px">
+    <p style="margin:0 0 14px;font:700 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#7A4A53">O que você liberou</p>
+    <table role="presentation" cellpadding="0" cellspacing="0">${perks.map(p => `<tr><td valign="top" style="padding:0 10px 10px 0;color:#C2185B;font:700 16px/1.5 Arial,Helvetica,sans-serif">✓</td><td style="padding:0 0 10px;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">${esc(p)}</td></tr>`).join('')}</table>
+    ${until ? `<div style="margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#F7DDE1;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Seu Pro vale até <b>${esc(until)}</b>.</div>` : ''}
+    <div style="margin:22px 0 4px"><a href="https://criahub.app.br" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">Abrir o CriaHub</a></div>
+    <p style="margin:22px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Qualquer dúvida, é só responder este e-mail que eu te ajudo.</p>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+  return { subject, html, text };
+}
+
+async function sendMail(to: string, mail: { subject: string; html: string; text: string }) {
+  if (GPASS) {
+    const smtp = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: GMAIL, pass: GPASS } });
+    await smtp.sendMail({ from: { name: NAME, address: GMAIL }, to, replyTo: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text });
+    return;
+  }
+  const key = env('RESEND_API_KEY');
+  if (!key) throw new Error('falta GMAIL_APP_PASSWORD (ou RESEND_API_KEY)');
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: env('MAIL_FROM') || `${NAME} <oi@criahub.app.br>`, to: [to], reply_to: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text }),
+  });
+  if (!r.ok) throw new Error(`resend: ${r.status} ${await r.text()}`);
+}
+
+/* virou Pro: manda uma vez por "entrada" no Pro e tira o recado da aba Momentos */
+async function welcomePro(b: { user_id?: string; email?: string; name?: string; ref?: string; until?: string | null }) {
+  if (!b.user_id || !b.email) return new Response('faltou user_id/email', { status: 400 });
+  const ref = String(b.ref || '');
+  const { data: done } = await sb.from('moments_done').select('user_id').eq('user_id', b.user_id).eq('kind', 'virou_pro').eq('ref', ref).maybeSingle();
+  if (done) return new Response('já enviado');
+  try { await sendMail(b.email, proEmail({ name: b.name || '', until: b.until })); }
+  catch (e) { return new Response(`e-mail: ${(e as Error).message}`, { status: 502 }); }
+  await sb.from('moments_done').upsert({ user_id: b.user_id, kind: 'virou_pro', ref, how: 'enviado', done_at: new Date().toISOString() });
+  return new Response('enviado');
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const secret = env('WAITLIST_HOOK_SECRET');
   if (!secret || req.headers.get('x-hook-secret') !== secret) return new Response('nope', { status: 401 });
 
-  const { id } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  if (body?.kind === 'pro') return await welcomePro(body);
+  const { id } = body;
   if (!id) return new Response('sem id', { status: 400 });
 
   const { data: row, error } = await sb.from('waitlist').select('id,name,email,pain,welcomed_at').eq('id', id).maybeSingle();
