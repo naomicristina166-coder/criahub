@@ -62,7 +62,8 @@ select cron.schedule('aquecimento-criahub', '* * * * *', $cron$
   select net.http_post(
     url := 'https://dvzfllqcgozecvhodygz.supabase.co/functions/v1/caixa',
     headers := jsonb_build_object('Content-Type', 'application/json', 'apikey', 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F', 'Authorization', 'Bearer sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F'),
-    body := jsonb_build_object('action', 'aquecer', 'key', (select cron from private.mail_key where id = 1)))
+    body := jsonb_build_object('action', 'aquecer', 'key', (select cron from private.mail_key where id = 1)),
+    timeout_milliseconds := 30000)   -- a função pode demorar pra acordar; com 5 s (o padrão) o aviso se perdia
   where exists (select 1 from public.warm_alerts where sent_at is null and send_at <= now());
 $cron$);
 
