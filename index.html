@@ -1280,6 +1280,7 @@ const fLeads = () => S.data.leads.filter(l => !S.f.front || leadFront(l) === S.f
 const lastWork = id => S.data.deliveries.filter(d => d.brandId === id && (d.stage || 0) >= 3 && d.due).map(d => d.due).sort().pop() || '';
 const brandName = id => S.data.brands.find(b => b.id === id)?.name || 'Sem marca';
 const sortBy = (arr, k) => [...arr].sort((a, b) => String(a[k] || '9999').localeCompare(String(b[k] || '9999')));
+const cycleName = b => { const n = +b.cycle || 30; return n === 7 ? 'Ciclo semanal' : n === 15 ? 'Ciclo quinzenal' : `Ciclo de ${n} dias`; };
 function cycleInfo(b) {
   if (!b.start || !b.end) return null;
   const total = Math.max(1, diff(b.start, b.end) + 1), gone = Math.min(total, Math.max(0, diff(b.start, today()) + 1));
@@ -1501,7 +1502,7 @@ function vBrands() {
 function brandCard(b) {
   const st = BRAND_STATUS[b.status] || BRAND_STATUS.ativo, ct = ctypeOf(b), done = deliveredInCycle(b), vids = +b.videos || 0;
   const paid = S.data.payments.filter(p => p.brandId === b.id && p.paid).reduce((s, p) => s + brlOf(p), 0);
-  const typeTxt = ct === 'ciclo' ? `Ciclo de ${+b.cycle || 30} dias` : ct === 'pacote' ? `Pacote de ${vids} vídeos` : 'Vídeos avulsos';
+  const typeTxt = ct === 'ciclo' ? cycleName(b) : ct === 'pacote' ? `Pacote de ${vids} vídeos` : 'Vídeos avulsos';
   const c = ct === 'ciclo' ? cycleInfo(b) : null, live = b.status !== 'encerrado';
   let prog = '', hint = '';
   if (c && live) {
@@ -1616,7 +1617,7 @@ function vContracts() {
 const longD = s => s ? parse(s).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '___';
 function fillTpl(tpl, b) {
   const ct = ctypeOf(b);
-  const v = { marca: b.name, contato: b.contact || '___', valor: +b.value ? moneyV(b.value, b.currency) : 'R$ ___', videos: b.videos || '___', tipo: ct === 'ciclo' ? `ciclo de ${+b.cycle || 30} dias` : ct === 'pacote' ? 'pacote de vídeos' : 'vídeo avulso', inicio: longD(b.start), prazo: longD(b.end), hoje: longD(today()), meu_nome: S.profile.name || '___' };
+  const v = { marca: b.name, contato: b.contact || '___', valor: +b.value ? moneyV(b.value, b.currency) : 'R$ ___', videos: b.videos || '___', tipo: ct === 'ciclo' ? cycleName(b).toLowerCase() : ct === 'pacote' ? 'pacote de vídeos' : 'vídeo avulso', inicio: longD(b.start), prazo: longD(b.end), hoje: longD(today()), meu_nome: S.profile.name || '___' };
   return tpl.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (m, k) => (k in v ? String(v[k]) : m));
 }
 function aiErr(code) {
@@ -2593,7 +2594,7 @@ const HELP = {
   'financeiro.preco': ['Preço', 'Calculadora de quanto cobrar por vídeo, pacote ou ciclo, com proposta pronta pra mandar.'],
   'financeiro.notas': ['Notas fiscais', 'Controle das notas emitidas e do DAS do MEI, o imposto mensal de quem é microempreendedora.'],
 };
-const GLOSS = [['UGC', 'Conteúdo feito por creators pra marca usar, no perfil dela ou em anúncios.'], ['Tech Canvas', 'Quando você posta nos perfis da própria marca, em ciclos com meta de views.'], ['Ciclo', 'Período de trabalho com a marca (ex.: 30 dias) que pode ser renovado.'], ['Entrega', 'Cada vídeo que você deve à marca, com prazo.'], ['Briefing', 'O pedido da marca: o que mostrar, o que evitar e os prazos.'], ['Gancho', 'A frase dos primeiros segundos que faz a pessoa continuar assistindo.'], ['Engajamento', 'Curtidas, comentários, compartilhamentos e salvamentos em relação às views.'], ['Licença de uso', 'Por quanto tempo a marca pode usar seu vídeo.'], ['Permuta', 'Pagamento em produto em vez de dinheiro.'], ['Mídia kit', 'Sua apresentação profissional pras marcas.'], ['Follow-up', 'Chamar a marca de novo depois de um primeiro contato.'], ['MEI e DAS', 'MEI é o CNPJ simples de microempreendedora; DAS é o imposto mensal dele.']];
+const GLOSS = [['UGC', 'Conteúdo feito por creators pra marca usar, no perfil dela ou em anúncios.'], ['Tech Canvas', 'Quando você posta nos perfis da própria marca, em ciclos com meta de views.'], ['Ciclo', 'Período de trabalho com a marca (semanal, quinzenal, 30, 60 ou 90 dias) que pode ser renovado.'], ['Entrega', 'Cada vídeo que você deve à marca, com prazo.'], ['Briefing', 'O pedido da marca: o que mostrar, o que evitar e os prazos.'], ['Gancho', 'A frase dos primeiros segundos que faz a pessoa continuar assistindo.'], ['Engajamento', 'Curtidas, comentários, compartilhamentos e salvamentos em relação às views.'], ['Licença de uso', 'Por quanto tempo a marca pode usar seu vídeo.'], ['Permuta', 'Pagamento em produto em vez de dinheiro.'], ['Mídia kit', 'Sua apresentação profissional pras marcas.'], ['Follow-up', 'Chamar a marca de novo depois de um primeiro contato.'], ['MEI e DAS', 'MEI é o CNPJ simples de microempreendedora; DAS é o imposto mensal dele.']];
 const helpKey = () => { const T = TOOLS[S.tab]; return T ? S.tab + '.' + S.f[T.f] : S.tab; };
 function openHelp(key) {
   const h = HELP[key] || HELP[key.split('.')[0]] || ['CriaHub', 'Toque nas abas de cima pra trocar de tela.'];
@@ -4035,7 +4036,7 @@ const FORMS = {
     { k: 'contact', l: 'Contato', t: 'text', ph: '@marca, e-mail ou nome da pessoa' },
     { k: 'cnpj', l: 'CNPJ da marca (para a nota fiscal)', t: 'text', ph: '00.000.000/0000-00', hint: 'Opcional. Se a marca for de fora do Brasil, deixe vazio.' },
     { k: 'ctype', l: 'Tipo de trabalho', t: 'select', o: CTYPES, d: () => defaultCtype(S.f.front || fronts()[0]) },
-    { k: 'cycle', l: 'Duração do ciclo', t: 'select', o: [['30', '30 dias'], ['60', '60 dias'], ['90', '90 dias']], d: '30', when: 'ciclo' },
+    { k: 'cycle', l: 'Duração do ciclo', t: 'select', o: [['7', 'Semanal (7 dias)'], ['15', 'Quinzenal (15 dias)'], ['30', '30 dias'], ['60', '60 dias'], ['90', '90 dias']], d: '30', when: 'ciclo' },
     { k: 'goalViews', l: 'Meta de views do ciclo', t: 'number', hint: 'Soma do Instagram, TikTok e YouTube. Opcional.', when: 'ciclo' },
     { row: [{ k: 'start', l: 'Início', t: 'date', d: today, when: 'ciclo pacote' }, { k: 'end', l: 'Fim ou prazo final', t: 'date', hint: 'No ciclo, se ficar vazio eu calculo', when: 'ciclo pacote' }] },
     { row: [{ k: 'videos', l: 'Quantos vídeos', t: 'number', d: 4, when: 'ciclo pacote' }, { k: 'value', l: 'Valor', t: 'number', step: '0.01', hint: 'Ciclo: valor do ciclo · Pacote: valor total · Avulso: valor por vídeo' }] },
@@ -4209,7 +4210,7 @@ async function submitEntity(form) {
   const obj = { ...(prev || { id: newId(), created: new Date().toISOString() }), ...vals };
   if (col === 'brands') {
     const ct = obj.ctype || 'avulso';
-    if (ct === 'ciclo' && !obj.end && obj.start) obj.end = addDays(obj.start, (+obj.cycle || 30) - 1);
+    if (ct === 'ciclo' && obj.start && (!obj.end || (prev && +prev.cycle !== +obj.cycle && (!vals.end || vals.end === prev.end)))) obj.end = addDays(obj.start, (+obj.cycle || 30) - 1);
     if (ct === 'avulso') { obj.start = ''; obj.end = ''; }
     const mk = obj.mkpay; delete obj.mkpay;
     closeForm(); await put('brands', obj);
