@@ -246,7 +246,7 @@ begin
   select u.id, u.email::text,
     coalesce(nullif(pr.data->>'name', ''), u.raw_user_meta_data->>'name', w.name, '')::text,
     coalesce(nullif(pr.data->>'ig', ''), nullif(ltrim(pr.data#>>'{kit,ig}', '@'), ''), nullif(ltrim(w.instagram, '@'), ''))::text,
-    w.whatsapp::text,
+    coalesce(nullif(pr.data->>'wa', ''), nullif(u.raw_user_meta_data->>'whatsapp', ''), w.whatsapp)::text,
     coalesce(pr.data->'obKinds', '[]'::jsonb),
     w.id is not null,
     u.created_at, u.last_sign_in_at, u.email_confirmed_at is not null,
