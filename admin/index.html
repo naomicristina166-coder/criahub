@@ -795,7 +795,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (st.fundMissing) return `<h1>Momentos</h1>${fundMiss()}`;
     if (!st.mom) return '<div class="loading">Carregando…</div>';
     const L = st.mom, s30 = st.momStats ? st.momStats.sent30 : 0;
-    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Cada conquista das suas creators, com um recado seu pronto pra mandar. É isso que faz ela se sentir vista e ficar.</p></div>
+    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Cada conquista das suas creators, com um recado seu pronto pra mandar. É isso que faz ela se sentir vista e ficar. Nada é enviado sozinho: os botões abrem o WhatsApp, o Direct ou o e-mail dela com o texto, e quem envia é você.</p></div>
       <span class="pill ok" style="font-size:12px">${nf(s30)} ${s30 === 1 ? 'recado' : 'recados'} em 30 dias</span></div>
       <div class="list" style="margin-top:12px">${L.length ? L.map(m => {
         const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria'), wa = waNum(m.whatsapp), ig = m.instagram;
@@ -806,7 +806,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
             ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
             ${!wa && !ig ? `<a class="btn sm" href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Um recado da Naomi, do CriaHub')}&body=${encodeURIComponent(txt)}" data-msent="${esc(k)}">E-mail</a>` : ''}
             <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
-            <span style="flex:1"></span><button class="btn ghost sm" data-mdone="${esc(k)}">${st.momSent[k] ? 'Enviei ✓' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
+            <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
         : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
       <p class="note">Aparecem: aniversário (7 dias antes), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
   }
@@ -850,7 +850,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (d.crmdel) { if (st.sure !== d.crmdel) { st.sure = d.crmdel; render(); return; }
       const r = await sb.rpc('admin_crm_delete', { p_id: d.crmdel }); if (r.error) { toast('Não consegui apagar.'); return; }
       st.crm = st.crm.filter(x => x.id !== d.crmdel); st.copen = null; st.sure = null; toast('Contato apagado'); render(); return; }
-    if (d.mcopy) { const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.mcopy)}"]`), ok = await copyTxt((ta && ta.value) || st.momMsg[d.mcopy] || ''); st.momSent[d.mcopy] = true; if (t.tagName === 'BUTTON') toast(ok ? 'Recado copiado ✨' : 'Não consegui copiar'); else if (ok) toast('Recado copiado: cole no Direct'); return; }
+    if (d.mcopy) { const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.mcopy)}"]`), ok = await copyTxt((ta && ta.value) || st.momMsg[d.mcopy] || ''); st.momSent[d.mcopy] = true; if (t.tagName === 'BUTTON') toast(ok ? 'Recado copiado ✨' : 'Não consegui copiar'); else toast(ok ? 'Texto copiado. No Direct dela, cole e envie. Depois volte e toque em “Já mandei”.' : 'Não consegui copiar. Copie o texto à mão.'); setTimeout(render, 400); return; }
     if (d.msent) { st.momSent[d.msent] = true; setTimeout(render, 400); return; }
     if (d.mdone) { await momFinish(d.mdone, 'enviado'); return; }
     if (d.mskip) { await momFinish(d.mskip, 'pulado'); return; }
