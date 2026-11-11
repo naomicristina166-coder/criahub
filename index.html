@@ -5136,9 +5136,13 @@ function wPhase(a) {
   const n = a.testStart ? diff(a.testStart, today()) + 1 : 1, tot = +a.testDays || 5;
   return n > tot ? { txt: `Teste concluído (${tot} dias)`, done: true } : { txt: `Em teste · dia ${Math.max(1, n)} de ${tot}`, done: false };
 }
-let WT = null; try { WT = JSON.parse(localStorage.getItem('criahub:warmT') || 'null'); } catch (_) {}
+/* vários aquecimentos ao mesmo tempo: um cronômetro por conta */
+let WTS = []; try { WTS = JSON.parse(localStorage.getItem('criahub:warmTs') || '[]'); const old = JSON.parse(localStorage.getItem('criahub:warmT') || 'null'); if (old && !WTS.some(w => w.aid === old.aid)) WTS.push(old); localStorage.removeItem('criahub:warmT'); } catch (_) {}
+if (!Array.isArray(WTS)) WTS = [];
 let wTick = null;
-const wSave = () => { try { WT ? localStorage.setItem('criahub:warmT', JSON.stringify(WT)) : localStorage.removeItem('criahub:warmT'); } catch (_) {} };
+const wtOf = aid => WTS.find(w => w.aid === aid);
+const wSave = () => { try { WTS.length ? localStorage.setItem('criahub:warmTs', JSON.stringify(WTS)) : localStorage.removeItem('criahub:warmTs'); } catch (_) {} };
+const wLeft = w => { const now = w.pausedAt || Date.now(), open = !w.end; return { open, ms: open ? now - w.start : Math.max(0, w.end - now) }; };
 function warmPanel(bf) {
   const t = today(), all = wAccs(), byB = bf && bf !== 'todas', accs = (byB ? all.filter(a => acKey(a) === bf) : all).slice().sort((a, b) => (acKey(a) === '_none') - (acKey(b) === '_none') || brandName(a.brandId).localeCompare(brandName(b.brandId)));
   if (!accs.length) return all.length && byB ? '<div class="sub" style="margin:4px 2px">Nenhuma conta dessa marca está ativa ou em teste agora.</div>' : '';
@@ -5148,12 +5152,12 @@ function warmPanel(bf) {
   const rows = accs.map((a, i) => {
     const head = grouped && (i === 0 || acKey(accs[i - 1]) !== acKey(a)) ? `<div class="wbrand">${esc(acKey(a) === '_none' ? 'Sem marca' : brandName(a.brandId))}</div>` : '';
     const ph = wPhase(a), sl = wSlots(a, t);
-    const chips = sl.map(k => { const l = wLog(a.id, t, k), on = WT && WT.aid === a.id && WT.slot === k;
+    const run = wtOf(a.id), chips = sl.map(k => { const l = wLog(a.id, t, k), on = run && run.slot === k;
       return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}${!l && wSesTime(k) ? ` <small>${wSesTime(k)}</small>` : ''}</button>`; }).join('');
     const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post').length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
     return `${head}<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
       <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
-      ${(() => { const nx = (sl.includes(cur) && !wLog(a.id, t, cur) ? cur : null) || sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); const on = WT && WT.aid === a.id; if (on) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[WT.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
+      ${(() => { const nx = (sl.includes(cur) && !wLog(a.id, t, cur) ? cur : null) || sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); if (run) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[run.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
       <div class="wchips">${chips}<button class="wchip post ${wPostDay(a.id, t) ? 'ok' : ''}" data-warmpost="${a.id}" aria-pressed="${wPostDay(a.id, t)}">${wPostDay(a.id, t) ? '📌 Posto hoje' : '+ Vou postar hoje'}</button></div>
       ${ph.done ? `<button class="link" data-warmactive="${a.id}" style="text-align:left">Teste acabou: marcar a conta como ativa</button>` : ''}</div>`;
   }).join('');
@@ -5166,15 +5170,19 @@ function warmPanel(bf) {
 }
 function warmBar() {
   let el = document.getElementById('warmBar');
-  if (!WT) { el?.remove(); clearInterval(wTick); wTick = null; return; }
-  /* ao reabrir o app, as contas ainda estão carregando: espera, sem apagar o cronômetro */
-  const a = S.data.accounts.find(x => x.id === WT.aid); if (!a) { if (!S.loading && S.data.accounts.length) { WT = null; wSave(); el?.remove(); } return; }
-  const now = WT.pausedAt || Date.now(), open = !WT.end, left = open ? now - WT.start : Math.max(0, WT.end - now), mm = Math.floor(left / 60000), ss = Math.floor(left % 60000 / 1000);
-  if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbar'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  wNotify(false);
-  el.classList.toggle('paused', !!WT.pausedAt);
-  el.innerHTML = `<div><b>${WT.pausedAt ? 'Pausado' : 'Aquecendo'} ${esc(a.handle)}</b><small>${esc(WSLOTS[WT.slot][0])}${!WT.pausedAt && open ? ' · pare quando quiser' : ''}</small></div><span class="wt num">${pad(mm)}:${pad(ss)}</span><button class="iconbtn wpause" data-warmpause="1" aria-label="${WT.pausedAt ? 'Continuar' : 'Pausar'}">${WT.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="1">Concluir</button><button class="iconbtn" data-warmstop="1" aria-label="Cancelar">${ic('x')}</button>`;
-  if (!open && !left && !WT.pausedAt) warmFinish(true);
+  if (!WTS.length) { el?.remove(); clearInterval(wTick); wTick = null; return; }
+  /* ao reabrir o app, as contas ainda estão carregando: espera, sem apagar os cronômetros */
+  if (!S.loading && S.data.accounts.length) { const n = WTS.length; WTS = WTS.filter(w => S.data.accounts.some(x => x.id === w.aid)); if (WTS.length !== n) wSave(); }
+  const rows = WTS.map(w => ({ w, a: S.data.accounts.find(x => x.id === w.aid) })).filter(x => x.a);
+  if (!rows.length) { if (!WTS.length) el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbars'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  const many = rows.length > 1, tm = w => { const { ms } = wLeft(w); return `${pad(Math.floor(ms / 60000))}:${pad(Math.floor(ms % 60000 / 1000))}`; };
+  /* a cada segundo só o relógio muda; os botões ficam no lugar (senão o toque se perde) */
+  const sig = rows.map(({ w, a }) => [w.aid, w.slot, w.start, !!w.pausedAt, a.handle].join(':')).join('|');
+  if (el.dataset.sig === sig) { rows.forEach(({ w }) => { const t = el.querySelector(`[data-wt="${w.aid}"]`); if (t) t.textContent = tm(w); }); }
+  else { el.dataset.sig = sig; el.innerHTML = rows.map(({ w, a }) => { const { open } = wLeft(w);
+    return `<div class="warmbar${w.pausedAt ? ' paused' : ''}${many ? ' mini' : ''}"><div><b>${w.pausedAt ? 'Pausado' : 'Aquecendo'} ${esc(a.handle)}</b><small>${esc(WSLOTS[w.slot][0])}${!w.pausedAt && open && !many ? ' · pare quando quiser' : ''}</small></div><span class="wt num" data-wt="${w.aid}">${tm(w)}</span><button class="iconbtn wpause" data-warmpause="${w.aid}" aria-label="${w.pausedAt ? 'Continuar' : 'Pausar'} ${esc(a.handle)}">${w.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="${w.aid}">Concluir</button><button class="iconbtn" data-warmstop="${w.aid}" aria-label="Cancelar ${esc(a.handle)}">${ic('x')}</button></div>`; }).join(''); }
+  rows.forEach(({ w }) => { wNotify(w, false); const { open, ms } = wLeft(w); if (!open && !ms && !w.pausedAt) warmFinish(w.aid, true); });
 }
 /* som do fim do aquecimento (com o app aberto). O AudioContext é criado no toque de começar, que é quando o celular deixa tocar som */
 let wAudio = null;
@@ -5187,13 +5195,13 @@ function wBeep() {
 }
 const wTag = aid => 'warm-' + aid;
 /* notificação = só o cronômetro (⏱ 15 min, ⏱ 14 min…). Atualiza a cada minuto enquanto o celular deixa o app rodar */
-let wNoteMin = -1;
-function wNotify(force) {
-  const A = window.criahubAlarm; if (!A || !WT) return;
-  const now = WT.pausedAt || Date.now(), open = !WT.end, ms = open ? now - WT.start : Math.max(0, WT.end - now), mm = open ? Math.floor(ms / 60000) : Math.ceil(ms / 60000);
-  const key = (WT.pausedAt ? 'p' : '') + mm; if (!force && key === wNoteMin) return; wNoteMin = key; if (!open && ms <= 0) return;
-  const a = S.data.accounts.find(x => x.id === WT.aid);
-  A.show(WT.pausedAt ? `⏸ ${mm} min · pausado` : `⏱ ${mm} min`, a ? a.handle : '', wTag(WT.aid), false);
+const wNoteMin = {};
+function wNotify(w, force) {
+  const A = window.criahubAlarm; if (!A || !w) return;
+  const { open, ms } = wLeft(w), mm = open ? Math.floor(ms / 60000) : Math.ceil(ms / 60000);
+  const key = (w.pausedAt ? 'p' : '') + mm; if (!force && key === wNoteMin[w.aid]) return; wNoteMin[w.aid] = key; if (!open && ms <= 0) return;
+  const a = S.data.accounts.find(x => x.id === w.aid);
+  A.show(w.pausedAt ? `⏸ ${mm} min · pausado` : `⏱ ${mm} min`, a ? a.handle : '', wTag(w.aid), false);
 }
 /* alerta grande na tela quando o tempo acaba (aparece também se ela voltar pro app depois) */
 function wDoneAlert(h, slot, fresh) {
@@ -5204,8 +5212,8 @@ function wDoneAlert(h, slot, fresh) {
   if (fresh) { let n = 0; const t = setInterval(() => { if (!document.getElementById('wDone') || ++n > 2) { clearInterval(t); return; } wBeep(); try { navigator.vibrate && navigator.vibrate([400, 200, 400]); } catch (_) {} }, 6000); }
 }
 document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-wdoneok]'); if (!t) return; e.preventDefault(); document.getElementById('wDone')?.remove(); }, true);
-async function warmFinish(auto) {
-  if (!WT) return; const w = WT, mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WT = null; wSave(); warmBar();
+async function warmFinish(aid, auto) {
+  const w = wtOf(aid); if (!w) return; const mins = Math.max(1, Math.round((Date.now() - w.start) / 60000)); WTS = WTS.filter(x => x !== w); delete wNoteMin[aid]; wSave(); warmBar(); render();
   const A = window.criahubAlarm, a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta';
   if (A) { A.clear(w.alarmId); }
   /* acabou agora, com o app na tela: toca, vibra e avisa. Se ela voltou depois, só salva */
@@ -5215,19 +5223,18 @@ async function warmFinish(auto) {
   if (auto) wDoneAlert(h, w.slot, fresh);
   await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
   try { navigator.vibrate && navigator.vibrate(fresh ? [400, 200, 400, 200, 800] : [200, 100, 200]); } catch (_) {}
-  toast(auto ? 'Aquecimento concluído ✨ Pode ir pra próxima conta.' : `Aquecimento salvo: ${mins} min ✨`);
+  toast(auto ? `Aquecimento de ${h} concluído ✨` : `Aquecimento de ${h} salvo: ${mins} min ✨`);
 }
 function warmStart(aid, slot) {
   wUnlock();
-  const m = WSLOTS[slot][1], now = Date.now(); WT = { aid, slot, start: now, end: m ? now + m * 60000 : null }; wSave(); warmBar();
-  clearInterval(wTick); wTick = setInterval(warmBar, 1000); render();
+  const m = WSLOTS[slot][1], now = Date.now(), w = { aid, slot, start: now, end: m ? now + m * 60000 : null }; WTS.push(w); wSave(); warmBar();
+  if (!wTick) wTick = setInterval(warmBar, 1000); render();
   const A = window.criahubAlarm; if (!A) return;
-  const a = S.data.accounts.find(x => x.id === aid), h = a ? a.handle : 'a conta', w = WT;
-  wNotify(true);
+  const a = S.data.accounts.find(x => x.id === aid), h = a ? a.handle : 'a conta';
+  wNotify(w, true);
   /* alarme no servidor: com tempo, no fim; depois do post (tempo livre), aos 15 minutos */
-  const at = w.end || now + 15 * 60000;
-  A.set(at, m ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(aid))
-    .then(id => { if (id && WT && WT.start === w.start) { WT.alarmId = id; wSave(); } else if (id && (!WT || WT.start !== w.start)) A.clear(id); });
+  A.set(w.end || now + 15 * 60000, m ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(aid))
+    .then(id => { if (id && WTS.includes(w)) { w.alarmId = id; wSave(); } else if (id) A.clear(id); });
 }
 document.addEventListener('click', e => {
   const t = e.target.closest && e.target.closest('[data-acb]'); if (!t) return;
@@ -5264,24 +5271,24 @@ document.addEventListener('submit', async e => {
 document.addEventListener('click', async e => {
   const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop],[data-warmpause]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
-  if (d.warmdone) { await warmFinish(false); return; }
-  if (d.warmpause) { if (!WT) return; wUnlock(); const A = window.criahubAlarm, now = Date.now();
-    if (!WT.pausedAt) { WT.pausedAt = now; if (A) A.clear(WT.alarmId); WT.alarmId = null; }
-    else { const dur = now - WT.pausedAt; WT.start += dur; if (WT.end) WT.end += dur; delete WT.pausedAt;
-      const a = S.data.accounts.find(x => x.id === WT.aid), h = a ? a.handle : 'a conta', w = WT;
-      if (A) A.set(w.end || w.start + 15 * 60000, w.end ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(w.aid)).then(id => { if (id && WT && WT.start === w.start && !WT.pausedAt) { WT.alarmId = id; wSave(); } else if (id) A.clear(id); }); }
-    wSave(); wNotify(true); warmBar(); return; }
-  if (d.warmstop) { const w = WT; WT = null; wSave(); warmBar(); render(); if (w && window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
+  if (d.warmdone) { await warmFinish(d.warmdone, false); return; }
+  if (d.warmpause) { const w = wtOf(d.warmpause); if (!w) return; wUnlock(); const A = window.criahubAlarm, now = Date.now();
+    if (!w.pausedAt) { w.pausedAt = now; if (A) A.clear(w.alarmId); w.alarmId = null; }
+    else { const dur = now - w.pausedAt; w.start += dur; if (w.end) w.end += dur; delete w.pausedAt;
+      const a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta', st = w.start;
+      if (A) A.set(w.end || w.start + 15 * 60000, w.end ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(w.aid)).then(id => { if (id && WTS.includes(w) && w.start === st && !w.pausedAt) { w.alarmId = id; wSave(); } else if (id) A.clear(id); }); }
+    wSave(); wNotify(w, true); warmBar(); return; }
+  if (d.warmstop) { const w = wtOf(d.warmstop); if (!w) return; WTS = WTS.filter(x => x !== w); delete wNoteMin[w.aid]; wSave(); warmBar(); render(); if (window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
   if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
   if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
   if (d.warm) {
     const [aid, slot] = d.warm.split('|'), l = wLog(aid, today(), slot);
     if (l) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Desmarcar?'; setTimeout(() => render(), 3000); return; } await del('warm', l.id); return; }
-    if (WT && !(WT.aid === aid && WT.slot === slot)) { const o = S.data.accounts.find(x => x.id === WT.aid); toast(`Termine ou cancele o aquecimento de ${o ? o.handle : 'outra conta'} primeiro`); return; }
-    if (WT) return; warmStart(aid, slot); return;
+    const run = wtOf(aid); if (run) { if (run.slot !== slot) toast('Essa conta já está aquecendo. Conclua ou cancele na barra lá embaixo.'); return; }
+    warmStart(aid, slot); return;
   }
 }, true);
-if (WT) { wTick = setInterval(warmBar, 1000); setTimeout(warmBar, 2000); }
+if (WTS.length) { wTick = setInterval(warmBar, 1000); setTimeout(warmBar, 2000); }
 /* conta pra aquecer agora aparece no Precisa de você */
 function warmPending() {
   if (!wAccs().length || proLocked('marcas.contas')) return [];
@@ -5317,6 +5324,10 @@ function warmPending() {
 .warmbar{grid-template-columns:minmax(0,1fr) auto auto auto auto !important}
 .warmbar .wpause{background:rgb(255 255 255 / .14);border-color:transparent;color:#fff;font-size:13px;font-weight:800}
 .warmbar.paused{background:#5B4A52}
+.warmbars{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:120;display:flex;flex-direction:column;gap:6px;max-width:560px;margin:0 auto}
+@media (min-width:900px){.warmbars{bottom:20px}}
+.warmbars .warmbar{position:static;max-width:none;margin:0}
+.warmbar.mini{padding:6px 8px 6px 14px;border-radius:14px}.warmbar.mini .wt{font-size:19px}.warmbar.mini b{font-size:13px}
 .wdone{position:fixed;inset:0;z-index:200;background:rgb(20 6 12 / .55);display:grid;place-items:center;padding:20px;animation:wdin .2s ease-out}
 .wdone-box{background:var(--bg,#fff);border-radius:24px;padding:26px 22px;max-width:340px;width:100%;display:grid;gap:8px;text-align:center;box-shadow:0 20px 50px rgb(0 0 0 / .3)}
 .wdone-e{font-size:54px;line-height:1;animation:wdshake .5s ease-in-out 3}
