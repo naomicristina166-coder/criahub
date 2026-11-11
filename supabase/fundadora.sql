@@ -293,7 +293,7 @@ begin
   )
   select ev.user_id,
     coalesce(nullif(pr.data->>'name', ''), u.raw_user_meta_data->>'name', w.name, split_part(u.email, '@', 1))::text,
-    u.email::text, w.whatsapp::text,
+    u.email::text, coalesce(nullif(pr.data->>'wa', ''), nullif(u.raw_user_meta_data->>'whatsapp', ''), w.whatsapp)::text,
     coalesce(nullif(pr.data->>'ig', ''), nullif(ltrim(pr.data#>>'{kit,ig}', '@'), ''), nullif(ltrim(w.instagram, '@'), ''))::text,
     ev.kind, ev.ref, ev.happened, ev.detail
   from ev
