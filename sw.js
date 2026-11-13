@@ -4,11 +4,17 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
   const alarm = d.alarm === '1' || d.alarm === true;
-  e.waitUntil(self.registration.showNotification(d.title || 'CriaHub', {
-    body: d.body || '', tag: d.tag || 'criahub', renotify: true,
-    silent: false, requireInteraction: alarm, vibrate: alarm ? [400, 200, 400, 200, 800, 300, 800] : [200, 100, 200],
-    data: { url: d.url || '/#radar' }
-  }));
+  /* o alarme não pode usar a mesma etiqueta do aviso "⏱ X min": no iPhone, uma notificação com a mesma
+     etiqueta substitui a anterior em silêncio, sem banner nem som. Fecha o contador e mostra o alarme como nova. */
+  const tag = d.tag || 'criahub';
+  e.waitUntil((async () => {
+    if (alarm) { try { (await self.registration.getNotifications({ tag })).forEach(n => n.close()); } catch (_) {} }
+    await self.registration.showNotification(d.title || 'CriaHub', {
+      body: d.body || '', tag: alarm ? tag + '-fim-' + Date.now() : tag, renotify: true,
+      silent: false, requireInteraction: alarm, vibrate: alarm ? [400, 200, 400, 200, 800, 300, 800] : [200, 100, 200],
+      data: { url: d.url || '/#radar' }
+    });
+  })());
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
