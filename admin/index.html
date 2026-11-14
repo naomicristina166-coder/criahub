@@ -810,7 +810,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
           <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
             ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
-            ${!wa && !ig ? `<a class="btn sm" href="${esc(gmail(m.email, 'Um recado da Naomi, do CriaHub', txt))}" target="_blank" rel="noopener" data-msent="${esc(k)}">E-mail</a>` : ''}
+            ${m.email ? `<a class="btn sm${wa || ig ? ' ghost' : ''}" href="${esc(gmail(m.email, 'Um recado da Naomi, do CriaHub', txt))}" target="_blank" rel="noopener" data-msent="${esc(k)}">E-mail</a>` : ''}
             <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
             <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
         : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
