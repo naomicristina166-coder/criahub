@@ -445,7 +445,10 @@ window.CRIAHUB_CONFIG = {
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%}
+html{height:100%}body{min-height:100%}
+/* iPhone: barras fixas em camada própria, pra não descolarem nem ficarem no meio da tela ao rolar */
+.tabs,.warmbars{transform:translateZ(0);-webkit-transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+body.warming main{padding-bottom:calc(200px + var(--wbh,0px))}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -461,7 +464,7 @@ h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 main{padding-block:20px 120px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));min-width:0}
 .wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
+.tabs{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);
   background:var(--surface);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .tab{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 8px;font-size:11px;font-weight:600;color:var(--muted)}
@@ -5175,18 +5178,20 @@ function warmPanel(bf) {
 }
 function warmBar() {
   let el = document.getElementById('warmBar');
-  if (!WTS.length) { el?.remove(); clearInterval(wTick); wTick = null; return; }
+  if (!WTS.length) { el?.remove(); document.body.classList.remove('warming'); clearInterval(wTick); wTick = null; return; }
   /* ao reabrir o app, as contas ainda estão carregando: espera, sem apagar os cronômetros */
   if (!S.loading && S.data.accounts.length) { const n = WTS.length; WTS = WTS.filter(w => S.data.accounts.some(x => x.id === w.aid)); if (WTS.length !== n) wSave(); }
   const rows = WTS.map(w => ({ w, a: S.data.accounts.find(x => x.id === w.aid) })).filter(x => x.a);
-  if (!rows.length) { if (!WTS.length) el?.remove(); return; }
+  if (!rows.length) { if (!WTS.length) { el?.remove(); document.body.classList.remove('warming'); } return; }
   if (!el) { el = document.createElement('div'); el.id = 'warmBar'; el.className = 'warmbars'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  if (!document.body.classList.contains('warming')) document.body.classList.add('warming');
   const many = rows.length > 1, tm = w => { const { ms } = wLeft(w); return `${pad(Math.floor(ms / 60000))}:${pad(Math.floor(ms % 60000 / 1000))}`; };
   /* a cada segundo só o relógio muda; os botões ficam no lugar (senão o toque se perde) */
   const sig = rows.map(({ w, a }) => [w.aid, w.slot, w.start, !!w.pausedAt, a.handle].join(':')).join('|');
   if (el.dataset.sig === sig) { rows.forEach(({ w }) => { const t = el.querySelector(`[data-wt="${w.aid}"]`); if (t) t.textContent = tm(w); }); }
   else { el.dataset.sig = sig; el.innerHTML = rows.map(({ w, a }) => { const { open } = wLeft(w);
     return `<div class="warmbar${w.pausedAt ? ' paused' : ''}${many ? ' mini' : ''}"><div><b>${w.pausedAt ? 'Pausado' : 'Aquecendo'} ${esc(a.handle)}</b><small>${esc(WSLOTS[w.slot][0])}${!w.pausedAt && open && !many ? ' · pare quando quiser' : ''}</small></div><span class="wt num" data-wt="${w.aid}">${tm(w)}</span><button class="iconbtn wpause" data-warmpause="${w.aid}" aria-label="${w.pausedAt ? 'Continuar' : 'Pausar'} ${esc(a.handle)}">${w.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="${w.aid}">Concluir</button><button class="iconbtn" data-warmstop="${w.aid}" aria-label="Cancelar ${esc(a.handle)}">${ic('x')}</button></div>`; }).join(''); }
+  { const h = el.offsetHeight + 'px'; if (document.body.style.getPropertyValue('--wbh') !== h) document.body.style.setProperty('--wbh', h); }
   rows.forEach(({ w }) => { wNotify(w, false); const { open, ms } = wLeft(w); if (!open && !ms && !w.pausedAt) warmFinish(w.aid, true); });
 }
 /* som do fim do aquecimento (com o app aberto). O AudioContext é criado no toque de começar, que é quando o celular deixa tocar som */
