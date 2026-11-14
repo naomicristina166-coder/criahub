@@ -437,6 +437,8 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       <div class="chips" style="margin:10px 0 14px">${st.uf === 'pro' || st.uf === 'vencendo' ? `<button class="chip" data-uf="vencendo" aria-pressed="${st.uf === 'vencendo'}">Pro vencendo · ${nf(n.vencendo)}</button>` : ''}<button class="chip" data-uf="sumidas" aria-pressed="${st.uf === 'sumidas'}">Sumidas há 7+ dias · ${nf(n.sumidas)}</button></div>
       <div class="list" id="ulist">${L.length ? L.map(personCard).join('') : '<div class="empty">Nenhuma creator encontrada.</div>'}</div>`;
   }
+  /* abre o Gmail do CriaHub no navegador já com o e-mail escrito (o mailto: não abre nada quando não há app de e-mail) */
+  const gmail = (to, su, body) => 'https://mail.google.com/mail/?authuser=criahubb@gmail.com&view=cm&fs=1&to=' + encodeURIComponent(to || '') + (su ? '&su=' + encodeURIComponent(su) : '') + (body ? '&body=' + encodeURIComponent(body) : '');
   function personCard(u) {
     const open = st.open === u.user_id, total = Object.values(u.counts || {}).reduce((a, b) => a + b, 0);
     const p = st.plan[u.user_id] || u.plan;
@@ -448,7 +450,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       <span class="right"><b>${dur(u.mins_30)}</b>${nf(u.days_30)} ${u.days_30 === 1 ? 'dia' : 'dias'}/30</span></button>
       ${open ? `<div class="det">
         <div><h3>Contato</h3><div class="links" style="margin-top:0">
-          <a class="pv" href="mailto:${esc(u.email)}">${esc(u.email)}</a>
+          <a class="pv" href="${esc(gmail(u.email))}" target="_blank" rel="noopener">${esc(u.email)}</a>
           ${u.instagram ? `<a class="pv" href="https://instagram.com/${encodeURIComponent(u.instagram)}" target="_blank" rel="noopener">@${esc(u.instagram)}</a>` : ''}
           ${u.whatsapp ? `<a class="pv" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
           <p class="note">${[(u.kinds || []).map(k => KIND_APP[k] || k).join(', '), u.from_waitlist ? 'veio da lista de espera' : '', Number(u.paid_total) ? 'já pagou ' + brl(u.paid_total) : '', u.feedbacks ? u.feedbacks + (u.feedbacks === 1 ? ' mensagem enviada' : ' mensagens enviadas') : ''].filter(Boolean).join(' · ') || (u.instagram ? '' : 'Sem @ ainda. Ela pode colocar em Ajustes › Seu @ do Instagram.')}</p></div>
@@ -562,7 +564,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <label style="grid-column:1/-1">Anotação<input name="note" maxlength="200" placeholder="Opcional. Ex.: cupom de lançamento"></label>
           <div><button class="btn" type="submit">Registrar</button></div></form></section>
       ${venc.length ? `<section class="sec"><h2>Vencimentos</h2><p class="sub" style="margin-bottom:12px">Pro vencido ou vencendo nos próximos 7 dias. Bom momento pra mandar um lembrete.</p><div class="list">${venc.map(u => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(u.name || u.email)}</div><div class="meta">${daysUntil(u.plan_until) < 0 ? 'venceu ' + dt(u.plan_until) : 'vence ' + dt(u.plan_until)}</div></div>
-        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="mailto:${esc(u.email)}">E-mail</a>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
+        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="${esc(gmail(u.email))}" target="_blank" rel="noopener">E-mail</a>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
       <div class="two sec">
         <section class="card"><h2>Últimos 6 meses</h2><div class="bars" style="height:150px">${byM.map((v, i) => `<div class="b" title="${brl(v)}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div>
           <div class="bars-x">${months.map(mName).map(m => `<span>${m}</span>`).join('')}</div><p class="note">Total desde o começo: <b>${brl(F.total)}</b></p></section>
@@ -763,7 +765,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
         <span class="meta">${c.next_date ? `<span class="${due ? 'crm-due' : ''}">Follow-up ${due && String(c.next_date).slice(0, 10) < todayStr() ? 'atrasado: ' : ''}${dt(c.next_date)}</span> · ` : ''}${c.last_log ? 'Última conversa: ' + esc(String(c.last_log).slice(0, 60)) : 'Sem conversa anotada'}</span></span>
       <span class="right">${c.logs ? `<b>${nf(c.logs)}</b>${c.logs === 1 ? 'conversa' : 'conversas'}` : ''}</span></button>
       ${open ? `<div class="det">
-        <div class="links" style="margin-top:0">${wa ? `<a class="pv" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${ig ? `<a class="pv" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Direct</a><a class="pv" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Perfil</a>` : ''}${c.email ? `<a class="pv" href="mailto:${esc(c.email)}">E-mail</a>` : ''}</div>
+        <div class="links" style="margin-top:0">${wa ? `<a class="pv" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${ig ? `<a class="pv" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Direct</a><a class="pv" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Perfil</a>` : ''}${c.email ? `<a class="pv" href="${esc(gmail(c.email))}" target="_blank" rel="noopener">E-mail</a>` : ''}</div>
         <div><h3>Próximo follow-up</h3><div class="chips"><button class="chip" data-cnext="${c.id}|1">Amanhã</button><button class="chip" data-cnext="${c.id}|3">Em 3 dias</button><button class="chip" data-cnext="${c.id}|7">Em 1 semana</button><button class="chip" data-cnext="${c.id}|0">Sem follow-up</button></div></div>
         <div><h3>Conversas</h3><div class="crm-add"><input id="clog" maxlength="1000" placeholder="O que vocês conversaram? Ex.: mandei o convite, ela topou testar"><button class="btn sm" data-caddlog="${c.id}">Anotar</button></div>
           <div class="crm-log" style="margin-top:8px">${!L ? '<p class="sub">Carregando…</p>' : L.length ? L.map(x => `<div>${esc(x.body)}<small>${dtt(x.created_at)}</small></div>`).join('') : '<p class="sub">Nenhuma conversa anotada ainda.</p>'}</div></div>
@@ -808,7 +810,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
           <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
             ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
-            ${!wa && !ig ? `<a class="btn sm" href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Um recado da Naomi, do CriaHub')}&body=${encodeURIComponent(txt)}" data-msent="${esc(k)}">E-mail</a>` : ''}
+            ${!wa && !ig ? `<a class="btn sm" href="${esc(gmail(m.email, 'Um recado da Naomi, do CriaHub', txt))}" target="_blank" rel="noopener" data-msent="${esc(k)}">E-mail</a>` : ''}
             <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
             <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
         : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
