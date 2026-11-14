@@ -124,6 +124,7 @@ select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;paddi
 .seg{display:inline-flex;background:var(--rosa-2);border-radius:12px;padding:3px}
 .seg button{border:0;background:none;border-radius:9px;padding:7px 14px;font-weight:800;font-size:13px;color:var(--vinho)}
 .seg button[aria-pressed=true]{background:var(--vinho);color:#fff}
+.ctabs{display:flex;width:100%;max-width:520px}.ctabs button{flex:1;padding:11px 14px;font-size:15px}
 .pain{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px}
 .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .links a{font-size:13px;font-weight:700;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
@@ -279,7 +280,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   const initials = s => (String(s || '?').trim()[0] || '?').toUpperCase();
 
   const st = { tab: 'geral', ov: null, daily: [], screens: [], users: null, wl: null, metric: 'active', sel: -1,
-    uq: '', uf: 'todas', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {},
+    uq: '', uf: 'pro', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {},
     fb: [], errs: [], rev: [], ff: 'novo', fopen: null, showErr: false };
   try { const t = sessionStorage.getItem('criahub:admtab'); if (t) st.tab = t; } catch (_) {}
   /* dentro do app (aberto pelo botão Painel): links pro app abrem na janela do app, não dentro do painel */
@@ -432,7 +433,8 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       <button class="btn ghost sm" data-csv="users">Baixar planilha</button></div>
       <div class="tools"><input class="search" type="search" placeholder="Buscar por nome, e-mail, @ ou WhatsApp" value="${esc(st.uq)}" data-q="u" aria-label="Buscar creator">
         <select class="sel" data-sort aria-label="Ordenar"><option value="recentes"${st.us === 'recentes' ? ' selected' : ''}>Mais recentes</option><option value="tempo"${st.us === 'tempo' ? ' selected' : ''}>Mais tempo no app</option><option value="ultima"${st.us === 'ultima' ? ' selected' : ''}>Usou por último</option></select></div>
-      <div class="chips" style="margin-bottom:14px">${[['todas', 'Todas'], ['gratis', 'Grátis'], ['pro', 'Pro'], ['vencendo', 'Pro vencendo'], ['sumidas', 'Sumidas há 7+ dias']].map(([k, l]) => `<button class="chip" data-uf="${k}" aria-pressed="${st.uf === k}">${l} · ${nf(n[k])}</button>`).join('')}</div>
+      <div class="seg ctabs" role="group" aria-label="Plano">${[['pro', '⭐ Pro'], ['gratis', 'Grátis'], ['todas', 'Todas']].map(([k, l]) => `<button data-uf="${k}" aria-pressed="${st.uf === k || (k === 'pro' && st.uf === 'vencendo')}">${l} · ${nf(n[k])}</button>`).join('')}</div>
+      <div class="chips" style="margin:10px 0 14px">${st.uf === 'pro' || st.uf === 'vencendo' ? `<button class="chip" data-uf="vencendo" aria-pressed="${st.uf === 'vencendo'}">Pro vencendo · ${nf(n.vencendo)}</button>` : ''}<button class="chip" data-uf="sumidas" aria-pressed="${st.uf === 'sumidas'}">Sumidas há 7+ dias · ${nf(n.sumidas)}</button></div>
       <div class="list" id="ulist">${L.length ? L.map(personCard).join('') : '<div class="empty">Nenhuma creator encontrada.</div>'}</div>`;
   }
   function personCard(u) {
@@ -450,6 +452,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           ${u.instagram ? `<a class="pv" href="https://instagram.com/${encodeURIComponent(u.instagram)}" target="_blank" rel="noopener">@${esc(u.instagram)}</a>` : ''}
           ${u.whatsapp ? `<a class="pv" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
           <p class="note">${[(u.kinds || []).map(k => KIND_APP[k] || k).join(', '), u.from_waitlist ? 'veio da lista de espera' : '', Number(u.paid_total) ? 'já pagou ' + brl(u.paid_total) : '', u.feedbacks ? u.feedbacks + (u.feedbacks === 1 ? ' mensagem enviada' : ' mensagens enviadas') : ''].filter(Boolean).join(' · ') || (u.instagram ? '' : 'Sem @ ainda. Ela pode colocar em Ajustes › Seu @ do Instagram.')}</p></div>
+        ${u.plan === 'pro' && !u.is_admin ? `<div><h3>E-mail de boas-vindas ao Pro</h3><p class="note" style="margin:0">${(st.mom || []).some(m => m.user_id === u.user_id && m.kind === 'virou_pro') ? '⚠️ Ainda não foi. O envio automático falhou: confira a senha de app do Gmail do CriaHub. Pela aba Momentos dá pra mandar na mão.' : '✓ Enviado, ou ela virou Pro antes do envio automático existir (12/11).'}</p></div>` : ''}
         <div><h3>No app (não abre o conteúdo, só conta)</h3>${total ? `<div class="counts">${Object.entries(u.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span><b>${nf(v)}</b> ${esc(COLS[k] || k)}</span>`).join('')}</div>` : '<p class="sub">Ainda não cadastrou nada (sem contar os exemplos).</p>'}</div>
         <div><h3>Onde passa o tempo · últimos 30 dias</h3>${uscreens(u.user_id)}</div>
         <div class="meta">Abriu o app ${nf(u.opens_30)} ${u.opens_30 === 1 ? 'vez' : 'vezes'} em 30 dias · ${dur(u.mins_total)} no total · último login ${dtt(u.last_sign_in_at)}</div>
@@ -460,6 +463,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
           <div class="chips" style="margin-top:8px"><button class="chip" data-gift="${u.user_id}|36">🎁 Presente Cria Beta (3 anos)</button><button class="chip" data-gift="${u.user_id}|1">1 mês de cortesia</button><button class="chip" data-gift="${u.user_id}|0">Sem data de fim</button></div>
           <div class="chips" style="margin-top:8px">${(st.aff || []).some(a => a.user_id === u.user_id) ? '<span class="note" style="margin:0">💸 Já é afiliada · veja na aba Afiliadas</span>' : `<button class="chip" data-affmake="${u.user_id}|1|${esc(u.name || u.email || '')}">💸 Tornar afiliada Cria Beta (30% → 20%)</button><button class="chip" data-affmake="${u.user_id}|0|${esc(u.name || u.email || '')}">💸 Tornar afiliada (20%)</button>`}</div>
+          ${u.is_admin ? '' : `<div class="chips" style="margin-top:14px"><button class="chip" data-del="${u.user_id}" data-delmail="${esc(u.email)}" style="color:#B3261E">🗑 Excluir esta conta</button></div>`}
           ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}${u.plan_until ? ' · pago até ' + dt(u.plan_until) : ''}. Pagamento novo? Registre em Finanças que a data se atualiza sozinha.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
       </div>` : ''}</article>`;
   }
@@ -913,6 +917,19 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       if (r.error) { toast('Não consegui marcar'); return; } toast('Marcado como pago ✓'); loadAff(); return;
     }
     if (d.afftoggle) { const [uid, on] = d.afftoggle.split('|'); const r = await sb.rpc('admin_aff_toggle', { p_user: uid, p_active: on === '1' }); if (r.error) { toast('Não consegui'); return; } loadAff(); }
+  }, true);
+
+  /* =========== excluir conta (supabase/excluir-conta.sql) =========== */
+  document.addEventListener('click', async e => {
+    const t = e.target.closest && e.target.closest('[data-del]'); if (!t) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const mail = t.dataset.delmail || '';
+    const typed = (window.prompt(`Excluir a conta ${mail} pra sempre?\n\nApaga a conta, tudo que ela cadastrou no app e o e-mail da lista de espera. Não dá pra desfazer.\n\nPra confirmar, digite o e-mail da conta:`) || '').trim().toLowerCase();
+    if (!typed) return;
+    if (typed !== mail.toLowerCase()) { toast('O e-mail não bate. Nada foi excluído.'); return; }
+    const r = await sb.rpc('admin_delete_user', { p_user: t.dataset.del, p_waitlist: true });
+    if (r.error) { toast(/admin_delete_user|schema cache|function/i.test(r.error.message) ? 'Falta rodar supabase/excluir-conta.sql no Supabase' : r.error.message.replace(/^.*?:\s*/, '')); return; }
+    st.users = (st.users || []).filter(u => u.user_id !== t.dataset.del); st.open = null; render(); toast('Conta excluída: ' + mail);
   }, true);
   sb && sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin('Sua sessão terminou. Entre de novo.'); });
 
