@@ -800,13 +800,16 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   function vMom() {
     if (st.fundMissing) return `<h1>Momentos</h1>${fundMiss()}`;
     if (!st.mom) return '<div class="loading">Carregando…</div>';
-    const L = st.mom, s30 = st.momStats ? st.momStats.sent30 : 0;
-    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Cada conquista das suas creators, com um recado seu pronto pra mandar. É isso que faz ela se sentir vista e ficar. Nada é enviado sozinho: os botões abrem o WhatsApp, o Direct ou o e-mail dela com o texto, e quem envia é você.</p></div>
-      <span class="pill ok" style="font-size:12px">${nf(s30)} ${s30 === 1 ? 'recado' : 'recados'} em 30 dias</span></div>
+    const L = st.mom, s30 = st.momStats ? st.momStats.sent30 : 0, a30 = st.momStats ? st.momStats.auto30 || 0 : 0, rec = (st.momStats && st.momStats.recent) || [];
+    const brH = +new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }) % 24, today = todayStr();
+    const when = m => m.kind === 'aniversario' ? (String(m.happened).slice(0, 10) === today ? (brH < 10 ? 'O e-mail de parabéns sai sozinho hoje às 10h' : 'O e-mail de parabéns já devia ter saído hoje: confira o Gmail') : `O e-mail de parabéns sai sozinho no dia, ${dt(m.happened).slice(0, 5)}, às 10h`)
+      : `Aconteceu em ${dt(m.happened).slice(0, 5)} · o recado sai sozinho ${brH < 10 ? 'hoje' : 'amanhã'} às 10h`;
+    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Todo dia às 10h o recado de cada conquista sai sozinho: e-mail pelo Gmail do CriaHub e notificação no celular dela. Aqui fica só o que ainda não saiu. Se quiser mandar pessoalmente antes, use os botões.</p></div>
+      <span class="pill ok" style="font-size:12px">${nf(s30 + a30)} ${s30 + a30 === 1 ? 'recado' : 'recados'} em 30 dias${a30 ? ` · ${nf(a30)} ${a30 === 1 ? 'saiu sozinho' : 'saíram sozinhos'}` : ''}</span></div>
       <div class="list" style="margin-top:12px">${L.length ? L.map(m => {
         const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria'), wa = waNum(m.whatsapp), ig = m.instagram;
         return `<article class="person mom"><div class="top1"><span class="em1" aria-hidden="true">${K[0]}</span><div style="min-width:0"><div class="t">${esc(K[1](String(m.happened).slice(0, 10)))}</div>
-          <div class="em pv">${esc(m.name || '')}${ig ? ' · @' + esc(ig) : ''}${m.kind !== 'aniversario' ? ' · ' + dt(m.happened) : ''}</div></div></div>
+          <div class="em pv">${esc(m.name || '')}${ig ? ' · @' + esc(ig) : ''}</div><div class="em" style="margin-top:2px">${esc(when(m))}</div></div></div>
           <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
           <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
             ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
@@ -814,7 +817,8 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
             <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
             <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
         : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
-      <p class="note">Aparecem: aniversário (7 dias antes), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
+      ${rec.length ? `<h2 style="margin-top:22px">Saíram sozinhos</h2><div class="list" style="margin-top:8px">${rec.map(r => `<div class="person" style="padding:10px 14px"><div class="t" style="font-size:14px">${(MK[r.kind] || ['⭐'])[0]} ${esc(r.name || '')} · ${esc(MK[r.kind] ? MK[r.kind][1](String(r.done_at).slice(0, 10)) : r.kind)}</div><div class="em">${esc(dt(r.done_at))}</div></div>`).join('')}</div>` : ''}
+      <p class="note">Aparecem: aniversário (7 dias antes), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. A data é quando aconteceu, não um prazo pra você. Se um card fica aqui mais de um dia, o e-mail não está saindo: confira a senha de app do Gmail nos segredos do Supabase. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
   }
   async function momFinish(k, how) {
     const m = st.mom.find(x => momKey(x) === k); if (!m) return;

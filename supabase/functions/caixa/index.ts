@@ -142,6 +142,38 @@ async function aquecer() {
   return Response.json({ ok: true, alarms: users, sent });
 }
 
+/* momentos: todo dia às 10h, o recado de cada conquista sai sozinho (e-mail + notificação).
+   O e-mail vai pela função boas-vindas; só quando ele sai o momento some da aba Momentos do painel. */
+const MOM_PUSH: Record<string, (n: string) => [string, string]> = {
+  aniversario: n => [`Feliz aniversário${n ? ', ' + n : ''}! 🎂`, 'Te mandei um recado no e-mail 💌'],
+  primeira_marca: n => [`Primeira marca organizada${n ? ', ' + n : ''}! 🎉`, 'Que seja a primeira de muitas. Te mandei um recado no e-mail 💌'],
+  primeiro_video: n => [`Primeiro vídeo no ar${n ? ', ' + n : ''}! 🎬`, 'Bora pro próximo! Te mandei um recado no e-mail 💌'],
+  primeiro_pagamento: n => [`Primeiro pagamento registrado! 💸`, 'Dinheiro de creator merece comemoração 💌'],
+  '30_dias': n => [`30 dias de CriaHub${n ? ', ' + n : ''}! 🗓️`, 'Obrigada por confiar. Te mandei uma pergunta no e-mail 💌'],
+  virou_pro: n => [`Bem-vinda ao Pro${n ? ', ' + n : ''}! ✨`, 'Tudo do Pro já está liberado na sua conta.'],
+  sumida: n => [`Senti sua falta${n ? ', ' + n : ''} 💌`, 'Tá tudo bem? Se algo travou, me conta.'],
+};
+async function momentos() {
+  const hook = env('WAITLIST_HOOK_SECRET'), base = Deno.env.get('SUPABASE_URL');
+  if (!hook) return Response.json({ ok: false, why: 'falta o segredo WAITLIST_HOOK_SECRET' });
+  const { data: due, error } = await sb.rpc('moments_auto');
+  if (error) return new Response(error.message, { status: 500 });
+  const push = await vapid(); let mails = 0, pushes = 0; const fails: string[] = [];
+  for (const m of (due || []) as any[]) {
+    if (!m.email || !MOM_PUSH[m.kind]) continue;
+    const body = m.kind === 'virou_pro'
+      ? { kind: 'pro', user_id: m.user_id, email: m.email, name: m.name, ref: m.ref }
+      : { kind: 'momento', moment: m.kind, user_id: m.user_id, email: m.email, name: m.name, ref: m.ref };
+    const r = await fetch(`${base}/functions/v1/boas-vindas`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hook-secret': hook }, body: JSON.stringify(body) }).catch(() => null);
+    const txt = r ? await r.text() : 'sem resposta';
+    if (!r || !r.ok || txt !== 'enviado') { fails.push(`${m.kind}: ${txt.slice(0, 120)}`); continue; }
+    mails++;
+    const n = String(m.name || '').trim().split(/\s+/)[0], [title, msg] = MOM_PUSH[m.kind](n);
+    if (push && m.kind !== 'aniversario') pushes += await pushTo(m.user_id, { title, body: msg, tag: 'momento-' + m.kind, url: '/#inicio' });
+  }
+  return Response.json({ ok: true, due: (due || []).length, mails, pushes, fails });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -150,5 +182,6 @@ Deno.serve(async req => {
   if (b.action === 'lembrar' && await keyOk('cron', b.key)) return lembrar();
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
   if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
+  if (b.action === 'momentos' && await keyOk('cron', b.key)) return momentos();
   return new Response('forbidden', { status: 403 });
 });
