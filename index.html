@@ -378,7 +378,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -1136,7 +1136,7 @@ const COLOR_FAMS = [
 ];
 const COLORS = COLOR_FAMS.flatMap(([, a]) => a.map(x => x[1]));
 const colorName = h => (COLOR_FAMS.flatMap(([, a]) => a).find(x => x[1].toLowerCase() === String(h).toLowerCase()) || [])[0] || 'Cor personalizada';
-const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos', 'myposts'];
+const COLS = ['brands', 'deliveries', 'ideas', 'payments', 'extras', 'leads', 'contracts', 'tasks', 'goals', 'dreams', 'warm', 'habits', 'hlog', 'briefs', 'feedbacks', 'expenses', 'perms', 'notes', 'accounts', 'retros', 'videos', 'myposts', 'metrics'];
 const PH = [['marca', 'Nome da marca'], ['contato', 'Contato da marca'], ['valor', 'Valor'], ['videos', 'Quantidade de vídeos'], ['tipo', 'Tipo de trabalho'], ['inicio', 'Data de início'], ['prazo', 'Prazo final'], ['hoje', 'Data de hoje'], ['meu_nome', 'Seu nome']];
 const LIMITS = { ctr: 5, msg: 30, studio: 15, chat: 25 };
 const LANGS = ['Inglês', 'Espanhol', 'Francês', 'Italiano', 'Alemão'];
@@ -1182,9 +1182,9 @@ const LEAD_NEXT = { contatada: 3, respondeu: 2, proposta: 4 };
 const CHANNELS = ['DM Instagram', 'E-mail', 'DM TikTok', 'LinkedIn', 'WhatsApp', 'Indicação', 'Plataforma de UGC'];
 
 /* ================= state & storage ================= */
-const S = { tab: 'inicio', data: { myposts: [], brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], warm: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
+const S = { tab: 'inicio', data: { myposts: [], metrics: [], brands: [], deliveries: [], ideas: [], payments: [], extras: [], leads: [], contracts: [], tasks: [], goals: [], dreams: [], warm: [], habits: [], hlog: [], briefs: [], feedbacks: [], expenses: [], perms: [], notes: [], accounts: [], retros: [], videos: [] }, profile: {}, mode: 'local', loading: true,
   f: { brand: 'todas', idea: 'todas', month: monthKey(today()), agBrand: '', front: '', mview: 'clientes', rview: 'hoje', day: today(), wk: 0, sview: 'briefing', fview: 'marcas', year: 0, cur: 'USD', aview: 'calendario', calM: today().slice(0, 7), calDay: today() },
-  ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
+  ct: { sub: 'modelo', tpl: null, brandId: '', draft: '', draftBrand: '', adj: '', cIn: '', cImgs: [], cLang: 'Português', cOut: '', mMode: 'in', mIn: '', mImgs: [], mLang: 'Inglês', mOut: '', svBrand: '', view: '', busy: null, ctl: null, err: '', bIn: '', bImgs: [], bBrand: '', bRes: null, rImgs: [], xImgs: [], rTxt: '', rDur: '', rDeliv: '', rvOut: '', gDeliv: '', tsOut: '', scIn: '', sImgs: [], scOut: '' },
   sample: null, imgLimits: null, news: [], newsReady: false };
 let newsSeen = ''; try { newsSeen = localStorage.getItem('criahub:newsSeen') || ''; } catch (e) {}
 try { S.f.front = localStorage.getItem('criahub:front') || ''; } catch (e) {}
@@ -1193,6 +1193,7 @@ if (TABS.some(x => x[0] === location.hash.slice(1))) S.tab = location.hash.slice
 /* aviso do Em alta abre direto na aba */
 let mailHash = location.hash === '#emails'; if (mailHash) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+if (location.hash === '#metricas') { S.tab = 'estudio'; S.f.sview = 'metricas'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
 function loadLocal() { try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) { COLS.forEach(c => S.data[c] = Array.isArray(j.data?.[c]) ? rollEx(j.data[c]) : []); S.profile = j.profile || {}; } } catch (e) {} }
@@ -2198,9 +2199,9 @@ function workBanner(d) {
 }
 
 /* ================= estúdio ================= */
-const STVIEWS = [['briefing', 'Briefing'], ['prontos', 'Prontos pra postar'], ['posts', 'Meus posts'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
+const STVIEWS = [['briefing', 'Briefing'], ['prontos', 'Prontos pra postar'], ['posts', 'Meus posts'], ['metricas', 'Métricas'], ['alta', 'Em alta'], ['revisor', 'Revisor'], ['gravar', 'Gravar'], ['lote', 'Em lote'], ['ideias', 'Ideias'], ['ganchos', 'Ganchos'], ['erros', 'Erros']];
 const studioSeg = () => `<div class="seg" role="group" aria-label="Estúdio">${STVIEWS.map(([k, l]) => `<button data-sview="${k}" aria-pressed="${S.f.sview === k}">${l}</button>`).join('')}</div>${window.criahubAiBadge && !['lote', 'ideias', 'erros', 'posts', 'prontos'].includes(S.f.sview) ? window.criahubAiBadge() : ''}`;
-function vStudio() { return ({ prontos: vReady, posts: vMyPosts, alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
+function vStudio() { return ({ prontos: vReady, posts: vMyPosts, metricas: vMetrics, alta: vTrends, briefing: vBriefing, revisor: vReview, gravar: vRecord, lote: vBatch, ideias: vIdeas, ganchos: vHooks, erros: vErrors })[S.f.sview](); }
 function studioUsage() {
   if (window.CRIAHUB_STANDALONE) return '';
   const u = usage(), used = u.studio || 0, max = LIMITS.studio, pct = Math.min(100, Math.round(used / max * 100));
@@ -2463,7 +2464,7 @@ const TOOLS = {
   rotina: { attr: 'rview', f: 'rview', name: 'Rotina', list: [['hoje', 'Meu dia', 'Tarefas do dia'], ['metas', 'Metas', 'Onde você quer chegar', () => S.data.goals.length], ['sonhos', 'Vision Board', 'Seus sonhos e metas com imagens', () => S.data.dreams.length, true], ['habitos', 'Hábitos', 'Água, sono, treino…', () => S.data.habits.length], ['semana', 'Semana', 'Balanço da semana e replanejar'], ['conquistas', 'Conquistas', 'Selos e retrospectivas do mês']] },
   marcas: { attr: 'mview', f: 'mview', name: 'Marcas', list: [['clientes', 'Clientes', 'Suas marcas'], ['contas', 'Contas', 'Perfis de marca que você posta (Tech Canvas)', () => S.data.accounts.length], ['prospec', 'Prospecção', 'Marcas que você quer conquistar', () => S.data.leads.length], ['permutas', 'Permutas', 'Produtos recebidos em troca de conteúdo', () => S.data.perms.length], ['contratos', 'Contratos', 'Modelo de contrato e tradução', () => S.data.contracts.length], ['licencas', 'Licenças', 'Prazo de uso de imagem dos vídeos', () => licenses().length], ['kit', 'Mídia kit', 'Sua apresentação pras marcas', () => !!kit().bio], ['mensagens', 'Mensagens', 'Mensagens prontas pras marcas', () => arr(S.profile.msgTpls).length]] },
   agenda: { attr: 'aview', f: 'aview', name: 'Agenda', list: [['calendario', 'Calendário', 'Seu mês'], ['entregas', 'Entregas', 'Prazos e etapas de cada vídeo'], ['datas', 'Datas comerciais', 'Quando prospectar pra cada data']] },
-  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['prontos', 'Prontos pra postar', 'Seus vídeos editados, guardados na ordem de postar', () => RD.n > 0, true], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
+  estudio: { attr: 'sview', f: 'sview', name: 'Estúdio', list: [['briefing', 'Briefing', 'Briefing vira plano'], ['prontos', 'Prontos pra postar', 'Seus vídeos editados, guardados na ordem de postar', () => RD.n > 0, true], ['posts', 'Meus posts', 'Planeje o que postar no seu perfil', () => S.data.myposts.length, true], ['metricas', 'Métricas', 'O que deu certo no vídeo e o que fazer no próximo', () => S.data.metrics.length, true], ['alta', 'Em alta', 'Músicas e trends da semana pro seu nicho', null, true], ['revisor', 'Revisor', 'Confere o vídeo antes de enviar'], ['gravar', 'Gravar', 'Roteiro e teleprompter'], ['lote', 'Em lote', 'Gravar vários vídeos de uma vez'], ['ideias', 'Ideias', 'Banco de ideias e ideias pro seu nicho com IA', () => S.data.ideas.length], ['ganchos', 'Ganchos', 'Os ganchos que mais deram views'], ['erros', 'Erros', 'Feedbacks das marcas viram checklist', () => S.data.feedbacks.length]] },
   financeiro: { attr: 'fview', f: 'fview', name: 'Finanças', list: [['marcas', 'Marcas', 'Pagamentos das marcas'], ['plano', 'Plano', 'Quanto guardar e pra quê', null, true], ['dolar', 'US$ / €', 'Ganhos em dólar e euro', () => S.data.payments.some(isFx) || S.data.brands.some(isFx)], ['rendas', 'Rendas', 'TikTok Shop, afiliados, freelas…', () => S.data.extras.length], ['gastos', 'Gastos', 'Gastos e lucro', () => S.data.expenses.length], ['ano', 'Ano', 'Seu ano em números'], ['meta', 'Meta', 'Meta de faturamento'], ['preco', 'Preço', 'Quanto cobrar por vídeo'], ['notas', 'Notas fiscais', 'Notas e DAS do MEI', () => S.data.payments.some(p => p.nf)]] },
 };
 const toolOn = (tab, v) => { const T = TOOLS[tab]; if (!T) return true; const it = T.list.find(x => x[0] === v); if (!it || T.list[0][0] === v || !S.profile.tools) return true; try { if (it[3] && it[3]()) return true; } catch (_) {} const k = tab + '.' + v; return k in S.profile.tools ? !!S.profile.tools[k] : !!it[4]; };
@@ -2476,7 +2477,7 @@ function toolsFor(kinds, focus) {
   if (kinds.includes('canvas')) on.push('marcas.contas', 'financeiro.dolar', 'estudio.ganchos');
   if (kinds.includes('rendas')) on.push('financeiro.gastos');
   if (kinds.includes('perfil') || kinds.includes('comecando')) on.push('estudio.ganchos');
-  on.push('estudio.posts', 'financeiro.plano');
+  on.push('estudio.posts', 'estudio.metricas', 'financeiro.plano');
   if (focus === 'rotina') on.push('rotina.semana');
   if (focus === 'dinheiro') on.push('financeiro.gastos', 'financeiro.meta', 'financeiro.ano');
   return Object.fromEntries(Object.entries(TOOLS).flatMap(([tab, T]) => T.list.slice(1).map(([v]) => [tab + '.' + v, on.includes(tab + '.' + v)])));
@@ -2582,6 +2583,7 @@ const HELP = {
   'agenda.datas': ['Datas comerciais', 'Datas que movimentam as marcas (Dia das Mães, Black Friday…) e quando começar a prospectar pra cada uma.'],
   'estudio.briefing': ['Briefing', 'Cole o pedido da marca. Eu separo as regras, monto os roteiros e mando os vídeos pra sua semana, em 3 passos.'],
   'estudio.alta': ['Em alta', 'Músicas e trends que estão bombando nesta semana, com a fonte de cada uma. Escolha seu nicho pra ver o que combina com você. A lista nova sai toda segunda de manhã.'],
+  'estudio.metricas': ['Métricas', 'Mande os prints das estatísticas de um vídeo, de qualquer rede. A IA lê os números e diz o que deu certo, o que não deu, o que repetir, o que mudar e como alcançar mais gente no próximo. Cada análise fica salva e as próximas comparam com os vídeos anteriores.'],
   'estudio.revisor': ['Revisor', 'Antes de enviar, confira se o vídeo segue o briefing: mande prints ou o roteiro e eu aponto o que ajustar.'],
   'estudio.gravar': ['Gravar', 'O roteiro do vídeo e um teleprompter pra você ler enquanto grava.'],
   'estudio.lote': ['Em lote', 'Grave vários vídeos de uma vez: os roteiros em sequência no teleprompter.'],
@@ -4637,7 +4639,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'fx_in') { FXC[S.f.cur || 'USD'] = e.target.value; const o = $('#fx_out'); if (o) o.innerHTML = fxOutHtml(); return; }
   if (e.target.id === 'fx_fee') { S.profile.fxFee = e.target.value; const o = $('#fx_out'); if (o) o.innerHTML = fxOutHtml(); clearTimeout(S.feeT); S.feeT = setTimeout(() => saveProfile({ fxFee: e.target.value }), 900); return; }
   if (e.target.id === 'rn_res') { TS.res = e.target.value.trim(); tsRefresh(); return; }
-  const map = { tpl: 'tpl', o_draft: 'draft', ct_adj: 'adj', ct_in: 'cIn', m_in: 'mIn', b_in: 'bIn', r_txt: 'rTxt', r_dur: 'rDur', r_ask: 'rAsk', r_brand: 'rBrand', sc_in: 'scIn' };
+  const map = { tpl: 'tpl', o_draft: 'draft', ct_adj: 'adj', ct_in: 'cIn', m_in: 'mIn', b_in: 'bIn', r_txt: 'rTxt', r_dur: 'rDur', r_ask: 'rAsk', r_brand: 'rBrand', sc_in: 'scIn', x_title: 'xTitle', x_hook: 'xHook', x_url: 'xUrl', x_cap: 'xCap' };
   if (map[e.target.id]) { S.ct[map[e.target.id]] = e.target.value; if (e.target.id === 'tpl') { const sb = $('[data-act=savetpl]'); if (sb) { sb.disabled = false; sb.style.opacity = ''; sb.textContent = 'Salvar modelo'; } } return; } if (e.target.id === 's_color') { document.documentElement.style.setProperty('--accent', e.target.value); document.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', 'false')); const nm = $('#sw_name'); if (nm) nm.textContent = colorName(e.target.value); } });
 document.addEventListener('change', async e => {
   if (e.target.id === 'imp_file' && e.target.files[0]) { try { const j = JSON.parse(await e.target.files[0].text()); if (j.app !== 'criahub' || !j.data) throw 0; closeForm(); toast('Importando…');
@@ -5008,8 +5010,8 @@ async function payCheck() {
   if (isPro()) { closeForm(); toast('Bem-vinda ao Pro! ✨'); } else toast('Ainda não chegou. Pode levar alguns minutos no Pix e no boleto.');
 }
 const FREE_BRANDS = 10;
-const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Vision Board', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
-const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Vision Board com os seus sonhos e metas', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
+const PRO_TOOLS = { 'financeiro.plano': 'Plano do seu dinheiro', 'rotina.sonhos': 'Vision Board', 'estudio.alta': 'Em alta', 'estudio.briefing': 'Briefing com IA', 'estudio.revisor': 'Revisor com IA', 'estudio.metricas': 'Análise de métricas com IA', 'estudio.ganchos': 'Ganchos que mais deram views', 'marcas.contas': 'Contas de marca e métricas (Tech Canvas)', 'marcas.kit': 'Mídia kit', 'financeiro.dolar': 'Dólar e euro', 'financeiro.notas': 'Notas fiscais e MEI' };
+const PRO_LIST = ['Marcas ilimitadas (no Grátis são até 10)', 'IA: análise das métricas dos seus vídeos, briefing vira plano, revisor, ideias pro seu nicho, organizar a semana, tradução de contrato e de mensagem', 'Vision Board com os seus sonhos e metas', 'Em alta: trends da semana pro seu nicho', 'Contas de marca e métricas por plataforma (Tech Canvas)', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Ganchos que mais deram views pra você', 'Tudo que chegar de novo no CriaHub'];
 var PLAN = null, PLAN_READY = false;
 function isPro() { if (ADMIN) return true; if (!PLAN || PLAN.plan !== 'pro') return false; return !PLAN.until || String(PLAN.until).slice(0, 10) >= today(); }
 window.criahubIsPro = () => !PLAN_READY || S.mode !== 'remote' || isPro();
@@ -5057,7 +5059,7 @@ function proDecorate(v) {
   const sg = v.querySelector('.seg'); if (!sg) return;
   v.querySelectorAll('.head .btn').forEach(b => b.remove());
   let n = sg.nextElementSibling; while (n) { const nx = n.nextElementSibling; n.remove(); n = nx; }
-  const desc = { 'financeiro.plano': 'Quanto guardar por mês, a sua reserva de emergência e a hora certa de investir em equipamento ou curso, com base no que você ganha e gasta.', 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
+  const desc = { 'financeiro.plano': 'Quanto guardar por mês, a sua reserva de emergência e a hora certa de investir em equipamento ou curso, com base no que você ganha e gasta.', 'rotina.sonhos': 'Monte o seu quadro com imagens dos seus sonhos, marque os realizados e baixe como papel de parede.', 'estudio.alta': 'As músicas e trends da semana pro seu nicho, toda semana.', 'estudio.briefing': 'Cole o briefing da marca e a IA separa as regras, monta os roteiros e manda pra sua semana.', 'estudio.revisor': 'A IA confere o seu vídeo antes de enviar pra marca.', 'estudio.metricas': 'Mande os prints das estatísticas do vídeo e a IA diz o que deu certo, o que mudar e como alcançar mais gente no próximo.', 'estudio.ganchos': 'Veja quais ganchos deram mais views pra você.', 'marcas.contas': 'Os perfis de marca que você posta no Tech Canvas, com métricas por plataforma.', 'marcas.kit': 'Seu mídia kit pronto pra mandar pras marcas.', 'financeiro.dolar': 'Ganhos em dólar e euro já convertidos pra real.', 'financeiro.notas': 'Notas fiscais e o DAS do MEI no mesmo lugar.' }[key] || '';
   sg.insertAdjacentHTML('afterend', `<div class="pro-lock section"><span class="pro-pill" style="align-self:flex-start;margin:0;background:#F4C9D8;color:#420725">PRO</span><h2>${esc(PRO_TOOLS[key])}</h2><p>${esc(desc)}</p><button class="btn" data-pro="${esc(key)}">Conhecer o Pro</button></div>`);
 }
 function openPro(reason) {
@@ -5847,6 +5849,171 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .wc-cmp{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .wc-cmp > b{font-size:22px;font-weight:800;color:var(--accent,#420725)}.wc-cmp span{font-size:13.5px}
 </style>`);
+/* ================= Métricas: ela manda os prints das estatísticas do vídeo e a IA diz o que deu certo e o que fazer no próximo ================= */
+const MX_PLATS = ['Instagram', 'TikTok', 'YouTube', 'Kwai', 'Pinterest', 'Outra'];
+const MX_IC = { Instagram: '📸', TikTok: '🎵', YouTube: '▶️', Kwai: '🎬', Pinterest: '📌', Outra: '📱' };
+const MX_WHERE = { Instagram: 'No Reels, toque em <b>Ver insights</b> (ou nos 3 pontinhos › Insights). Tire print de todas as telas, rolando até o fim.', TikTok: 'No vídeo, toque nos <b>3 pontinhos › Análises</b> (ou Estatísticas). Tire print da visão geral, da retenção e de quem assistiu.', YouTube: 'No app <b>YouTube Studio</b>, abra o vídeo › <b>Análises</b>. Tire print da visão geral, do público e da retenção.', Kwai: 'No vídeo, abra os <b>dados do vídeo</b> e tire print de todas as telas.', Pinterest: 'No Pin, toque em <b>Ver estatísticas</b> e tire print de tudo.', Outra: 'Abra as estatísticas do vídeo no app e tire print de todas as telas.' };
+const MX_GOALS = [['alcance', 'Alcançar mais gente'], ['seguidores', 'Ganhar seguidores'], ['engajamento', 'Engajamento'], ['vendas', 'Vendas e cliques'], ['marcas', 'Atrair marcas']];
+const MX_KEYS = [['views', 'Views'], ['alcance', 'Alcance'], ['curtidas', 'Curtidas'], ['comentarios', 'Comentários'], ['compartilhamentos', 'Compartilhados'], ['salvamentos', 'Salvamentos'], ['seguidores', 'Seguidores novos'], ['retencao', 'Retenção'], ['tempo_medio', 'Tempo médio'], ['nao_seguidores', 'Não seguidores']];
+const mxNum = v => { if (v === null || v === undefined || v === '' || typeof v === 'boolean') return null; const n = typeof v === 'number' ? v : +String(v).replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'); return isFinite(n) && String(v).trim() !== '' ? n : null; };
+const mxEng = m => { const v = mxNum(m.views) || mxNum(m.alcance); if (!v) return null; const s = ['curtidas', 'comentarios', 'compartilhamentos', 'salvamentos'].reduce((a, k) => a + (mxNum(m[k]) || 0), 0); return s ? s / v : null; };
+const mxFmt = (k, v) => { const n = mxNum(v); if (n === null) return ''; if (k === 'retencao' || k === 'nao_seguidores') return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'; if (k === 'tempo_medio') return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 's'; return (k === 'seguidores' ? '+' : '') + nCompact(n); };
+const mxList = () => [...S.data.metrics].sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
+const mxGoalName = k => (MX_GOALS.find(g => g[0] === k) || MX_GOALS[0])[1];
+window.criahubOpenMetricas = () => { if (sheet) closeForm(); S.tab = 'estudio'; S.f.sview = 'metricas'; render(); window.scrollTo(0, 0); };
+
+function mxHistory() {
+  return mxList().slice(0, 8).map(x => { const m = x.m || {}, e = mxEng(m), q = k => mxNum(m[k]) ?? '?';
+    return `- ${fmtD(x.date)} · ${x.platform} · "${String(x.title || 'sem título').slice(0, 80)}"${x.hook ? ` · gancho: "${String(x.hook).slice(0, 100)}"` : ''} · views ${q('views')} · retenção ${q('retencao')}% · tempo médio ${q('tempo_medio')}s · compart. ${q('compartilhamentos')} · salv. ${q('salvamentos')} · seguidores +${q('seguidores')}${e ? ` · engajamento ${(e * 100).toFixed(1)}%` : ''}${x.r && x.r.deu_certo && x.r.deu_certo[0] ? ` · o que funcionou: ${String(x.r.deu_certo[0]).slice(0, 140)}` : ''}`; }).join('\n');
+}
+function mxPrompt(n) {
+  const c = S.ct, plat = c.xPlat || 'Instagram', hist = mxHistory(), niches = myNiches().map(nicheName).join(', ');
+  return `Você é uma estrategista de conteúdo que analisa métricas de vídeos curtos de creators brasileiras (perfil próprio e UGC). As ${n} imagens anexadas são prints das estatísticas (insights) de UM vídeo no ${plat}.
+Leia com atenção todos os números que aparecem: visualizações, contas alcançadas, curtidas, comentários, compartilhamentos, salvamentos, seguidores ganhos, retenção ou porcentagem que assistiu até o fim, tempo médio assistido, duração do vídeo, de onde vieram as views (Para você, perfil, hashtags, busca, seguindo), seguidores x não seguidores, idade, gênero e cidades do público.
+
+SOBRE O VÍDEO (escrito pela creator, entre as linhas ${Q})
+${Q}
+Do que é: ${(c.xTitle || '').slice(0, 300) || 'não informado'}
+Gancho (primeira frase): ${(c.xHook || '').slice(0, 300) || 'não informado'}
+Legenda: ${(c.xCap || '').slice(0, 2200) || 'não informada'}
+Objetivo dela com esse vídeo: ${mxGoalName(c.xGoal)}
+${niches ? `Nicho do perfil: ${niches}` : ''}
+${Q}
+${hist ? `\nVÍDEOS QUE ELA JÁ ANALISOU AQUI (do mais novo pro mais antigo), pra comparar:\n${hist}\n` : '\nÉ o primeiro vídeo que ela analisa aqui, então não há histórico pra comparar.\n'}
+REGRAS
+- Use SÓ números que aparecem nos prints. O que não aparecer fica null. Nunca invente nem estime número.
+- Se as imagens não forem estatísticas de um vídeo, diga isso no resumo, nota 0 e deixe as listas vazias.
+- Escreva em português do Brasil, tom de amiga que entende do assunto: direto, acolhedor e prático, sem jargão (se usar um termo, explique em poucas palavras).
+- Cada item deve ser específico deste vídeo e acionável no próximo. Nada de dica genérica tipo "poste com frequência".
+- Use o que se sabe de como o ${plat} distribui vídeos curtos (segurar os 3 primeiros segundos, assistir até o fim, rever, compartilhamentos e salvamentos pesam muito, views de não seguidores mostram alcance novo), sem prometer resultado.
+- Pense no objetivo dela (${mxGoalName(c.xGoal)}) ao dizer o que deu certo e o que mudar.
+- ${hist ? 'Compare com os vídeos anteriores dela: este foi melhor ou pior que a média e o motivo provável. Aponte padrões que se repetem.' : 'Deixe "comparacao" vazio.'}
+
+Responda APENAS com um objeto JSON, sem nenhum texto fora dele, exatamente neste formato:
+{
+ "titulo": "nome curto do vídeo (use o que ela escreveu; se não escreveu, deduza pelos prints)",
+ "metricas": { "views": número ou null, "alcance": número ou null, "curtidas": número ou null, "comentarios": número ou null, "compartilhamentos": número ou null, "salvamentos": número ou null, "seguidores": número de seguidores ganhos ou null, "retencao": porcentagem de 0 a 100 de quem assistiu até o fim ou null, "tempo_medio": segundos ou null, "duracao": segundos ou null, "nao_seguidores": porcentagem de 0 a 100 das views que vieram de não seguidores ou null },
+ "numeros": [ { "nome": "nome do número como aparece no print", "valor": "valor como aparece", "leitura": "o que isso quer dizer, em 1 frase simples" } ],
+ "nota": número inteiro de 1 a 10 para o desempenho deste vídeo frente ao objetivo,
+ "resumo": "2 a 3 frases: como o vídeo foi e o principal motivo",
+ "deu_certo": ["até 4 itens"],
+ "nao_deu": ["até 4 itens, cada um com o motivo provável"],
+ "replicar": ["até 4 coisas para repetir no próximo vídeo"],
+ "mudar": ["até 4 mudanças concretas para o próximo vídeo"],
+ "alcance": ["até 4 ações para alcançar mais gente (gancho, formato, horário, legenda, áudio, chamada pra compartilhar, etc.)"],
+ "ideias": [ { "titulo": "ideia de próximo vídeo", "gancho": "a primeira frase pronta", "como": "como fazer em 1 ou 2 frases e por que deve funcionar" } ],
+ "comparacao": "texto curto comparando com os vídeos anteriores, ou vazio",
+ "nao_li": ["o que não dá pra saber pelos prints e que ajudaria a analisar melhor (ex.: print da retenção)"]
+}
+Os números em "metricas" vão sem pontos nem letras (ex.: 12400, não "12,4 mil"). Traga 3 ideias.`;
+}
+function mxClean(r) {
+  const c = S.ct, L = v => arr(v).slice(0, 5), m = r.metricas && typeof r.metricas === 'object' ? r.metricas : {}, s = (v, n) => String(v ?? '').trim().slice(0, n);
+  return { id: newId(), created: new Date().toISOString(), date: today(), platform: c.xPlat || 'Instagram', goal: c.xGoal || 'alcance',
+    title: s(c.xTitle, 120) || s(r.titulo, 120) || 'Vídeo de ' + fmtD(today()), url: s(c.xUrl, 500), hook: s(c.xHook, 300), caption: s(c.xCap, 2200),
+    m: Object.fromEntries([...MX_KEYS.map(([k]) => k), 'duracao'].map(k => [k, mxNum(m[k])])),
+    r: { nota: Math.max(0, Math.min(10, Math.round(+r.nota || 0))), resumo: s(r.resumo, 900),
+      numeros: (Array.isArray(r.numeros) ? r.numeros : []).slice(0, 16).map(x => ({ nome: s(x && x.nome, 60), valor: s(x && x.valor, 40), leitura: s(x && x.leitura, 220) })).filter(x => x.nome),
+      deu_certo: L(r.deu_certo), nao_deu: L(r.nao_deu), replicar: L(r.replicar), mudar: L(r.mudar), alcance: L(r.alcance),
+      ideias: (Array.isArray(r.ideias) ? r.ideias : []).slice(0, 3).map(x => ({ titulo: s(x && x.titulo, 140), gancho: s(x && x.gancho, 240), como: s(x && x.como, 400) })).filter(x => x.titulo),
+      comparacao: s(r.comparacao, 700), nao_li: L(r.nao_li) } };
+}
+async function mxRun() {
+  const c = S.ct, imgs = c.xImgs;
+  if (!imgs.length) { toast('Envie pelo menos 1 print das estatísticas do vídeo'); return; }
+  await gated('studio', async () => {
+    const ctl = new AbortController(); c.ctl = ctl; c.busy = 'mx'; c.err = ''; c.lastOk = false; render();
+    let r = null;
+    try { r = await S.sample.json(mxPrompt(imgs.length), { signal: ctl.signal, cache: false, images: imgs, maxTokens: 4000 }); }
+    catch (e) { if (e.code !== 'cancelled') c.err = e.code === 'invalid_json' ? 'Não consegui organizar a análise. Tente de novo.' : aiErr(e.code); }
+    c.busy = null; c.ctl = null;
+    if (r && typeof r === 'object' && !Array.isArray(r)) {
+      const rec = mxClean(r); c.lastOk = true; await put('metrics', rec);
+      Object.assign(c, { xOpen: rec.id, xImgs: [], xTitle: '', xHook: '', xUrl: '', xCap: '' }); toast('Análise pronta ✨'); render(); window.scrollTo(0, 0); return;
+    }
+    if (r) c.err = 'Não consegui organizar a análise. Tente de novo.';
+    render();
+  });
+}
+const mxUl = a => `<ul class="tips">${a.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ul>`;
+function mxBlock(ico, title, a) { return a && a.length ? `<div class="mx-blk"><h3>${ico} ${title}</h3>${mxUl(a)}</div>` : ''; }
+function mxText(x) {
+  const r = x.r || {}, sec = (t, a) => a && a.length ? `\n\n${t}\n${a.map(i => '• ' + i).join('\n')}` : '';
+  return `Análise do vídeo "${x.title}" (${x.platform}, ${fmtD(x.date)})${r.nota ? `\nNota: ${r.nota}/10` : ''}\n\n${r.resumo || ''}${sec('O QUE DEU CERTO', r.deu_certo)}${sec('O QUE NÃO DEU CERTO', r.nao_deu)}${sec('REPETIR NO PRÓXIMO', r.replicar)}${sec('MUDAR NO PRÓXIMO', r.mudar)}${sec('PRA ALCANÇAR MAIS GENTE', r.alcance)}${r.comparacao ? `\n\nCOMPARANDO COM OS OUTROS VÍDEOS\n${r.comparacao}` : ''}${r.ideias && r.ideias.length ? `\n\nIDEIAS PRO PRÓXIMO VÍDEO\n${r.ideias.map((i, k) => `${k + 1}. ${i.titulo}${i.gancho ? `\n   Gancho: ${i.gancho}` : ''}${i.como ? `\n   ${i.como}` : ''}`).join('\n')}` : ''}\n\nFeito no CriaHub.`;
+}
+function mxDetail(x) {
+  const r = x.r || {}, m = x.m || {}, e = mxEng(m);
+  const tiles = MX_KEYS.filter(([k]) => mxNum(m[k]) !== null).map(([k, l]) => `<div class="mx-n"><b>${mxFmt(k, m[k])}</b><span>${l}</span></div>`).join('') + (e ? `<div class="mx-n"><b>${pctTxt(e)}</b><span>Engajamento</span></div>` : '');
+  const saved = i => S.data.ideas.some(d => d.fromMx === x.id + ':' + i);
+  return `<section class="card section mx-res" id="mx_res">
+    <div class="row-h"><h2>${esc(x.title)}</h2><button class="link" data-xclose="1">Fechar</button></div>
+    <div class="sub">${MX_IC[x.platform] || '📱'} ${esc(x.platform)} · ${esc(mxGoalName(x.goal))} · analisado em ${fmtD(x.date)}${x.url && /^https?:\/\//i.test(x.url) ? ` · <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir o vídeo</a>` : ''}</div>
+    ${r.nota || r.resumo ? `<div class="mx-score">${r.nota ? `<b>${r.nota}<small>/10</small></b>` : ''}<p>${esc(r.resumo || '')}</p></div>` : ''}
+    ${tiles ? `<div class="mx-nums">${tiles}</div>` : ''}
+    ${r.numeros && r.numeros.length ? `<details class="mx-read"><summary>Números que eu li nos prints (${r.numeros.length})</summary><ul class="tips">${r.numeros.map(n => `<li><span><b>${esc(n.nome)}: ${esc(n.valor)}</b>${n.leitura ? ' · ' + esc(n.leitura) : ''}</span></li>`).join('')}</ul><div class="sub">Algum número errado? Os prints com letra pequena às vezes confundem. Mande de novo com mais zoom.</div></details>` : ''}
+    ${mxBlock('✅', 'O que deu certo', r.deu_certo)}${mxBlock('⚠️', 'O que não deu certo', r.nao_deu)}${mxBlock('🔁', 'Repita no próximo', r.replicar)}${mxBlock('✏️', 'Mude no próximo', r.mudar)}${mxBlock('🚀', 'Pra alcançar mais gente', r.alcance)}
+    ${r.comparacao ? `<div class="mx-blk"><h3>📈 Comparando com os seus outros vídeos</h3><p class="mx-p">${esc(r.comparacao)}</p></div>` : ''}
+    ${r.ideias && r.ideias.length ? `<div class="mx-blk"><h3>💡 Ideias pro próximo vídeo</h3><div class="mx-ideas">${r.ideias.map((i, k) => `<div class="mx-idea"><b>${esc(i.titulo)}</b>${i.gancho ? `<span class="sub">Gancho: “${esc(i.gancho)}”</span>` : ''}${i.como ? `<span class="sub">${esc(i.como)}</span>` : ''}<button class="btn sm ${saved(k) ? 'ghost' : 'soft'}" data-xidea="${x.id}|${k}" ${saved(k) ? 'disabled' : ''} style="justify-self:start">${saved(k) ? 'Salva nas Ideias ✓' : 'Salvar nas Ideias'}</button></div>`).join('')}</div></div>` : ''}
+    ${r.nao_li && r.nao_li.length ? `<div class="wnote">🔎 <span><b>Pra uma análise ainda melhor:</b> ${esc(r.nao_li.join(' · '))}</span></div>` : ''}
+    <div class="row-btns"><button class="btn ghost sm" data-xcopy="${x.id}">Copiar análise</button><button class="btn ghost sm danger" data-xdel="${x.id}">Excluir</button></div>
+  </section>`;
+}
+function mxRow(x) {
+  const r = x.r || {}, v = mxNum((x.m || {}).views);
+  return `<button class="mx-row${S.ct.xOpen === x.id ? ' on' : ''}" data-xopen="${x.id}"><span class="mx-ic" aria-hidden="true">${MX_IC[x.platform] || '📱'}</span><span style="min-width:0"><b>${esc(x.title)}</b><small>${esc(x.platform)} · ${fmtD(x.date)}${v !== null ? ' · ' + nCompact(v) + ' views' : ''}</small></span>${r.nota ? `<span class="pill ${r.nota >= 7 ? 'p-ok' : r.nota >= 5 ? 'p-acc' : 'p-warn'}">${r.nota}/10</span>` : ''}</button>`;
+}
+function vMetrics() {
+  const c = S.ct, plat = c.xPlat || 'Instagram', goal = c.xGoal || 'alcance', L = mxList(), open = c.xOpen && L.find(x => x.id === c.xOpen), busy = c.busy === 'mx';
+  const withV = L.filter(x => mxNum((x.m || {}).views) !== null), avg = withV.length ? withV.reduce((s, x) => s + mxNum(x.m.views), 0) / withV.length : 0, best = [...withV].sort((a, b) => mxNum(b.m.views) - mxNum(a.m.views))[0];
+  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Mande os prints das estatísticas do vídeo e descubra o que deu certo, o que mudar e como alcançar mais gente no próximo.</div></div></div>${studioSeg()}
+  ${studioUsage()}
+  ${open ? mxDetail(open) : ''}
+  <section class="card section"><h2>Analisar um vídeo</h2>
+    <ol class="mx-steps"><li>Abra o vídeo no app da rede e entre nas <b>estatísticas</b>.</li><li>Tire print de tudo: visão geral, retenção, de onde vieram as views e o público.</li><li>Envie aqui (até ${S.imgLimits?.maxCount || 5} prints) e conte do que é o vídeo.</li></ol>
+    <div class="field"><label>Em qual rede?</label><div class="chips" role="group" aria-label="Rede">${MX_PLATS.map(p => `<button type="button" class="chip" data-xplat="${p}" aria-pressed="${plat === p}">${MX_IC[p]} ${p}</button>`).join('')}</div><span class="hint">${MX_WHERE[plat]}</span></div>
+    <div class="field"><label>Prints das estatísticas</label></div>${filesHtml('xImgs')}
+    <div class="field"><label for="x_title">Do que é o vídeo?</label><input type="text" id="x_title" maxlength="120" value="${esc(c.xTitle || '')}" placeholder="Ex.: rotina de skincare da manhã em 30 segundos"></div>
+    <div class="grid2"><div class="field"><label for="x_hook">Gancho <span class="hint" style="display:inline;margin:0">(a primeira frase, opcional)</span></label><input type="text" id="x_hook" maxlength="300" value="${esc(c.xHook || '')}" placeholder="Ex.: Para de lavar o rosto assim"></div>
+      <div class="field"><label for="x_url">Link do vídeo <span class="hint" style="display:inline;margin:0">(opcional)</span></label><input type="text" inputmode="url" id="x_url" maxlength="500" value="${esc(c.xUrl || '')}" placeholder="https://…"></div></div>
+    <div class="field"><label for="x_cap">Legenda <span class="hint" style="display:inline;margin:0">(opcional)</span></label><textarea id="x_cap" maxlength="2200" style="min-height:70px" placeholder="Cole a legenda e as hashtags que você usou">${esc(c.xCap || '')}</textarea></div>
+    <div class="field"><label>O que você queria com esse vídeo?</label><div class="chips" role="group" aria-label="Objetivo">${MX_GOALS.map(([k, l]) => `<button type="button" class="chip" data-xgoal="${k}" aria-pressed="${goal === k}">${l}</button>`).join('')}</div></div>
+    <div class="row-btns"><button class="btn" data-xrun="1" ${c.busy ? 'disabled' : ''}>${busy ? 'Analisando…' : 'Analisar vídeo'}</button>${busy ? '<button class="btn ghost sm" data-act="stopai">Parar</button>' : ''}</div>
+    ${busy ? thinkingBox('Lendo os seus números e pensando no próximo vídeo… pode levar até um minuto.') : ''}
+    ${c.err && S.f.sview === 'metricas' ? `<div class="err">${esc(c.err)}</div>` : ''}${noAIStudio()}
+    <span class="sub" style="font-size:12.5px">Os prints não ficam guardados: só os números e a análise, pra comparar com os próximos vídeos.</span>
+  </section>
+  ${L.length ? `<section class="section"><div class="row-h"><h2>Seus vídeos analisados (${L.length})</h2></div>
+    ${withV.length >= 2 ? `<div class="card mx-avg"><span>Média de views <b>${nCompact(avg)}</b></span><span>Melhor: <b>${esc(best.title)}</b> · ${nCompact(best.m.views)}</span></div>` : ''}
+    <div class="mx-list">${L.map(mxRow).join('')}</div>
+    ${L.length < 3 ? '<div class="sub">A partir do 2º vídeo, a análise compara com os anteriores e mostra o que se repete nos que vão melhor.</div>' : ''}</section>` : ''}`;
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest && e.target.closest('[data-xplat],[data-xgoal],[data-xrun],[data-xopen],[data-xclose],[data-xidea],[data-xcopy],[data-xdel]'); if (!t) return;
+  e.preventDefault(); e.stopImmediatePropagation(); const d = t.dataset, c = S.ct;
+  if (d.xplat) { c.xPlat = d.xplat; render(); return; }
+  if (d.xgoal) { c.xGoal = d.xgoal; render(); return; }
+  if (d.xrun) { await mxRun(); return; }
+  if (d.xopen) { c.xOpen = c.xOpen === d.xopen ? '' : d.xopen; render(); if (c.xOpen) document.getElementById('mx_res')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (d.xclose) { c.xOpen = ''; render(); return; }
+  if (d.xidea) { const [id, k] = d.xidea.split('|'), x = S.data.metrics.find(v => v.id === id), i = x && x.r && x.r.ideias && x.r.ideias[+k]; if (!i) return;
+    await put('ideas', { id: newId(), title: i.titulo, tag: 'Roteiro', status: 'nova', notes: [i.gancho ? 'Gancho: ' + i.gancho : '', i.como || '', `Veio da análise de "${x.title}" (${x.platform}).`].filter(Boolean).join('\n'), fromMx: id + ':' + k, created: new Date().toISOString() }); toast('Ideia salva no Estúdio › Ideias'); return; }
+  if (d.xcopy) { const x = S.data.metrics.find(v => v.id === d.xcopy); if (!x) return; try { await navigator.clipboard.writeText(mxText(x)); toast('Análise copiada'); } catch (_) { toast('Não consegui copiar'); } return; }
+  if (d.xdel) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Toque de novo pra excluir'; return; } if (c.xOpen === d.xdel) c.xOpen = ''; await del('metrics', d.xdel); toast('Análise excluída'); return; }
+}, true);
+(() => { const st = document.createElement('style'); st.textContent = `
+.mx-steps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px;color:var(--fg)}
+.mx-score{display:flex;gap:14px;align-items:center}.mx-score p{margin:0;font-size:15px;line-height:1.5}
+.mx-score b{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;color:var(--accent-ink);white-space:nowrap}.mx-score b small{font-size:15px;color:var(--muted);font-weight:700}
+.mx-nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.mx-n{background:var(--surface-2);border-radius:12px;padding:9px 11px;display:grid;gap:2px;min-width:0}.mx-n b{font-size:18px;font-weight:800}.mx-n span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.mx-read summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--accent-ink)}.mx-read[open] summary{margin-bottom:6px}
+.mx-blk h3{font-size:15.5px;margin:4px 0 6px}.mx-p{margin:0;font-size:14.5px;line-height:1.5}
+.mx-ideas{display:grid;gap:8px}.mx-idea{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:5px;background:var(--surface)}
+.mx-list{display:grid;gap:8px}
+.mx-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--fg);font:inherit;cursor:pointer}
+.mx-row.on{border-color:var(--accent-ink)}.mx-row b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mx-row small{color:var(--muted);font-size:12.5px}.mx-ic{font-size:20px}
+.mx-avg{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:14px}.mx-avg span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+`; document.head.appendChild(st); })();
 /* ================= Meus posts: planejador das redes da creator (fora das contas do Tech Canvas) ================= */
 const mpSt = k => MP_ST.find(x => x[0] === k) || MP_ST[0];
 const MP_IC = { Instagram: '📸', TikTok: '🎵', YouTube: '▶️', Pinterest: '📌', LinkedIn: '💼', Outra: '•' };
@@ -5864,7 +6031,7 @@ function vMyPosts() {
   return `<div class="head"><div><h1>Estúdio</h1><div class="sub">O que você vai postar no seu perfil, dia a dia: Instagram, TikTok, YouTube ou onde você estiver.</div></div><button class="btn" data-mpnew="">${ic('plus')}Novo post</button></div>${studioSeg()}
   <div class="calnav"><button class="iconbtn" data-mpw="-1" aria-label="Semana anterior">‹</button><h2 style="font-size:17px">${wk === 0 ? 'Esta semana' : wk === 1 ? 'Próxima semana' : `Semana ${fmtD(ws)}`}</h2><button class="iconbtn" data-mpw="1" aria-label="Próxima semana">›</button></div>${wk ? '<button class="link" data-mpw="0" style="align-self:center">Voltar pra esta semana</button>' : ''}
   <section class="card section" style="gap:8px">${goal ? `<div class="progress-top"><span style="color:var(--fg);font-weight:700">Posts da semana</span><span class="num">${done} de ${goal}</span></div><div class="bar ${done >= goal ? 'ok' : ''}"><span style="width:${Math.min(100, Math.round(done / goal * 100))}%"></span></div>` : '<b>Quantos posts por semana você quer fazer?</b>'}
-    <div class="chips">${[2, 3, 4, 5, 7, 10, 14].map(n => `<button class="chip" data-mpgoal="${n}" aria-pressed="${goal === n}">${n}</button>`).join('')}</div>
+    <div class="chips">${[1, 2, 3, 4, 5, 6, 7, ...(goal > 7 ? [goal] : [])].map(n => `<button class="chip" data-mpgoal="${n}" aria-pressed="${goal === n}">${n}</button>`).join('')}</div>
     ${late.length ? `<div class="sub" style="color:var(--warn)">${late.length} post${late.length > 1 ? 's' : ''} de dias que já passaram ainda não ${late.length > 1 ? 'foram postados' : 'foi postado'}.</div>` : ''}</section>
   <div class="mp-days">${days.map(d => { const its = sortBy(inWk.filter(m => m.date === d), 'time');
     return `<section class="mp-day${d === t ? ' today' : ''}"><div class="mp-dh"><b>${dl(d)}${d === t ? ' · hoje' : ''}</b><button class="link" data-mpnew="${d}">+ post</button></div>${its.length ? its.map(mpCard).join('') : '<div class="mp-empty">Nada planejado</div>'}</section>`; }).join('')}</div>

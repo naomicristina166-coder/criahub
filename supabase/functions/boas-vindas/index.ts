@@ -3,6 +3,7 @@
      Busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
    • Virou Pro: o gatilho de supabase/pro-boas-vindas.sql chama quando uma conta passa pro Pro (pagou ou ganhou).
      Manda o e-mail de boas-vindas ao Pro e marca o recado como enviado na aba Momentos do painel.
+   • Novidade do app: a função caixa (ação "novidade", rode supabase/novidade-metricas.sql) chama uma vez por creator.
 
    Por onde o e-mail sai:
    • Gmail do CriaHub (criahubb@gmail.com), com a foto do perfil, se GMAIL_APP_PASSWORD estiver nos segredos
@@ -199,6 +200,51 @@ async function sendMoment(b: { user_id?: string; email?: string; name?: string; 
   return new Response('enviado');
 }
 
+/* novidades do app: um e-mail por novidade pra cada creator (quem chama é a função caixa, ação "novidade") */
+const NEWS: Record<string, { subject: (n: string) => string; pre: string; title: string; lines: (n: string) => string[]; bullets: string[]; after: string[]; cta: string; url: string }> = {
+  metricas: {
+    subject: n => `Novidade no CriaHub: descubra o que deu certo no seu vídeo, ${n} 📊`,
+    pre: 'Mande os prints das estatísticas e a IA diz o que repetir e o que mudar no próximo vídeo.',
+    title: 'Análise de Métricas chegou',
+    lines: n => [`Oi, ${n}!`, 'Tem novidade no CriaHub: a <b>Análise de Métricas</b>. Sabe aquela dúvida de "por que esse vídeo foi bem e o outro não"? Agora o app te ajuda a responder.'],
+    bullets: ['Abra as estatísticas do vídeo no Instagram, TikTok, YouTube ou onde você postar', 'Tire os prints e mande no CriaHub, em Estúdio › Métricas', 'A IA lê os seus números e te diz o que deu certo, o que não deu, o que repetir, o que mudar e como alcançar mais gente', 'Ganhe 3 ideias pro próximo vídeo, com o gancho pronto', 'Cada análise fica salva: as próximas comparam com os seus vídeos anteriores e mostram o que se repete nos que vão melhor'],
+    after: ['Testa no próximo vídeo que você postar e me conta o que achou, respondendo este e-mail.'],
+    cta: 'Analisar meu vídeo', url: 'https://criahub.app.br/#metricas',
+  },
+};
+export function newsEmail(key: string, name: string) {
+  const N = NEWS[key]; if (!N) return null;
+  const nome = firstName(name), subject = N.subject(nome), lines = N.lines(nome);
+  const plain = (s: string) => s.replace(/<[^>]+>/g, '');
+  const text = [...lines.map(plain).flatMap(l => [l, '']), ...N.bullets.map(b => `• ${b}`), '', ...N.after.flatMap(l => [l, '']), `${N.cta}: ${N.url}`, '', 'Com carinho,', 'Naomi', 'Fundadora do CriaHub'].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(N.pre)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:32px">
+    <div style="font:700 34px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.2px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span> <span style="font-size:13px;letter-spacing:1px;color:#420725;background:#F2C9CF;border-radius:999px;padding:4px 10px;vertical-align:middle">NOVIDADE</span></div>
+    <div style="font:700 28px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:22px">${esc(N.title)}</div>
+  </td></tr>
+  <tr><td style="padding:32px">
+    ${lines.map(l => `<p style="margin:0 0 16px;font:400 17px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${l.replace(/<(?!\/?b>)[^>]*>/g, '')}</p>`).join('')}
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 8px">${N.bullets.map(b => `<tr><td valign="top" style="padding:0 10px 10px 0;color:#C2185B;font:700 16px/1.5 Arial,Helvetica,sans-serif">✓</td><td style="padding:0 0 10px;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">${esc(b)}</td></tr>`).join('')}</table>
+    ${N.after.map(l => `<p style="margin:8px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${esc(l)}</p>`).join('')}
+    <div style="margin:22px 0 4px"><a href="${N.url}" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">${esc(N.cta)}</a></div>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}
+async function sendNews(b: { user_id?: string; email?: string; name?: string; news?: string }) {
+  if (!b.user_id || !b.email || !b.news) return new Response('faltou user_id/email/news', { status: 400 });
+  const mail = newsEmail(b.news, b.name || ''); if (!mail) return new Response('novidade sem modelo', { status: 400 });
+  try { await sendMail(b.email, mail); }
+  catch (e) { return new Response(`e-mail: ${(e as Error).message}`, { status: 502 }); }
+  return new Response('enviado');
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const secret = env('WAITLIST_HOOK_SECRET');
@@ -207,6 +253,7 @@ Deno.serve(async req => {
   const body = await req.json().catch(() => ({}));
   if (body?.kind === 'pro') return await welcomePro(body);
   if (body?.kind === 'momento') return await sendMoment(body);
+  if (body?.kind === 'novidade') return await sendNews(body);
   const { id } = body;
   if (!id) return new Response('sem id', { status: 400 });
 
