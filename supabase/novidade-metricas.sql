@@ -6,8 +6,8 @@
 --
 -- PASSO 1 · rode este arquivo inteiro até a linha "PASSO 2". Ele cria a tabela e as funções.
 -- PASSO 2 · TESTE: rode só o bloco do PASSO 2. Vai só pra você (admins). Confira o e-mail e a notificação.
--- PASSO 3 · PRA TODAS: rode só o bloco do PASSO 3. Ele manda até 60 por vez (pra função não estourar o tempo).
---           Se o resultado (net._http_response) mostrar "faltam" maior que 0, rode o PASSO 3 de novo (o Gmail aceita uns 500 por dia; passou disso, continue no dia seguinte).
+-- PASSO 3 · PRA TODAS: rode só o bloco do PASSO 3. Ele liga o envio automático: vai mandando sozinho, aos poucos,
+--           e se desliga quando todas receberem.
 
 create table if not exists public.news_sent (
   user_id uuid not null references auth.users on delete cascade,
@@ -61,10 +61,20 @@ select net.http_post(
 -- pra ver o resultado, espere uns segundos e rode:  select status_code, content from net._http_response order by created desc limit 1;
 
 
--- PASSO 3 · PRA TODAS AS CREATORS ------------------------------------------------------------------------
--- select net.http_post(
---   url := 'https://dvzfllqcgozecvhodygz.supabase.co/functions/v1/caixa',
---   headers := jsonb_build_object('Content-Type', 'application/json', 'apikey', 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F', 'Authorization', 'Bearer sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F'),
---   body := jsonb_build_object('action', 'novidade', 'news', 'metricas', 'key', (select cron from private.mail_key where id = 1)),
---   timeout_milliseconds := 300000);
--- (tire os "-- " do começo das 5 linhas acima pra rodar)
+-- PASSO 3 · PRA TODAS AS CREATORS, NO AUTOMÁTICO ------------------------------------------------------
+-- Liga um envio automático: das 9h às 21h (Brasília), a cada 2 horas, manda pra mais 60 creators.
+-- São até 420 por dia (dentro do limite do Gmail). Quando todas receberem, o agendador se desliga sozinho.
+-- Você não precisa fazer mais nada. Tire os "-- " do começo das linhas abaixo e rode só esse bloco.
+-- select cron.unschedule('novidade-metricas') where exists (select 1 from cron.job where jobname = 'novidade-metricas');
+-- select cron.schedule('novidade-metricas', '13 12-23/2 * * *', $cron$
+--   select case when public.news_left('metricas') = 0
+--     then (select cron.unschedule('novidade-metricas'))::text
+--     else (select net.http_post(
+--       url := 'https://dvzfllqcgozecvhodygz.supabase.co/functions/v1/caixa',
+--       headers := jsonb_build_object('Content-Type', 'application/json', 'apikey', 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F', 'Authorization', 'Bearer sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F'),
+--       body := jsonb_build_object('action', 'novidade', 'news', 'metricas', 'key', (select cron from private.mail_key where id = 1)),
+--       timeout_milliseconds := 300000))::text end;
+-- $cron$);
+--
+-- Pra acompanhar quantas já receberam:  select count(*) filter (where mail) e_mails, sum(pushes) notificacoes, count(*) pessoas from public.news_sent where news = 'metricas';
+-- Pra parar antes da hora:               select cron.unschedule('novidade-metricas');
