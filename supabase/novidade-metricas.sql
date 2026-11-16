@@ -62,8 +62,8 @@ select net.http_post(
 
 
 -- PASSO 3 · PRA TODAS AS CREATORS, NO AUTOMÁTICO ------------------------------------------------------
--- Liga um envio automático: das 9h às 21h (Brasília), a cada 2 horas, manda pra mais 60 creators.
--- São até 420 por dia (dentro do limite do Gmail). Quando todas receberem, o agendador se desliga sozinho.
+-- Liga um envio automático: das 9h às 19h (Brasília), a cada 2 horas, manda pra mais 60 creators.
+-- São até 360 por dia (dentro do limite do Gmail). Quando todas receberem, o agendador se desliga sozinho.
 -- Você não precisa fazer mais nada. Tire os "-- " do começo das linhas abaixo e rode só esse bloco.
 -- select cron.unschedule('novidade-metricas') where exists (select 1 from cron.job where jobname = 'novidade-metricas');
 -- select cron.schedule('novidade-metricas', '13 12-23/2 * * *', $cron$
