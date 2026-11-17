@@ -3,6 +3,7 @@
      Busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
    • Virou Pro: o gatilho de supabase/pro-boas-vindas.sql chama quando uma conta passa pro Pro (pagou ou ganhou).
      Manda o e-mail de boas-vindas ao Pro e marca o recado como enviado na aba Momentos do painel.
+   • Recado do Painel: o botão "E-mail" dos Momentos manda na hora, com o texto escrito no card (só pra conta admin).
    • Novidade do app: a função caixa (ação "novidade", rode supabase/novidade-metricas.sql) chama uma vez por creator.
 
    Por onde o e-mail sai:
@@ -245,8 +246,48 @@ async function sendNews(b: { user_id?: string; email?: string; name?: string; ne
   return new Response('enviado');
 }
 
+/* recado do Painel: a Naomi aperta "E-mail" num card e ele sai na hora pelo Gmail do CriaHub, com o texto que ela escreveu.
+   Quem chama é o navegador do Painel, com o login dela: só passa se a conta for admin (public.is_admin). */
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+export function noteEmail(subject: string, body: string) {
+  const paras = body.replace(/\r/g, '').split(/\n{2,}|\n/).map(l => l.trim()).filter(Boolean);
+  const text = [...paras.flatMap(l => [l, '']), 'https://criahub.app.br'].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:28px 32px"><div style="font:700 34px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.2px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span></div></td></tr>
+  <tr><td style="padding:32px">
+    ${paras.map(l => `<p style="margin:0 0 16px;font:400 17px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${esc(l)}</p>`).join('')}
+    <div style="margin:22px 0 4px"><a href="https://criahub.app.br" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">Abrir o CriaHub</a></div>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}
+async function sendNote(req: Request, b: { user_id?: string; subject?: string; text?: string }) {
+  const out = (msg: string, status = 200) => new Response(msg, { status, headers: CORS });
+  const auth = req.headers.get('authorization') || '';
+  if (!/^Bearer\s+\S+/.test(auth)) return out('sem login', 401);
+  const me = createClient(env('SUPABASE_URL'), env('SUPABASE_ANON_KEY'), { global: { headers: { Authorization: auth } } });
+  const { data: adm } = await me.rpc('is_admin');
+  if (adm !== true) return out('só a fundadora pode mandar daqui', 403);
+  const text = String(b.text || '').trim().slice(0, 4000), subject = String(b.subject || 'Um recado da Naomi, do CriaHub').trim().slice(0, 200);
+  if (!b.user_id || !text) return out('faltou a creator ou o texto', 400);
+  const { data: u, error } = await sb.auth.admin.getUserById(b.user_id);
+  if (error || !u?.user?.email) return out('não achei o e-mail dessa creator', 404);
+  try { await sendMail(u.user.email, noteEmail(subject, text)); }
+  catch (e) { return out(`e-mail: ${(e as Error).message}`, 502); }
+  return out('enviado');
+}
+
 Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return new Response('ok');
+  if (!req.headers.get('x-hook-secret')) {
+    const b = await req.json().catch(() => ({}));
+    if (b?.kind === 'recado') return await sendNote(req, b);
+  }
   const secret = env('WAITLIST_HOOK_SECRET');
   if (!secret || req.headers.get('x-hook-secret') !== secret) return new Response('nope', { status: 401 });
 

@@ -5965,7 +5965,8 @@ function mxRow(x) {
 function vMetrics() {
   const c = S.ct, plat = c.xPlat || 'Instagram', goal = c.xGoal || 'alcance', L = mxList(), open = c.xOpen && L.find(x => x.id === c.xOpen), busy = c.busy === 'mx';
   const withV = L.filter(x => mxNum((x.m || {}).views) !== null), avg = withV.length ? withV.reduce((s, x) => s + mxNum(x.m.views), 0) / withV.length : 0, best = [...withV].sort((a, b) => mxNum(b.m.views) - mxNum(a.m.views))[0];
-  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Mande os prints das estatísticas do vídeo e descubra o que deu certo, o que mudar e como alcançar mais gente no próximo.</div></div></div>${studioSeg()}
+  return `<div class="head"><div><h1>Estúdio</h1><div class="sub">Descubra o que deu certo em cada vídeo e o que fazer no próximo.</div></div></div>${studioSeg()}
+  <section class="card section mx-intro"><h2>📊 Análise de Métricas</h2><div class="sub">A IA lê as estatísticas do seu vídeo e te diz por que ele foi bem (ou não). É só <b>escolher a rede</b>, mandar <b>até 5 prints</b> das estatísticas e <b>contar do que é o vídeo</b>. Você recebe uma <b>nota de 0 a 10</b>, dicas do que repetir, do que mudar e de como alcançar mais gente, e <b>3 ideias pro próximo vídeo</b>.</div></section>
   ${studioUsage()}
   ${open ? mxDetail(open) : ''}
   <section class="card section"><h2>Analisar um vídeo</h2>
@@ -6001,6 +6002,7 @@ document.addEventListener('click', async e => {
   if (d.xdel) { if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Toque de novo pra excluir'; return; } if (c.xOpen === d.xdel) c.xOpen = ''; await del('metrics', d.xdel); toast('Análise excluída'); return; }
 }, true);
 (() => { const st = document.createElement('style'); st.textContent = `
+.mx-intro .sub{font-size:14.5px;line-height:1.55;color:var(--fg)}
 .mx-steps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14px;color:var(--fg)}
 .mx-score{display:flex;gap:14px;align-items:center}.mx-score p{margin:0;font-size:15px;line-height:1.5}
 .mx-score b{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;color:var(--accent-ink);white-space:nowrap}.mx-score b small{font-size:15px;color:var(--muted);font-weight:700}
