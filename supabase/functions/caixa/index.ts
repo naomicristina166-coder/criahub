@@ -4,6 +4,8 @@
    • POST {action:'aniver', key} do agendador (9h) → parabéns no celular de quem faz aniversário hoje
    • POST {action:'aquecer', key} do agendador (a cada minuto, só quando tem alarme vencido) → avisa que o
      cronômetro do aquecimento acabou (tabela public.warm_alerts, rode supabase/aquecimento-alarme.sql)
+   • POST {action:'novidade', key, news, teste?} (rode supabase/novidade-metricas.sql) → avisa de uma novidade do app
+     por e-mail e no celular, uma vez por creator
    Não guarda o e-mail inteiro, não lê a caixa de ninguém e não usa IA: a classificação é por palavras.
 
    Como ligar (uma vez só), no painel do Supabase:
@@ -174,6 +176,33 @@ async function momentos() {
   return Response.json({ ok: true, due: (due || []).length, mails, pushes, fails });
 }
 
+/* novidade do app: e-mail + notificação no celular, uma vez por creator (tabela public.news_sent).
+   {action:'novidade', key, news:'metricas', teste:true} manda só pras admins, pra conferir antes.
+   Manda até 60 por vez (pra função não estourar o tempo); rode de novo que continua de onde parou. */
+const NEWS_PUSH: Record<string, [string, string, string]> = {
+  metricas: ['Novidade: Análise de Métricas 📊', 'Mande os prints das estatísticas do seu vídeo e descubra o que deu certo e o que fazer no próximo.', '/#metricas'],
+};
+async function novidade(news: string, teste: boolean) {
+  const hook = env('WAITLIST_HOOK_SECRET'), base = Deno.env.get('SUPABASE_URL');
+  if (!NEWS_PUSH[news]) return Response.json({ ok: false, why: 'novidade desconhecida' });
+  if (!hook) return Response.json({ ok: false, why: 'falta o segredo WAITLIST_HOOK_SECRET' });
+  const { data: who, error } = await sb.rpc('news_feed', { p_news: news, p_test: teste, p_limit: 60 });
+  if (error) return new Response(error.message, { status: 500 });
+  const push = await vapid(), [title, body, url] = NEWS_PUSH[news]; let mails = 0, pushes = 0; const fails: string[] = [];
+  for (const u of (who || []) as any[]) {
+    let mailed = false;
+    if (u.email) {
+      const r = await fetch(`${base}/functions/v1/boas-vindas`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hook-secret': hook }, body: JSON.stringify({ kind: 'novidade', news, user_id: u.user_id, email: u.email, name: u.name }) }).catch(() => null);
+      const txt = r ? await r.text() : 'sem resposta';
+      if (r && r.ok && txt === 'enviado') { mailed = true; mails++; } else fails.push(`${u.email}: ${txt.slice(0, 120)}`);
+    }
+    const n = push ? await pushTo(u.user_id, { title, body, tag: 'novidade-' + news, url }, 24 * 3600) : 0; pushes += n;
+    if (!teste && (mailed || n)) await sb.from('news_sent').upsert({ user_id: u.user_id, news, mail: mailed, pushes: n });
+  }
+  const { data: left } = teste ? { data: null } : await sb.rpc('news_left', { p_news: news });
+  return Response.json({ ok: true, teste, people: (who || []).length, mails, pushes, faltam: left, fails });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -183,5 +212,6 @@ Deno.serve(async req => {
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
   if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
   if (b.action === 'momentos' && await keyOk('cron', b.key)) return momentos();
+  if (b.action === 'novidade' && await keyOk('cron', b.key)) return novidade(String(b.news || ''), b.teste === true);
   return new Response('forbidden', { status: 403 });
 });
