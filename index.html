@@ -504,6 +504,8 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke
   .side .spacer{flex:1}
   .side .sync{font-size:12px;color:var(--muted);padding:6px 12px}
   .side .spacer{min-height:12px}
+  .side{padding-bottom:0}
+  .side-bottom{position:sticky;bottom:0;padding:8px 0 24px;display:flex;flex-direction:column;gap:inherit;background:var(--surface);border-top:1px solid var(--line)}
   main{padding-block:36px 60px}
 }
 /* notebook com tela baixa: menu lateral mais compacto e rolável, pra Ajustes e Painel admin sempre aparecerem */
@@ -511,7 +513,12 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke
   .side{padding:16px 12px;gap:2px}
   .side .logo{font-size:26px}
   .side .tagline{padding-bottom:10px}
-  .nav{padding:8px 12px}
+  .nav{padding:6px 12px}
+  .side .tagline{display:none}
+  .side .logo{padding-bottom:10px}
+  .side{padding-bottom:0}
+  .side-bottom{padding:6px 0 10px}
+  .side .sync{display:none}
 }
 
 /* ---------- common ---------- */
@@ -1323,10 +1330,12 @@ function renderShell() {
     <button class="nav" data-chat="1">${ic('chat')}Chat CriaHub</button>
     <button class="nav" data-learn="1">${ic('book')}Aprenda o CriaHub</button>
     <div class="spacer"></div>
+    <div class="side-bottom">
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
     ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel admin</button>` : ''}
-    <div class="sync">${syncTxt}</div>`);
+    <div class="sync">${syncTxt}</div>
+    </div>`);
   setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
