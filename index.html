@@ -378,7 +378,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
   }
   /* abrir direto no Radar (quando toca na notificação) */
@@ -5076,6 +5076,8 @@ function openPro(reason) {
   </div></div>`;
 }
 window.criahubOpenPro = r => { if (sheet) closeForm(); openPro(r); };
+/* lembrete do Pro vencendo (e-mail e notificação) abre direto a tela de renovar */
+if (location.hash === '#pro') setTimeout(() => { try { history.replaceState(null, '', location.pathname); } catch (_) {} window.criahubOpenPro(); }, 1500);
 document.addEventListener('click', e => {
   const t = e.target.closest && e.target.closest('[data-pro]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); if (sheet) closeForm(); openPro(t.dataset.pro);
