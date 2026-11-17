@@ -564,7 +564,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <label style="grid-column:1/-1">Anotação<input name="note" maxlength="200" placeholder="Opcional. Ex.: cupom de lançamento"></label>
           <div><button class="btn" type="submit">Registrar</button></div></form></section>
       ${venc.length ? `<section class="sec"><h2>Vencimentos</h2><p class="sub" style="margin-bottom:12px">Pro vencido ou vencendo nos próximos 7 dias. Bom momento pra mandar um lembrete.</p><div class="list">${venc.map(u => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(u.name || u.email)}</div><div class="meta">${daysUntil(u.plan_until) < 0 ? 'venceu ' + dt(u.plan_until) : 'vence ' + dt(u.plan_until)}</div></div>
-        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="${esc(gmail(u.email))}" target="_blank" rel="noopener">E-mail</a>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
+        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="btn ghost sm" data-vsend="${u.user_id}" title="Manda agora o lembrete pronto pelo Gmail do CriaHub">Mandar lembrete</button>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
       <div class="two sec">
         <section class="card"><h2>Últimos 6 meses</h2><div class="bars" style="height:150px">${byM.map((v, i) => `<div class="b" title="${brl(v)}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div>
           <div class="bars-x">${months.map(mName).map(m => `<span>${m}</span>`).join('')}</div><p class="note">Total desde o começo: <b>${brl(F.total)}</b></p></section>
@@ -786,6 +786,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   }
 
   /* ---- Momentos ---- */
+  const brDate = r => { const x = String(r || '').slice(0, 10).split('-'); return x.length === 3 ? `${x[2]}/${x[1]}` : ''; };
   const MK = {
     aniversario: ['🎂', d => `Aniversário ${d === todayStr() ? 'hoje' : 'em ' + dt(d).slice(0, 5)}`, n => `Oi, ${n}! Vi aqui que o seu aniversário tá chegando 🎂 Quero te desejar um ano lindo, cheio de marcas incríveis e de conquistas. Obrigada por fazer parte do CriaHub! Com carinho, Naomi`],
     primeira_marca: ['🎉', () => 'Organizou a primeira marca', n => `${n}, passando pra comemorar com você: primeira marca organizada no CriaHub! 🎉 Que seja a primeira de muitas. Se precisar de qualquer coisa, me chama aqui. Naomi`],
@@ -793,6 +794,8 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     primeiro_pagamento: ['💸', () => 'Primeiro pagamento recebido', n => `${n}, primeiro pagamento registrado no CriaHub! 💸 Dinheiro de creator merece comemoração. Fico muito feliz de fazer parte disso. Naomi`],
     '30_dias': ['🗓️', () => '30 dias de CriaHub', n => `${n}, hoje faz 30 dias que você está no CriaHub! 🗓️ Obrigada por confiar. Me conta: o que mais te ajudou até agora e do que você sente falta? A sua resposta muda o app. Naomi`],
     virou_pro: ['✨', () => 'Virou Pro', n => `${n}, bem-vinda ao CriaHub Pro! ✨ Obrigada demais por apoiar o app. Qualquer dúvida, me chama direto aqui. Naomi`],
+    pro_vence: ['⏳', () => 'Pro vence em 3 dias', (n, m) => `Oi, ${n}! Passando pra avisar que o seu CriaHub Pro vence dia ${brDate(m && m.ref)}. Pra continuar com tudo do Pro, é só renovar em criahub.app.br/#pro (Pix, boleto ou cartão). Se a sua assinatura é no cartão, a renovação é automática. Qualquer dúvida, me chama! Naomi`],
+    pro_venceu: ['🔔', () => 'Pro venceu e não renovou', (n, m) => `Oi, ${n}! O seu CriaHub Pro venceu dia ${brDate(m && m.ref)}. Tudo o que você cadastrou continua salvo. Pra voltar a usar o Pro, é só renovar em criahub.app.br/#pro. Se você já pagou, me avisa que eu confiro na hora. Naomi`],
     sumida: ['💌', () => 'Sumiu há uma semana', n => `Oi, ${n}! Senti sua falta no CriaHub 💌 Tá tudo bem? Se alguma coisa travou ou ficou confusa, me conta que eu te ajudo. Naomi`]
   };
   const momKey = m => m.user_id + '|' + m.kind + '|' + (m.ref || '');
@@ -804,21 +807,21 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const brH = +new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }) % 24, today = todayStr();
     const when = m => m.kind === 'aniversario' ? (String(m.happened).slice(0, 10) === today ? (brH < 10 ? 'O e-mail de parabéns sai sozinho hoje às 10h' : 'O e-mail de parabéns já devia ter saído hoje: confira o Gmail') : `O e-mail de parabéns sai sozinho no dia, ${dt(m.happened).slice(0, 5)}, às 10h`)
       : `Aconteceu em ${dt(m.happened).slice(0, 5)} · o recado sai sozinho ${brH < 10 ? 'hoje' : 'amanhã'} às 10h`;
-    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Todo dia às 10h o recado de cada conquista sai sozinho: e-mail pelo Gmail do CriaHub e notificação no celular dela. Aqui fica só o que ainda não saiu. Se quiser mandar pessoalmente antes, use os botões.</p></div>
+    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Todo dia às 10h o recado de cada conquista sai sozinho: e-mail pelo Gmail do CriaHub e notificação no celular dela. Aqui fica só o que ainda não saiu. Se quiser mandar antes, edite o texto e toque em Mandar e-mail agora: ele sai na hora.</p></div>
       <span class="pill ok" style="font-size:12px">${nf(s30 + a30)} ${s30 + a30 === 1 ? 'recado' : 'recados'} em 30 dias${a30 ? ` · ${nf(a30)} ${a30 === 1 ? 'saiu sozinho' : 'saíram sozinhos'}` : ''}</span></div>
       <div class="list" style="margin-top:12px">${L.length ? L.map(m => {
-        const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria'), wa = waNum(m.whatsapp), ig = m.instagram;
+        const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria', m), wa = waNum(m.whatsapp), ig = m.instagram;
         return `<article class="person mom"><div class="top1"><span class="em1" aria-hidden="true">${K[0]}</span><div style="min-width:0"><div class="t">${esc(K[1](String(m.happened).slice(0, 10)))}</div>
           <div class="em pv">${esc(m.name || '')}${ig ? ' · @' + esc(ig) : ''}</div><div class="em" style="margin-top:2px">${esc(when(m))}</div></div></div>
           <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
           <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
             ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
-            ${m.email ? `<a class="btn sm${wa || ig ? ' ghost' : ''}" href="${esc(gmail(m.email, 'Um recado da Naomi, do CriaHub', txt))}" target="_blank" rel="noopener" data-msent="${esc(k)}">E-mail</a>` : ''}
+            ${m.email ? `<button class="btn sm${wa || ig ? ' ghost' : ''}" data-msend="${esc(k)}" title="Manda agora pelo Gmail do CriaHub, com o texto acima">Mandar e-mail agora</button>` : ''}
             <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
             <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
         : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
       ${rec.length ? `<h2 style="margin-top:22px">Saíram sozinhos</h2><div class="list" style="margin-top:8px">${rec.map(r => `<div class="person" style="padding:10px 14px"><div class="t" style="font-size:14px">${(MK[r.kind] || ['⭐'])[0]} ${esc(r.name || '')} · ${esc(MK[r.kind] ? MK[r.kind][1](String(r.done_at).slice(0, 10)) : r.kind)}</div><div class="em">${esc(dt(r.done_at))}</div></div>`).join('')}</div>` : ''}
-      <p class="note">Aparecem: aniversário (7 dias antes), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. A data é quando aconteceu, não um prazo pra você. Se um card fica aqui mais de um dia, o e-mail não está saindo: confira a senha de app do Gmail nos segredos do Supabase. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
+      <p class="note">Aparecem: aniversário (7 dias antes), Pro vencendo (3 dias antes) e Pro vencido (no dia seguinte, se não renovou), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. A data é quando aconteceu, não um prazo pra você. Se um card fica aqui mais de um dia, o e-mail não está saindo: confira a senha de app do Gmail nos segredos do Supabase. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
   }
   async function momFinish(k, how) {
     const m = st.mom.find(x => momKey(x) === k); if (!m) return;
@@ -862,6 +865,28 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       st.crm = st.crm.filter(x => x.id !== d.crmdel); st.copen = null; st.sure = null; toast('Contato apagado'); render(); return; }
     if (d.mcopy) { const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.mcopy)}"]`), ok = await copyTxt((ta && ta.value) || st.momMsg[d.mcopy] || ''); st.momSent[d.mcopy] = true; if (t.tagName === 'BUTTON') toast(ok ? 'Recado copiado ✨' : 'Não consegui copiar'); else toast(ok ? 'Texto copiado. No Direct dela, cole e envie. Depois volte e toque em “Já mandei”.' : 'Não consegui copiar. Copie o texto à mão.'); setTimeout(render, 400); return; }
     if (d.msent) { st.momSent[d.msent] = true; setTimeout(render, 400); return; }
+    if (d.vsend) {   /* lembrete de vencimento do Pro, com texto pronto, enviado na hora */
+      const u = (st.users || []).find(x => x.user_id === d.vsend); if (!u) return;
+      const n = first(u.name) || 'cria', late = daysUntil(u.plan_until) < 0, dd = brDate(u.plan_until);
+      const txt = late ? (MK.pro_venceu[2](n, { ref: u.plan_until })) : (MK.pro_vence[2](n, { ref: u.plan_until }));
+      t.disabled = true; t.textContent = 'Mandando…'; let msg = 'sem resposta';
+      try { const { data: ss } = await sb.auth.getSession(); const tok = ss && ss.session && ss.session.access_token;
+        const r = await fetch(CFG.url + '/functions/v1/boas-vindas', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.key, Authorization: 'Bearer ' + (tok || '') }, body: JSON.stringify({ kind: 'recado', user_id: u.user_id, subject: late ? `${n}, seu CriaHub Pro venceu dia ${dd}` : `${n}, seu CriaHub Pro vence dia ${dd}`, text: txt }) });
+        msg = await r.text(); } catch (_) { msg = 'sem internet'; }
+      if (msg === 'enviado') { t.textContent = 'Lembrete enviado ✓'; toast('Lembrete enviado 💌'); return; }
+      t.disabled = false; t.textContent = 'Mandar lembrete';
+      toast(/nope|sem login|401/i.test(msg) ? 'A função boas-vindas ainda está na versão antiga: publique a nova no Supabase.' : 'O e-mail não saiu: ' + String(msg).slice(0, 120)); return; }
+    if (d.msend) {   /* manda o e-mail na hora (função boas-vindas, só pra admin) e tira o card */
+      const m = st.mom.find(x => momKey(x) === d.msend); if (!m) return;
+      const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.msend)}"]`), txt = ((ta && ta.value) || st.momMsg[d.msend] || '').trim(); if (!txt) { toast('Escreva o recado antes'); return; }
+      t.disabled = true; t.textContent = 'Mandando…';
+      let msg = 'sem resposta';
+      try { const { data: ss } = await sb.auth.getSession(); const tok = ss && ss.session && ss.session.access_token;
+        const r = await fetch(CFG.url + '/functions/v1/boas-vindas', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.key, Authorization: 'Bearer ' + (tok || '') }, body: JSON.stringify({ kind: 'recado', user_id: m.user_id, subject: 'Um recado da Naomi, do CriaHub', text: txt }) });
+        msg = await r.text(); } catch (_) { msg = 'sem internet'; }
+      if (msg === 'enviado') { toast('E-mail enviado 💌'); await momFinish(d.msend, 'enviado'); return; }
+      t.disabled = false; t.textContent = 'Mandar e-mail agora';
+      toast(/nope|sem login|401/i.test(msg) ? 'A função boas-vindas ainda está na versão antiga: publique a nova no Supabase.' : 'O e-mail não saiu: ' + String(msg).slice(0, 120)); return; }
     if (d.mdone) { await momFinish(d.mdone, 'enviado'); return; }
     if (d.mskip) { await momFinish(d.mskip, 'pulado'); return; }
   });

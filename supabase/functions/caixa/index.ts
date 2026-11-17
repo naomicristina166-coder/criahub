@@ -146,13 +146,15 @@ async function aquecer() {
 
 /* momentos: todo dia às 10h, o recado de cada conquista sai sozinho (e-mail + notificação).
    O e-mail vai pela função boas-vindas; só quando ele sai o momento some da aba Momentos do painel. */
-const MOM_PUSH: Record<string, (n: string) => [string, string]> = {
+const MOM_PUSH: Record<string, (n: string, ref: string) => [string, string]> = {
   aniversario: n => [`Feliz aniversário${n ? ', ' + n : ''}! 🎂`, 'Te mandei um recado no e-mail 💌'],
   primeira_marca: n => [`Primeira marca organizada${n ? ', ' + n : ''}! 🎉`, 'Que seja a primeira de muitas. Te mandei um recado no e-mail 💌'],
   primeiro_video: n => [`Primeiro vídeo no ar${n ? ', ' + n : ''}! 🎬`, 'Bora pro próximo! Te mandei um recado no e-mail 💌'],
   primeiro_pagamento: n => [`Primeiro pagamento registrado! 💸`, 'Dinheiro de creator merece comemoração 💌'],
   '30_dias': n => [`30 dias de CriaHub${n ? ', ' + n : ''}! 🗓️`, 'Obrigada por confiar. Te mandei uma pergunta no e-mail 💌'],
   virou_pro: n => [`Bem-vinda ao Pro${n ? ', ' + n : ''}! ✨`, 'Tudo do Pro já está liberado na sua conta.'],
+  pro_vence: (n, r) => [`Seu Pro vence dia ${r.slice(8, 10)}/${r.slice(5, 7)} ⏳`, 'Toque pra renovar e continuar com tudo do Pro.'],
+  pro_venceu: n => [`Seu Pro venceu${n ? ', ' + n : ''} 💌`, 'Seus dados continuam salvos. Toque pra renovar.'],
   sumida: n => [`Senti sua falta${n ? ', ' + n : ''} 💌`, 'Tá tudo bem? Se algo travou, me conta.'],
 };
 async function momentos() {
@@ -170,8 +172,8 @@ async function momentos() {
     const txt = r ? await r.text() : 'sem resposta';
     if (!r || !r.ok || txt !== 'enviado') { fails.push(`${m.kind}: ${txt.slice(0, 120)}`); continue; }
     mails++;
-    const n = String(m.name || '').trim().split(/\s+/)[0], [title, msg] = MOM_PUSH[m.kind](n);
-    if (push && m.kind !== 'aniversario') pushes += await pushTo(m.user_id, { title, body: msg, tag: 'momento-' + m.kind, url: '/#inicio' });
+    const n = String(m.name || '').trim().split(/\s+/)[0], [title, msg] = MOM_PUSH[m.kind](n, String(m.ref || ''));
+    if (push && m.kind !== 'aniversario') pushes += await pushTo(m.user_id, { title, body: msg, tag: 'momento-' + m.kind, url: m.kind.startsWith('pro_ven') ? '/#pro' : '/#inicio' });
   }
   return Response.json({ ok: true, due: (due || []).length, mails, pushes, fails });
 }
