@@ -5215,8 +5215,13 @@ const WCK_DAYS = {
 const wckDay = a => a.testStart ? Math.min(6, Math.max(1, diff(a.testStart, today()) + 1)) : 1;
 const wckList = n => [...(n < 6 ? WCK_ALL : []), ...(WCK_DAYS[n] || [])];
 function wckHtml(a) {
-  if ((a.phase || 'ativa') !== 'teste') return '';
+  if ((a.phase || 'ativa') !== 'teste' || a.wckOn === false) return '';
+  const raw = a.testStart ? diff(a.testStart, today()) + 1 : 1;
+  if (raw > 6) return '';
+  /* só aparece se a creator quiser: na primeira vez, uma pergunta curta */
+  if (a.wckOn !== true) return `<div class="wnote">📋 <span><b>Quer acompanhar o passo a passo do aquecimento?</b> Um checklist curto pra cada dia, até o primeiro post.</span><span style="display:flex;gap:6px;flex-shrink:0"><button class="btn sm" data-wckon="${a.id}|1">Quero</button><button class="btn sm ghost" data-wckon="${a.id}|0">Agora não</button></span></div>`;
   const n = wckDay(a), it = wckList(n), on = new Set(((a.wck || {})[n] || []).map(Number)), k = it.filter((_, i) => on.has(i)).length;
+  if (n >= 6 && k === it.length) return '';
   return `<details class="wck"${k < it.length ? ' open' : ''}><summary>📋 Checklist do dia ${n}${n >= 6 ? ' · dia de postar' : ` de 6`} <span class="num">${k}/${it.length}</span></summary>
     <div class="wck-l">${it.map((t, i) => `<button class="wck-i ${on.has(i) ? 'ok' : ''}" data-wck="${a.id}|${n}|${i}" aria-pressed="${on.has(i)}"><span class="wck-b">${on.has(i) ? '✓' : ''}</span><span>${esc(t)}</span></button>`).join('')}</div>
     ${n === 1 ? '<small class="sub">Até 3 contas por celular. Nada de seguidores comprados nem automação.</small>' : ''}</details>`;
@@ -5362,7 +5367,7 @@ document.addEventListener('submit', async e => {
   closeForm(); await saveProfile({ warmPlan: { sessions, pre } }); toast('Rotina de aquecimento salva ⏰');
 }, true);
 document.addEventListener('click', async e => {
-  const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop],[data-warmpause],[data-wck]'); if (!t) return;
+  const t = e.target.closest && e.target.closest('[data-warm],[data-warmpost],[data-warmactive],[data-warmdone],[data-warmstop],[data-warmpause],[data-wck],[data-wckon]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
   if (d.warmdone) { await warmFinish(d.warmdone, false); return; }
   if (d.warmpause) { const w = wtOf(d.warmpause); if (!w) return; wUnlock(); const A = window.criahubAlarm, now = Date.now();
@@ -5372,6 +5377,7 @@ document.addEventListener('click', async e => {
       if (A) A.set(w.end || w.start + 15 * 60000, w.end ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(w.aid)).then(id => { if (id && WTS.includes(w) && w.start === st && !w.pausedAt) { w.alarmId = id; wSave(); } else if (id) A.clear(id); }); }
     wSave(); wNotify(w, true); warmBar(); if (w.rec) wRecSave(w); return; }
   if (d.warmstop) { const w = wtOf(d.warmstop); if (!w) return; WTS = WTS.filter(x => x !== w); { const r = S.data.warm.find(x => x.id === wRecId(w)); if (r && r.run) del('warm', r.id); } delete wNoteMin[w.aid]; wSave(); warmBar(); render(); if (window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
+  if (d.wckon) { const [aid, v] = d.wckon.split('|'), a = S.data.accounts.find(x => x.id === aid); if (a) { await put('accounts', { ...a, wckOn: v === '1' }); if (v === '1') toast('Checklist ligado 📋'); } return; }
   if (d.wck) { const [aid, n, i] = d.wck.split('|'), a = S.data.accounts.find(x => x.id === aid); if (!a) return; const w = { ...(a.wck || {}) }, l = new Set((w[n] || []).map(Number)); l.has(+i) ? l.delete(+i) : l.add(+i); w[n] = [...l]; await put('accounts', { ...a, wck: w }); if (l.size === wckList(+n).length) toast(+n >= 6 ? 'Primeiro post no ar! 🎬' : `Dia ${n} do aquecimento completo ✨`); return; }
   if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
   if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
