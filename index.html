@@ -380,6 +380,22 @@ window.CRIAHUB_CONFIG = {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
+    /* toda vez que o app abre com as notificações ligadas: confere a inscrição deste aparelho e regrava no servidor.
+       Se o navegador trocou o endereço (acontece no Android) ou a chave mudou, as notificações voltam sem ela fazer nada. */
+    const pushResync = async () => {
+      if (!pushOn() || !session) return;
+      try {
+        const reg = await swReg();
+        const r = await fetch(cfg.url + '/functions/v1/push', { method: 'POST', headers: { apikey: cfg.key, Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pub' }) });
+        const j = await r.json().catch(() => ({})); if (!j.publicKey) return;
+        let sub = await reg.pushManager.getSubscription();
+        if (sub) { const cur = sub.options && sub.options.applicationServerKey; if (cur && btoa(String.fromCharCode(...new Uint8Array(cur))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') !== j.publicKey) { await sub.unsubscribe(); sub = null; } }
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(j.publicKey) });
+        await sb.from('push_subs').upsert({ endpoint: sub.endpoint, user_id: uid(), sub: sub.toJSON(), ua: navigator.userAgent.slice(0, 200) });
+      } catch (_) {}
+    };
+    ready.then(() => setTimeout(pushResync, 4000)).catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { const k = 'criahub:pushSync', t = Date.now(); let last = 0; try { last = +sessionStorage.getItem(k) || 0; } catch (_) {} if (t - last > 6 * 3600e3) { try { sessionStorage.setItem(k, String(t)); } catch (_) {} pushResync(); } } });
   }
   /* abrir direto no Radar (quando toca na notificação) */
   function openRadar() { let n = 0; const t = setInterval(() => { const b = document.querySelector('.nav[data-tab=radar], #top [data-tab=radar], [data-tab=radar]'); if (b) { clearInterval(t); b.click(); } else if (++n > 40) clearInterval(t); }, 250); }
@@ -1342,6 +1358,7 @@ function renderShell() {
 
 function render() {
   renderShell();
+  try { wAdopt(); } catch (_) {}
   const v = $('#view');
   if (S.loading && isEmpty()) { v.innerHTML = `<div class="loading"><span class="dot"></span>Abrindo o seu CriaHub…</div>`; return; }
   toolsFix();
@@ -5156,7 +5173,30 @@ const wPlan = () => { const p = S.profile.warmPlan || {}, ss = Array.isArray(p.s
 const wDef = k => { if (k === 'pre') return ['Antes do post', wPlan().pre]; if (k === 'pos') return ['Depois do post', 0]; const s = wPlan().sessions.find(x => x.k === k); return s ? [s.name, +s.mins || 15] : [k, 15]; };
 const WSLOTS = new Proxy({}, { get: (_, k) => wDef(String(k)) });
 const wNow = () => { const hm = `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`, ss = wPlan().sessions; let cur = ss[0]; ss.forEach(x => { if (x.time <= hm) cur = x; }); return cur.k; };
-const wLog = (aid, d, slot) => S.data.warm.find(x => x.id === `${aid}_${d}_${slot}`);
+/* um aquecimento em andamento fica salvo na conta com run: true e o horário do fim.
+   Ele conta como feito quando o tempo acaba, mesmo que o aparelho tenha fechado ou dormido. */
+const wDone = x => !!x && (!x.run || (!!x.end && x.end <= Date.now()));
+const wLog = (aid, d, slot) => { const r = S.data.warm.find(x => x.id === `${aid}_${d}_${slot}`); return wDone(r) ? r : undefined; };
+const wRecId = w => `${w.aid}_${w.date || today()}_${w.slot}`;
+const wRecSave = w => put('warm', { id: wRecId(w), aid: w.aid, date: w.date || today(), slot: w.slot, mins: WSLOTS[w.slot][1] || 0, at: new Date().toISOString(), run: true, start: w.start, end: w.pausedAt ? null : w.end });
+/* adota cronômetros começados em outro aparelho, fecha os que acabaram e larga os que foram concluídos ou cancelados em outro lugar */
+let wAdopting = false;
+function wAdopt() {
+  if (wAdopting || S.loading || !S.data.accounts.length || !Array.isArray(S.data.warm)) return; wAdopting = true;
+  try {
+    const now = Date.now(), recs = new Map(S.data.warm.map(x => [x.id, x]));
+    const before = WTS.length; WTS = WTS.filter(w => { if (!w.rec) return true; const r = recs.get(wRecId(w)); return !!r && !!r.run; });
+    const t = today();
+    S.data.warm.filter(x => x.run).forEach(x => {
+      if (!S.data.accounts.some(a => a.id === x.aid)) return;
+      const mine = WTS.find(w => w.aid === x.aid && wRecId(w) === x.id);
+      if (x.end && x.end <= now) { if (!mine) { const { run, ...rest } = x; put('warm', { ...rest, at: new Date().toISOString() }); } return; }
+      /* só os cronômetros com hora pra acabar (os pausados e o "depois do post" ficam só no aparelho em que começaram) */
+      if (!mine && x.date === t && x.end && x.start && !wtOf(x.aid)) WTS.push({ aid: x.aid, slot: x.slot, date: x.date, start: x.start, end: x.end, rec: true });
+    });
+    if (WTS.length !== before) { wSave(); if (WTS.length && !wTick) wTick = setInterval(warmBar, 1000); setTimeout(warmBar, 0); }
+  } finally { wAdopting = false; }
+}
 const wPostDay = (aid, d) => !!wLog(aid, d, 'post');
 const wSesTime = k => (wPlan().sessions.find(x => x.k === k) || {}).time || '';
 const wSlots = (a, d) => [...wPlan().sessions.map(x => x.k), ...(wPostDay(a.id, d) ? ['pre', 'pos'] : [])];
@@ -5184,7 +5224,7 @@ function warmPanel(bf) {
     const ph = wPhase(a), sl = wSlots(a, t);
     const run = wtOf(a.id), chips = sl.map(k => { const l = wLog(a.id, t, k), on = run && run.slot === k;
       return `<button class="wchip ${l ? 'ok' : ''} ${on ? 'run' : ''} ${!l && k === cur ? 'now' : ''}" data-warm="${a.id}|${k}" aria-pressed="${!!l}" aria-label="${WSLOTS[k][0]}${l ? ', feito' : ''}">${l ? '✓ ' : ''}${WSLOTS[k][0]}${!l && wSesTime(k) ? ` <small>${wSesTime(k)}</small>` : ''}</button>`; }).join('');
-    const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post').length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
+    const dots = days.map(d => { const n = S.data.warm.filter(x => x.aid === a.id && x.date === d && x.slot !== 'post' && wDone(x)).length, full = wPlan().sessions.length; return `<i class="${n >= full ? 'on' : n ? 'part' : ''}" title="${fmtD(d)}: ${n} aquecimento${n === 1 ? '' : 's'}"></i>`; }).join('');
     return `${head}<div class="wrow"><div class="wtop"><div style="min-width:0"><b>${PLAT_S[a.platform] || '•'} ${esc(a.handle)}</b><small>${esc(brandName(a.brandId))} · ${esc(ph.txt)}</small></div>
       <span class="dots" aria-label="Últimos 7 dias">${dots}</span></div>
       ${(() => { const nx = (sl.includes(cur) && !wLog(a.id, t, cur) ? cur : null) || sl.find(k => !wLog(a.id, t, k) && k !== 'pos') || sl.find(k => !wLog(a.id, t, k)); if (run) return `<div class="wgo run">⏱ Aquecendo agora: ${esc(WSLOTS[run.slot][0].toLowerCase())}. Use a barra lá embaixo pra concluir.</div>`; return nx ? `<button class="btn wgo" data-warm="${a.id}|${nx}">▶ Começar aquecimento · ${esc(WSLOTS[nx][0])}${WSLOTS[nx][1] ? ` (${WSLOTS[nx][1]} min)` : ' (tempo livre)'}</button>` : ''; })()}
@@ -5253,13 +5293,13 @@ async function warmFinish(aid, auto) {
   if (fresh) { wBeep(); setTimeout(wBeep, 3200); if (A) A.show('⏰ Aquecimento concluído', h, wTag(w.aid), true); }
   else if (A) A.close(wTag(w.aid));
   if (auto) wDoneAlert(h, w.slot, fresh);
-  await put('warm', { id: `${w.aid}_${today()}_${w.slot}`, aid: w.aid, date: today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
+  await put('warm', { id: wRecId(w), aid: w.aid, date: w.date || today(), slot: w.slot, mins: w.end ? Math.min(mins, WSLOTS[w.slot][1]) : mins, at: new Date().toISOString() });
   try { navigator.vibrate && navigator.vibrate(fresh ? [400, 200, 400, 200, 800] : [200, 100, 200]); } catch (_) {}
   toast(auto ? `Aquecimento de ${h} concluído ✨` : `Aquecimento de ${h} salvo: ${mins} min ✨`);
 }
 function warmStart(aid, slot) {
   wUnlock();
-  const m = WSLOTS[slot][1], now = Date.now(), w = { aid, slot, start: now, end: m ? now + m * 60000 : null }; WTS.push(w); wSave(); warmBar();
+  const m = WSLOTS[slot][1], now = Date.now(), w = { aid, slot, date: today(), start: now, end: m ? now + m * 60000 : null, rec: true }; WTS.push(w); wSave(); warmBar(); wRecSave(w);
   if (!wTick) wTick = setInterval(warmBar, 1000); render();
   const A = window.criahubAlarm; if (!A) return;
   const a = S.data.accounts.find(x => x.id === aid), h = a ? a.handle : 'a conta';
@@ -5309,8 +5349,8 @@ document.addEventListener('click', async e => {
     else { const dur = now - w.pausedAt; w.start += dur; if (w.end) w.end += dur; delete w.pausedAt;
       const a = S.data.accounts.find(x => x.id === w.aid), h = a ? a.handle : 'a conta', st = w.start;
       if (A) A.set(w.end || w.start + 15 * 60000, w.end ? '⏰ Aquecimento concluído' : '⏱ 15 min', h, wTag(w.aid)).then(id => { if (id && WTS.includes(w) && w.start === st && !w.pausedAt) { w.alarmId = id; wSave(); } else if (id) A.clear(id); }); }
-    wSave(); wNotify(w, true); warmBar(); return; }
-  if (d.warmstop) { const w = wtOf(d.warmstop); if (!w) return; WTS = WTS.filter(x => x !== w); delete wNoteMin[w.aid]; wSave(); warmBar(); render(); if (window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
+    wSave(); wNotify(w, true); warmBar(); if (w.rec) wRecSave(w); return; }
+  if (d.warmstop) { const w = wtOf(d.warmstop); if (!w) return; WTS = WTS.filter(x => x !== w); { const r = S.data.warm.find(x => x.id === wRecId(w)); if (r && r.run) del('warm', r.id); } delete wNoteMin[w.aid]; wSave(); warmBar(); render(); if (window.criahubAlarm) { window.criahubAlarm.clear(w.alarmId); window.criahubAlarm.close(wTag(w.aid)); } toast('Cronômetro cancelado'); return; }
   if (d.warmactive) { const a = S.data.accounts.find(x => x.id === d.warmactive); if (a) { await put('accounts', { ...a, phase: 'ativa' }); toast(`${a.handle} agora está ativa`); } return; }
   if (d.warmpost) { const id = `${d.warmpost}_${today()}_post`; if (wLog(d.warmpost, today(), 'post')) await del('warm', id); else await put('warm', { id, aid: d.warmpost, date: today(), slot: 'post', at: new Date().toISOString() }); return; }
   if (d.warm) {
@@ -5820,7 +5860,7 @@ function warmChart(bf) {
   if (proLocked('marcas.contas')) return '';
   const byB = bf && bf !== 'todas', accs = S.data.accounts.filter(a => !byB || acKey(a) === bf); if (!accs.length) return '';
   const N = S.f.wcR === 30 ? 30 : 14, t = today(), ids = new Set(accs.map(a => a.id)), per = wPlan().sessions.length;
-  const logs = S.data.warm.filter(x => ids.has(x.aid) && x.slot !== 'post');
+  const logs = S.data.warm.filter(x => ids.has(x.aid) && x.slot !== 'post' && wDone(x));
   const actOn = d => accs.filter(a => (a.phase || 'ativa') !== 'pausada' && (!a.created || String(a.created).slice(0, 10) <= d)).length || accs.length;
   const day = d => { const L = logs.filter(x => x.date === d); return { d, mins: L.reduce((s, x) => s + (+x.mins || 0), 0), n: L.filter(x => x.slot !== 'pos' && x.slot !== 'pre').length, need: actOn(d) * per }; };
   const days = Array.from({ length: N }, (_, i) => day(addDays(t, i - N + 1)));
