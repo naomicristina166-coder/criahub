@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CriaHub · Lista de espera</title>
+<meta name="description" content="O app que organiza a rotina de quem cria: rotina, marcas, conteúdo e dinheiro num lugar só. Entre na lista de espera do lançamento.">
+<meta name="theme-color" content="#420725">
+<meta property="og:title" content="CriaHub · Lista de espera">
+<meta property="og:description" content="Rotina, marcas, conteúdo e dinheiro num lugar só. Feito por quem vive a mesma rotina que você.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://criahub.app.br/lista/">
+<link rel="canonical" href="https://criahub.app.br/lista/">
+<script>
+/* link curto: leva pra página da lista de espera mantendo ?origem= e utm_ (sem origem, marca que veio por este link) */
+(function () {
+  var qs = new URLSearchParams(location.search);
+  if (!qs.get('origem') && !qs.get('utm_source')) qs.set('origem', location.pathname.replace(/\//g, '') || 'listadeespera');
+  location.replace('/lista/?' + qs.toString() + location.hash);
+})();
+</script>
+<meta http-equiv="refresh" content="1; url=/lista/">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#420725;color:#F6EEE8;font:600 17px/1.5 system-ui,sans-serif;text-align:center;padding:20px}a{color:#F2C9CF}</style>
+</head>
+<body>
+<p>Abrindo a lista de espera do CriaHub…<br><a href="/lista/">Toque aqui se não abrir</a></p>
+</body>
+</html>
