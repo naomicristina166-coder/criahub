@@ -222,9 +222,10 @@ async function dolar(min: number, teste: boolean) {
   if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
   const { data: who, error } = await sb.rpc('fx_usd_users', { p_test: teste });
   if (error) return new Response(error.message, { status: 500 });
-  const msg = teste
-    ? { title: '💵 Teste do aviso do dólar', body: `Agora: US$ 1 = R$ ${brNum(rate)} (${pct >= 0 ? '+' : ''}${brNum(pct, 1)}% hoje). Quando subir ${brNum(min, 1)}% ou mais, chega um aviso assim.`, tag: 'dolar', url: '/#dolar' }
-    : { title: `💵 O dólar subiu ${brNum(pct, 1)}% hoje`, body: `US$ 1 = R$ ${brNum(rate)}. Toque pra ver quanto valem seus ganhos em dólar.`, tag: 'dolar', url: '/#dolar' };
+  /* no teste o aviso chega igual ao de verdade (com a cotação de agora); se hoje o dólar não subiu, mostra só a cotação */
+  const msg = pct > 0
+    ? { title: `💵 O dólar subiu ${brNum(pct, 1)}% hoje`, body: `US$ 1 = R$ ${brNum(rate)}. Toque pra ver quanto valem seus ganhos em dólar.`, tag: 'dolar', url: '/#dolar' }
+    : { title: `💵 Dólar hoje: R$ ${brNum(rate)}`, body: 'Toque pra ver quanto valem seus ganhos em dólar.', tag: 'dolar', url: '/#dolar' };
   let sent = 0;
   for (const u of (who || []) as any[]) sent += await pushTo(u.user_id, msg, 6 * 3600);
   if (!teste) await sb.from('fx_alerts').update({ users: (who || []).length, sent }).eq('day', day);

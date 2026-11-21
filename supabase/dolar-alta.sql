@@ -5,7 +5,7 @@
 --
 -- Antes: publique a função "caixa" com o código novo (Edge Functions › caixa › Code › cole › Deploy).
 -- PASSO 1 · rode este arquivo inteiro até a linha "PASSO 2". Ele cria a tabela, a função e liga o agendador.
--- PASSO 2 · TESTE (só pra você): rode só o bloco do PASSO 2. Chega no seu celular um aviso de teste com a cotação de agora.
+-- PASSO 2 · TESTE (só pra você): rode só o bloco do PASSO 2. Chega no seu celular o aviso igual ao de verdade, com a cotação de agora.
 -- Pra mudar o quanto o dólar precisa subir: troque o 1.0 em 'min' (ex.: 0.5 = meio por cento) e rode o PASSO 1 de novo.
 
 -- dias em que o aviso já saiu (só a função lê e escreve)
