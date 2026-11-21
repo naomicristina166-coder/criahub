@@ -215,16 +215,18 @@ async function dolar(min: number, teste: boolean) {
   const j = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL').then(r => r.json()).catch(() => null);
   const q = j && j.USDBRL, rate = +(q?.bid), pct = +(q?.pctChange);
   if (!rate || !isFinite(pct)) return Response.json({ ok: false, why: 'sem cotação agora (tenta de novo na próxima hora)' });
-  if (!teste && pct < min) return Response.json({ ok: true, avisou: false, rate, pct });
   const day = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  if (!teste && pct < min) return Response.json({ ok: true, avisou: false, rate, pct });
   /* marca o dia antes de mandar: se o agendador rodar duas vezes, ninguém recebe repetido */
   if (!teste && (await sb.from('fx_alerts').insert({ day, rate, pct })).error) return Response.json({ ok: true, avisou: false, why: 'já avisou hoje', rate, pct });
   if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
   const { data: who, error } = await sb.rpc('fx_usd_users', { p_test: teste });
   if (error) return new Response(error.message, { status: 500 });
-  /* no teste o aviso chega igual ao de verdade (com a cotação de agora); se hoje o dólar não subiu, mostra só a cotação */
+  /* no teste o aviso chega igual ao de verdade (com a cotação de agora); se o dólar não subiu, mostra só a cotação.
+     Fim de semana e feriado: a cotação é a do último dia útil, então não diz "hoje" */
+  const when = String(q?.create_date || '').slice(0, 10) === day ? 'hoje' : 'no último dia útil';
   const msg = pct > 0
-    ? { title: `💵 O dólar subiu ${brNum(pct, 1)}% hoje`, body: `US$ 1 = R$ ${brNum(rate)}. Toque pra ver quanto valem seus ganhos em dólar.`, tag: 'dolar', url: '/#dolar' }
+    ? { title: `💵 O dólar subiu ${brNum(pct, 1)}% ${when}`, body: `US$ 1 = R$ ${brNum(rate)}. Toque pra ver quanto valem seus ganhos em dólar.`, tag: 'dolar', url: '/#dolar' }
     : { title: `💵 Dólar hoje: R$ ${brNum(rate)}`, body: 'Toque pra ver quanto valem seus ganhos em dólar.', tag: 'dolar', url: '/#dolar' };
   let sent = 0;
   for (const u of (who || []) as any[]) sent += await pushTo(u.user_id, msg, 6 * 3600);
