@@ -1,0 +1,328 @@
+/* CriaHub · e-mails automáticos
+   • Lista de espera: o gatilho do banco (supabase/boas-vindas.sql) chama sempre que alguém entra em public.waitlist.
+     Busca a inscrição, manda o e-mail e marca welcomed_at (nunca manda duas vezes).
+   • Virou Pro: o gatilho de supabase/pro-boas-vindas.sql chama quando uma conta passa pro Pro (pagou ou ganhou).
+     Manda o e-mail de boas-vindas ao Pro e marca o recado como enviado na aba Momentos do painel.
+   • Recado do Painel: o botão "E-mail" dos Momentos manda na hora, com o texto escrito no card (só pra conta admin).
+   • Novidade do app: a função caixa (ação "novidade", rode supabase/novidade-metricas.sql) chama uma vez por creator.
+
+   Por onde o e-mail sai:
+   • Gmail do CriaHub (criahubb@gmail.com), com a foto do perfil, se GMAIL_APP_PASSWORD estiver nos segredos
+   • senão, pelo Resend (oi@criahub.app.br)
+
+   Como colocar no ar (uma vez):
+   1. Supabase › Edge Functions › boas-vindas › Code › apague tudo, cole este arquivo › Deploy
+      ("Verify JWT with legacy secret" continua desligado)
+   2. Edge Functions › Secrets:
+        GMAIL_APP_PASSWORD    a senha de app do Google (16 letras) da conta criahubb@gmail.com
+        WAITLIST_HOOK_SECRET  o código que aparece no fim do supabase/boas-vindas.sql
+        GMAIL_USER            (opcional) padrão: criahubb@gmail.com
+        MAIL_NAME             (opcional) nome do remetente, padrão: CriaHub
+        GROUP_URL             (opcional) link de convite do grupo VIP no WhatsApp
+        RESEND_API_KEY        (só se for usar o Resend) */
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import nodemailer from 'npm:nodemailer@6.9.16';
+
+const env = (k: string) => Deno.env.get(k) || '';
+const sb = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'));
+const NAME = env('MAIL_NAME') || 'CriaHub';
+const GMAIL = env('GMAIL_USER') || 'criahubb@gmail.com';
+const GPASS = env('GMAIL_APP_PASSWORD').replace(/\s+/g, '');
+const REPLY_TO = env('MAIL_REPLY_TO') || GMAIL;
+const LAUNCH = '15 de dezembro';
+const GROUP_URL = env('GROUP_URL');
+
+const esc = (s: string) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+const firstName = (n: string) => (String(n || '').trim().split(/\s+/)[0] || 'cria').slice(0, 40);
+
+export function welcomeEmail(row: { name: string; pain?: string | null }) {
+  const nome = esc(firstName(row.name));
+  const pain = row.pain ? esc(String(row.pain).trim().slice(0, 280)) : '';
+  const subject = 'Você está na lista, cria! 🍒';
+  const text = [
+    `Oi, ${firstName(row.name)}!`,
+    '',
+    'Que bom ter você aqui. Você acabou de entrar na lista de espera do CriaHub, o app que junta rotina, marcas, conteúdo e dinheiro de quem cria num lugar só.',
+    '',
+    'O que acontece agora:',
+    `1. No dia ${LAUNCH}, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`,
+    '2. Preço de Cria Fundadora: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 199 no anual. Depois, o Pro passa a custar R$ 29,90 por mês.',
+    '3. Até lá, eu mostro os bastidores no Instagram: @criahubapp e @naomicristinna_',
+    ...(GROUP_URL ? ['', `Entra no grupo VIP das Crias no WhatsApp, onde saem os spoilers: ${GROUP_URL}`] : []),
+    ...(row.pain ? ['', `Você me contou que o que mais te atrapalha é: "${String(row.pain).trim()}". Anotei. É exatamente pra isso que o CriaHub existe.`] : []),
+    '',
+    'Qualquer dúvida, é só responder este e-mail.',
+    '',
+    'Com carinho,',
+    'Naomi',
+    'Fundadora do CriaHub',
+    'quem cria, se organiza.',
+  ].join('\n');
+
+  const btn = (href: string, label: string, bg: string, fg: string) =>
+    `<a href="${href}" style="display:inline-block;background:${bg};color:${fg};text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px;margin:4px 6px 4px 0">${label}</a>`;
+  const step = (n: string, t: string) =>
+    `<tr><td valign="top" style="padding:0 12px 14px 0;width:34px"><div style="width:30px;height:30px;border-radius:50%;background:#F2C9CF;color:#420725;font:700 15px/30px Arial,Helvetica,sans-serif;text-align:center">${n}</div></td><td style="padding:4px 0 14px;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">${t}</td></tr>`;
+
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">Dia ${LAUNCH} você recebe o acesso antes de todo mundo.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:36px 32px 32px">
+    <div style="font:700 40px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.5px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span></div>
+    <div style="font:700 30px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:26px">Você está na lista, <em style="color:#F2C9CF">${nome}</em>!</div>
+    <div style="font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;margin-top:12px">Lançamento em 17 de dezembro</div>
+  </td></tr>
+  <tr><td style="padding:32px">
+    <p style="margin:0 0 18px;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Que bom ter você aqui. Você acabou de entrar na lista de espera do <b>CriaHub</b>, o app que junta rotina, marcas, conteúdo e dinheiro de quem cria num lugar só.</p>
+    <p style="margin:0 0 14px;font:700 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#7A4A53">O que acontece agora</p>
+    <table role="presentation" cellpadding="0" cellspacing="0">
+      ${step('1', `No dia <b>${LAUNCH}</b>, ao meio-dia, você entra no CriaHub, dois dias antes de todo mundo.`)}
+      ${step('2', 'Preço de <b>Cria Fundadora</b>: assinando o Pro até 21/12, você paga R$ 24,90 por mês congelado pra sempre, ou R$ 199 no anual. Depois, o Pro passa a custar R$ 29,90 por mês.')}
+      ${step('3', 'Até lá, eu mostro os bastidores no Instagram.')}
+    </table>
+    ${GROUP_URL ? `<div style="margin:6px 0 14px;padding:16px 18px;border-radius:16px;background:#E3F5EC;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218"><b>Grupo VIP das Crias</b><br>É lá que saem os spoilers do app e o aviso na hora que as portas abrirem.<div style="margin-top:10px">${btn(GROUP_URL, 'Entrar no grupo VIP', '#1F8A5B', '#FFFFFF')}</div></div>` : ''}
+    <div style="margin:6px 0 4px">${btn('https://www.instagram.com/criahubapp/', 'Seguir @criahubapp', '#420725', '#F6EEE8')}${btn('https://www.instagram.com/naomicristinna_/', 'Seguir @naomicristinna_', '#F2C9CF', '#420725')}</div>
+    ${pain ? `<div style="margin:26px 0 0;padding:18px 20px;border-radius:16px;background:#F7DDE1;font:400 15px/1.55 Arial,Helvetica,sans-serif;color:#2A1218">Você me contou que o que mais te atrapalha é:<br><i style="font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#420725">"${pain}"</i><br>Anotei. É exatamente pra isso que o CriaHub existe.</div>` : ''}
+    <p style="margin:26px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Qualquer dúvida, é só responder este e-mail.</p>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.
+    <div style="font:400 12px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;font-style:normal;margin-top:8px">Você recebeu este e-mail porque entrou na lista de espera em criahub.app.br/lista. Pra sair, responda com "sair".</div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+  return { subject, html, text };
+}
+
+
+const fmtBR = (d: string) => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${dd}/${m}/${y}`; };
+export function proEmail(row: { name: string; until?: string | null }) {
+  const nome = firstName(row.name), until = row.until ? fmtBR(row.until) : '';
+  const subject = `Seu CriaHub Pro está liberado, ${nome}! ✨`;
+  const perks = ['Marcas ilimitadas', 'IA: briefing vira plano, revisor, ideias pro seu nicho e tradução de contrato', 'Vision Board, Em alta e os ganchos que mais deram views pra você', 'Contas de marca e métricas por plataforma', 'Dólar e euro, mídia kit, notas fiscais e MEI', 'Tudo que chegar de novo no CriaHub'];
+  const text = [
+    `Oi, ${nome}!`, '',
+    'Bem-vinda ao CriaHub Pro! ✨ Obrigada demais por apoiar o app.', '',
+    'O que você liberou:', ...perks.map(p => `• ${p}`), '',
+    ...(until ? [`Seu Pro vale até ${until}.`, ''] : []),
+    'É só abrir o app: tudo já está liberado na sua conta. https://criahub.app.br', '',
+    'Qualquer dúvida, é só responder este e-mail que eu te ajudo.', '',
+    'Com carinho,', 'Naomi', 'Fundadora do CriaHub',
+  ].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">Tudo do Pro já está liberado na sua conta.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:36px 32px 32px">
+    <div style="font:700 40px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.5px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span> <span style="font-size:16px;letter-spacing:1px;color:#420725;background:#F2C9CF;border-radius:999px;padding:4px 10px;vertical-align:middle">PRO</span></div>
+    <div style="font:700 30px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:26px">Bem-vinda ao Pro, <em style="color:#F2C9CF">${esc(nome)}</em>!</div>
+    <div style="font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#E3C9CE;margin-top:12px">Obrigada demais por apoiar o app.</div>
+  </td></tr>
+  <tr><td style="padding:32px">
+    <p style="margin:0 0 14px;font:700 13px/1 Arial,Helvetica,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#7A4A53">O que você liberou</p>
+    <table role="presentation" cellpadding="0" cellspacing="0">${perks.map(p => `<tr><td valign="top" style="padding:0 10px 10px 0;color:#C2185B;font:700 16px/1.5 Arial,Helvetica,sans-serif">✓</td><td style="padding:0 0 10px;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">${esc(p)}</td></tr>`).join('')}</table>
+    ${until ? `<div style="margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#F7DDE1;font:400 15px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Seu Pro vale até <b>${esc(until)}</b>.</div>` : ''}
+    <div style="margin:22px 0 4px"><a href="https://criahub.app.br" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">Abrir o CriaHub</a></div>
+    <p style="margin:22px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">Qualquer dúvida, é só responder este e-mail que eu te ajudo.</p>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+  return { subject, html, text };
+}
+
+async function sendMail(to: string, mail: { subject: string; html: string; text: string }) {
+  if (GPASS) {
+    const smtp = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: GMAIL, pass: GPASS } });
+    await smtp.sendMail({ from: { name: NAME, address: GMAIL }, to, replyTo: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text });
+    return;
+  }
+  const key = env('RESEND_API_KEY');
+  if (!key) throw new Error('falta GMAIL_APP_PASSWORD (ou RESEND_API_KEY)');
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: env('MAIL_FROM') || `${NAME} <oi@criahub.app.br>`, to: [to], reply_to: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text }),
+  });
+  if (!r.ok) throw new Error(`resend: ${r.status} ${await r.text()}`);
+}
+
+/* virou Pro: manda uma vez por "entrada" no Pro e tira o recado da aba Momentos */
+async function welcomePro(b: { user_id?: string; email?: string; name?: string; ref?: string; until?: string | null }) {
+  if (!b.user_id || !b.email) return new Response('faltou user_id/email', { status: 400 });
+  const ref = String(b.ref || '');
+  const { data: done } = await sb.from('moments_done').select('user_id').eq('user_id', b.user_id).eq('kind', 'virou_pro').eq('ref', ref).maybeSingle();
+  if (done) return new Response('já enviado');
+  try { await sendMail(b.email, proEmail({ name: b.name || '', until: b.until })); }
+  catch (e) { return new Response(`e-mail: ${(e as Error).message}`, { status: 502 }); }
+  await sb.from('moments_done').upsert({ user_id: b.user_id, kind: 'virou_pro', ref, how: 'enviado', done_at: new Date().toISOString() });
+  return new Response('enviado');
+}
+
+/* momentos: o recado de cada conquista, mandado sozinho todo dia às 10h (quem chama é a função caixa) */
+const MOM: Record<string, { subject: (n: string, ref: string) => string; lines: (n: string, ref: string) => string[]; cta?: string; url?: string }> = {
+  aniversario: { subject: n => `Feliz aniversário, ${n}! 🎂`, lines: n => [`Oi, ${n}!`, 'Hoje o dia é seu 🎂 Quero te desejar um ano lindo, cheio de marcas incríveis e de conquistas.', 'Obrigada por fazer parte do CriaHub!'] },
+  primeira_marca: { subject: n => `Primeira marca organizada, ${n}! 🎉`, lines: n => [`${n}, passando pra comemorar com você: primeira marca organizada no CriaHub! 🎉`, 'Que seja a primeira de muitas.', 'Dica: cadastre as entregas e o pagamento dela, que o app te avisa antes de cada prazo.'] },
+  primeiro_video: { subject: n => `Primeiro vídeo no ar, ${n}! 🎬`, lines: n => [`${n}, primeiro vídeo no ar com o CriaHub! 🎬`, 'Passei só pra comemorar com você. Bora pro próximo!'] },
+  primeiro_pagamento: { subject: n => `Primeiro pagamento no CriaHub, ${n}! 💸`, lines: n => [`${n}, primeiro pagamento registrado no CriaHub! 💸`, 'Dinheiro de creator merece comemoração. Fico muito feliz de fazer parte disso.'] },
+  '30_dias': { subject: n => `30 dias de CriaHub, ${n}! 🗓️`, lines: n => [`${n}, hoje faz 30 dias que você está no CriaHub! 🗓️ Obrigada por confiar.`, 'Me conta, respondendo este e-mail: o que mais te ajudou até agora e do que você sente falta? A sua resposta muda o app.'] },
+  pro_vence: { subject: (n, r) => `${n}, seu CriaHub Pro vence dia ${fmtBR(r).slice(0, 5)} ⏳`, cta: 'Renovar o Pro', url: 'https://criahub.app.br/#pro', lines: (n, r) => [`Oi, ${n}!`, `Passando pra avisar que o seu CriaHub Pro vence dia ${fmtBR(r)}.`, 'Pra continuar com a IA, as Métricas, os ganchos, as contas de marca e tudo do Pro, é só renovar pelo botão abaixo (Pix, boleto ou cartão).', 'Se a sua assinatura é no cartão, a renovação é automática e você não precisa fazer nada.', 'Qualquer dúvida, é só responder este e-mail.'] },
+  pro_venceu: { subject: n => `${n}, seu CriaHub Pro venceu 💌`, cta: 'Renovar o Pro', url: 'https://criahub.app.br/#pro', lines: (n, r) => [`Oi, ${n}!`, `O seu CriaHub Pro venceu dia ${fmtBR(r)}. Tudo o que você cadastrou continua salvo, mas as ferramentas do Pro ficaram pausadas.`, 'Pra voltar a usar, é só renovar pelo botão abaixo (Pix, boleto ou cartão). Leva um minutinho.', 'Se você já pagou, me responde este e-mail que eu confiro na hora.'] },
+  sumida: { subject: n => `Senti sua falta, ${n} 💌`, lines: n => [`Oi, ${n}!`, 'Senti sua falta no CriaHub 💌 Tá tudo bem?', 'Se alguma coisa travou ou ficou confusa, é só responder este e-mail que eu te ajudo.'] },
+};
+export function momentEmail(kind: string, name: string, ref = '') {
+  const M = MOM[kind]; if (!M) return null;
+  const nome = firstName(name), subject = M.subject(nome, ref), lines = M.lines(nome, ref), url = M.url || 'https://criahub.app.br', cta = M.cta || 'Abrir o CriaHub';
+  const text = [...lines.flatMap(l => [l, '']), `${cta}: ${url}`, '', 'Com carinho,', 'Naomi', 'Fundadora do CriaHub'].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:28px 32px"><div style="font:700 34px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.2px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span></div></td></tr>
+  <tr><td style="padding:32px">
+    ${lines.map(l => `<p style="margin:0 0 16px;font:400 17px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${esc(l)}</p>`).join('')}
+    <div style="margin:22px 0 4px"><a href="${url}" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">${esc(cta)}</a></div>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}
+async function sendMoment(b: { user_id?: string; email?: string; name?: string; moment?: string; ref?: string }) {
+  if (!b.user_id || !b.email || !b.moment) return new Response('faltou user_id/email/moment', { status: 400 });
+  const mail = momentEmail(b.moment, b.name || '', String(b.ref || '')); if (!mail) return new Response('momento sem modelo', { status: 400 });
+  try { await sendMail(b.email, mail); }
+  catch (e) { return new Response(`e-mail: ${(e as Error).message}`, { status: 502 }); }
+  await sb.rpc('moments_auto_done', { p_user: b.user_id, p_kind: b.moment, p_ref: String(b.ref || '') });
+  return new Response('enviado');
+}
+
+/* novidades do app: um e-mail por novidade pra cada creator (quem chama é a função caixa, ação "novidade") */
+const NEWS: Record<string, { subject: (n: string) => string; pre: string; title: string; lines: (n: string) => string[]; bullets: string[]; after: string[]; cta: string; url: string }> = {
+  metricas: {
+    subject: n => `Novidade no CriaHub: descubra o que deu certo no seu vídeo, ${n} 📊`,
+    pre: 'Mande os prints das estatísticas e a IA diz o que repetir e o que mudar no próximo vídeo.',
+    title: 'Análise de Métricas chegou',
+    lines: n => [`Oi, ${n}!`, 'Tem novidade no CriaHub: a <b>Análise de Métricas</b>. Sabe aquela dúvida de "por que esse vídeo foi bem e o outro não"? Agora o app te ajuda a responder.'],
+    bullets: ['Abra as estatísticas do vídeo no Instagram, TikTok, YouTube ou onde você postar', 'Tire os prints e mande no CriaHub, em Estúdio › Métricas', 'A IA lê os seus números e te diz o que deu certo, o que não deu, o que repetir, o que mudar e como alcançar mais gente', 'Ganhe 3 ideias pro próximo vídeo, com o gancho pronto', 'Cada análise fica salva: as próximas comparam com os seus vídeos anteriores e mostram o que se repete nos que vão melhor'],
+    after: ['Testa no próximo vídeo que você postar e me conta o que achou, respondendo este e-mail.'],
+    cta: 'Analisar meu vídeo', url: 'https://criahub.app.br/#metricas',
+  },
+};
+export function newsEmail(key: string, name: string) {
+  const N = NEWS[key]; if (!N) return null;
+  const nome = firstName(name), subject = N.subject(nome), lines = N.lines(nome);
+  const plain = (s: string) => s.replace(/<[^>]+>/g, '');
+  const text = [...lines.map(plain).flatMap(l => [l, '']), ...N.bullets.map(b => `• ${b}`), '', ...N.after.flatMap(l => [l, '']), `${N.cta}: ${N.url}`, '', 'Com carinho,', 'Naomi', 'Fundadora do CriaHub'].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(N.pre)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:32px">
+    <div style="font:700 34px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.2px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span> <span style="font-size:13px;letter-spacing:1px;color:#420725;background:#F2C9CF;border-radius:999px;padding:4px 10px;vertical-align:middle">NOVIDADE</span></div>
+    <div style="font:700 28px/1.15 Georgia,'Times New Roman',serif;color:#F6EEE8;margin-top:22px">${esc(N.title)}</div>
+  </td></tr>
+  <tr><td style="padding:32px">
+    ${lines.map(l => `<p style="margin:0 0 16px;font:400 17px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${l.replace(/<(?!\/?b>)[^>]*>/g, '')}</p>`).join('')}
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 8px">${N.bullets.map(b => `<tr><td valign="top" style="padding:0 10px 10px 0;color:#C2185B;font:700 16px/1.5 Arial,Helvetica,sans-serif">✓</td><td style="padding:0 0 10px;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">${esc(b)}</td></tr>`).join('')}</table>
+    ${N.after.map(l => `<p style="margin:8px 0 0;font:400 16px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${esc(l)}</p>`).join('')}
+    <div style="margin:22px 0 4px"><a href="${N.url}" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">${esc(N.cta)}</a></div>
+    <p style="margin:22px 0 0;font:400 16px/1.5 Arial,Helvetica,sans-serif;color:#2A1218">Com carinho,<br><b>Naomi</b><br><span style="color:#7A4A53">Fundadora do CriaHub</span></p>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}
+async function sendNews(b: { user_id?: string; email?: string; name?: string; news?: string }) {
+  if (!b.user_id || !b.email || !b.news) return new Response('faltou user_id/email/news', { status: 400 });
+  const mail = newsEmail(b.news, b.name || ''); if (!mail) return new Response('novidade sem modelo', { status: 400 });
+  try { await sendMail(b.email, mail); }
+  catch (e) { return new Response(`e-mail: ${(e as Error).message}`, { status: 502 }); }
+  return new Response('enviado');
+}
+
+/* recado do Painel: a Naomi aperta "E-mail" num card e ele sai na hora pelo Gmail do CriaHub, com o texto que ela escreveu.
+   Quem chama é o navegador do Painel, com o login dela: só passa se a conta for admin (public.is_admin). */
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+export function noteEmail(subject: string, body: string) {
+  const paras = body.replace(/\r/g, '').split(/\n{2,}|\n/).map(l => l.trim()).filter(Boolean);
+  const text = [...paras.flatMap(l => [l, '']), 'https://criahub.app.br'].join('\n');
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#F6EEE8">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EEE8"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden">
+  <tr><td style="background:#420725;padding:28px 32px"><div style="font:700 34px/1 Arial,Helvetica,sans-serif;letter-spacing:-1.2px"><span style="color:#F2C9CF">cria</span><span style="color:#ffffff">hub</span></div></td></tr>
+  <tr><td style="padding:32px">
+    ${paras.map(l => `<p style="margin:0 0 16px;font:400 17px/1.6 Arial,Helvetica,sans-serif;color:#2A1218">${esc(l)}</p>`).join('')}
+    <div style="margin:22px 0 4px"><a href="https://criahub.app.br" style="display:inline-block;background:#420725;color:#F6EEE8;text-decoration:none;font:700 15px/1 Arial,Helvetica,sans-serif;padding:14px 22px;border-radius:999px">Abrir o CriaHub</a></div>
+  </td></tr>
+  <tr><td style="background:#420725;padding:22px 32px;font:italic 700 18px/1.3 Georgia,'Times New Roman',serif;color:#F2C9CF">quem cria, se organiza.</td></tr>
+</table></td></tr></table></body></html>`;
+  return { subject, html, text };
+}
+async function sendNote(req: Request, b: { user_id?: string; subject?: string; text?: string }) {
+  const out = (msg: string, status = 200) => new Response(msg, { status, headers: CORS });
+  const auth = req.headers.get('authorization') || '';
+  if (!/^Bearer\s+\S+/.test(auth)) return out('sem login', 401);
+  const me = createClient(env('SUPABASE_URL'), env('SUPABASE_ANON_KEY'), { global: { headers: { Authorization: auth } } });
+  const { data: adm } = await me.rpc('is_admin');
+  if (adm !== true) return out('só a fundadora pode mandar daqui', 403);
+  const text = String(b.text || '').trim().slice(0, 4000), subject = String(b.subject || 'Um recado da Naomi, do CriaHub').trim().slice(0, 200);
+  if (!b.user_id || !text) return out('faltou a creator ou o texto', 400);
+  const { data: u, error } = await sb.auth.admin.getUserById(b.user_id);
+  if (error || !u?.user?.email) return out('não achei o e-mail dessa creator', 404);
+  try { await sendMail(u.user.email, noteEmail(subject, text)); }
+  catch (e) { return out(`e-mail: ${(e as Error).message}`, 502); }
+  return out('enviado');
+}
+
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (req.method !== 'POST') return new Response('ok');
+  if (!req.headers.get('x-hook-secret')) {
+    const b = await req.json().catch(() => ({}));
+    if (b?.kind === 'recado') return await sendNote(req, b);
+  }
+  const secret = env('WAITLIST_HOOK_SECRET');
+  if (!secret || req.headers.get('x-hook-secret') !== secret) return new Response('nope', { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  if (body?.kind === 'pro') return await welcomePro(body);
+  if (body?.kind === 'momento') return await sendMoment(body);
+  if (body?.kind === 'novidade') return await sendNews(body);
+  const { id } = body;
+  if (!id) return new Response('sem id', { status: 400 });
+
+  const { data: row, error } = await sb.from('waitlist').select('id,name,email,pain,welcomed_at').eq('id', id).maybeSingle();
+  if (error || !row) return new Response('não achei', { status: 404 });
+  if (row.welcomed_at) return new Response('já enviado');
+
+  const mail = welcomeEmail(row);
+  try {
+    if (GPASS) {
+      const smtp = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user: GMAIL, pass: GPASS } });
+      await smtp.sendMail({ from: { name: NAME, address: GMAIL }, to: row.email, replyTo: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text });
+    } else {
+      const key = env('RESEND_API_KEY');
+      if (!key) return new Response('falta GMAIL_APP_PASSWORD (ou RESEND_API_KEY)', { status: 500 });
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: env('MAIL_FROM') || `${NAME} <oi@criahub.app.br>`, to: [row.email], reply_to: REPLY_TO, subject: mail.subject, html: mail.html, text: mail.text }),
+      });
+      if (!r.ok) return new Response(`resend: ${r.status} ${await r.text()}`, { status: 502 });
+    }
+  } catch (e) {
+    return new Response(`gmail: ${(e as Error).message}`, { status: 502 });
+  }
+
+  await sb.from('waitlist').update({ welcomed_at: new Date().toISOString() }).eq('id', id);
+  return new Response('enviado');
+});

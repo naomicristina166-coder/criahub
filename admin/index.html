@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>CriaHub · Painel</title>
+<meta name="theme-color" content="#420725">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --vinho:#420725; --vinho-2:#5A0F33; --rosa:#F4C9D8; --rosa-2:#FBE7EE; --rec:#FF5C8A;
+  --bg:#FAF6F7; --card:#fff; --ink:#22141A; --muted:#7A5A64; --line:#EEDFE4; --ok:#1F8A5B; --warn:#B25B00;
+  --display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif; --body:Manrope, ui-sans-serif, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+
+/* topo */
+.top{background:var(--vinho);color:#fff;position:sticky;top:0;z-index:10;padding-top:env(safe-area-inset-top,0)}
+.embed .top{padding-top:0}
+.embed .top .logo,.embed .top .tag{display:none}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:60px}
+.logo{font:800 24px/1 var(--display);letter-spacing:-.035em;display:inline-flex;align-items:baseline;text-decoration:none;white-space:nowrap;flex:none}
+.logo .c{color:var(--rosa)} .logo .h{color:#fff}
+.ii{position:relative;display:inline-block}
+.ii b{position:absolute;left:50%;top:-.12em;width:.24em;height:.24em;margin-left:-.12em;border-radius:50%;background:var(--rec)}
+.top .tag{font:700 11px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--rosa);border:1px solid rgb(244 201 216 / .35);border-radius:999px;padding:5px 9px}
+.top .sp{flex:1}
+.ib{border:0;background:rgb(255 255 255 / .1);color:#fff;border-radius:10px;min-height:38px;padding:0 12px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.ib:hover{background:rgb(255 255 255 / .18)}
+.ib[aria-pressed=true]{background:var(--rosa);color:var(--vinho)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;color:rgb(255 255 255 / .75);font-weight:700;padding:9px 14px;border-radius:999px;white-space:nowrap}
+.tabs button[aria-current=page]{background:#fff;color:var(--vinho)}
+
+main{padding:20px 0 60px}
+h1{font:800 28px/1.1 var(--display);letter-spacing:-.02em;margin:0 0 4px}
+h2{font:800 19px/1.2 var(--display);letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);font-size:13.5px;margin:0}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+
+/* números */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (min-width:760px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.kpi .l{font-size:12.5px;font-weight:700;color:var(--muted)}
+.kpi .v{font:800 30px/1.05 var(--display);letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.hi{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.kpi.hi .l,.kpi.hi .d{color:var(--rosa)}
+
+/* gráfico de barras por dia */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.bars{display:flex;align-items:flex-end;gap:3px;height:170px;padding-top:22px;position:relative}
+.bars .b{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end;position:relative;border:0;background:none;padding:0}
+.bars .b i{display:block;width:100%;background:var(--rosa);border-radius:5px 5px 2px 2px;min-height:2px}
+.bars .b:hover i,.bars .b.on i{background:var(--vinho)}
+.bars .b.today i{background:var(--rec)}
+.bars-x{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:6px}
+.tip{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
+.tip b{color:var(--ink)}
+
+/* ranking de telas */
+.rank{display:flex;flex-direction:column;gap:9px}
+.rank .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center}
+.rank .n{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .m{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rank .t{grid-column:1/-1;height:8px;border-radius:99px;background:var(--rosa-2);overflow:hidden}
+.rank .t i{display:block;height:100%;background:var(--vinho);border-radius:99px}
+.rank.low .t i{background:var(--rec)}
+.two{display:grid;gap:12px}
+@media (min-width:760px){.two{grid-template-columns:1fr 1fr}}
+
+/* filtros */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.search{flex:1 1 220px;min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:#fff}
+select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;font-weight:600}
+.btn{border:0;border-radius:12px;min-height:42px;padding:0 16px;font-weight:800;background:var(--vinho);color:#fff}
+.btn.ghost{background:#fff;color:var(--vinho);border:1px solid var(--line)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.danger{background:#fff;color:#B4232C;border:1px solid #F1C6CA}
+.btn.danger.sure{background:#B4232C;color:#fff;border-color:#B4232C}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* lista de pessoas */
+.list{display:flex;flex-direction:column;gap:10px}
+.person{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.person > button.head{all:unset;box-sizing:border-box;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:14px;cursor:pointer}
+.person > button.head:focus-visible{outline:2px solid var(--vinho);outline-offset:-2px;border-radius:16px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--rosa-2);color:var(--vinho);display:grid;place-items:center;font:800 16px/1 var(--display)}
+.nm{font-weight:800;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.em{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.lg-only{display:none}@media (min-width:600px){.lg-only{display:inline}}
+@media (max-width:380px){.top .tag{display:none}}
+.right{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.right b{display:block;font:800 17px/1.1 var(--display);color:var(--ink)}
+.pill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--rosa-2);color:var(--vinho)}
+.pill.pro{background:var(--vinho);color:#fff}
+.pill.warn{background:#FFF1E0;color:var(--warn)}
+.pill.ok{background:#E3F5EC;color:var(--ok)}
+.pill.me{background:#EFE9FF;color:#4B2BA8}
+.det{border-top:1px solid var(--line);padding:14px;display:grid;gap:16px;background:#FFFCFD}
+.det h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.counts{display:flex;flex-wrap:wrap;gap:6px}
+.counts span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px}
+.counts b{font-variant-numeric:tabular-nums}
+.planbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.planbox .until{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--muted)}.planbox .until input{flex:none;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 8px;background:#fff;font-weight:600;color:var(--ink)}
+.planbox input{flex:1 1 200px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+.seg{display:inline-flex;background:var(--rosa-2);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:7px 14px;font-weight:800;font-size:13px;color:var(--vinho)}
+.seg button[aria-pressed=true]{background:var(--vinho);color:#fff}
+.ctabs{display:flex;width:100%;max-width:520px}.ctabs button{flex:1;padding:11px 14px;font-size:15px}
+.pain{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.links a{font-size:13px;font-weight:700;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.wl{padding:14px}
+.wl .row1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.more{display:block;margin:14px auto 0}
+
+/* respostas "o que mais atrapalha" */
+.quotes{display:grid;gap:8px}
+@media (min-width:760px){.quotes{grid-template-columns:1fr 1fr}}
+.quote{background:#fff;border:1px solid var(--line);border-left:4px solid var(--rosa);border-radius:12px;padding:10px 12px;font-size:14px}
+.quote small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+
+.empty{text-align:center;color:var(--muted);padding:30px 16px;background:#fff;border:1px dashed var(--line);border-radius:16px}
+.state{min-height:70vh;display:grid;place-items:center;padding:24px}
+.state .box{max-width:380px;width:100%;text-align:center}
+.state h1{color:var(--vinho)}
+.state form{display:flex;flex-direction:column;gap:10px;margin-top:18px;text-align:left}
+.state label{font-size:13px;font-weight:800;display:flex;flex-direction:column;gap:5px}
+.state input{min-height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;background:#fff}
+.err{color:#B4232C;font-weight:700;font-size:14px;min-height:20px}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.on{opacity:1;transform:translateX(-50%)}
+body.disc .pv{filter:blur(6px);user-select:none}
+.loading{color:var(--muted);padding:40px 0;text-align:center}
+.badge[hidden]{display:none !important}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--rec);color:#fff;font-size:11px;font-weight:800;margin-left:6px;vertical-align:1px}
+.att{display:grid;gap:8px;margin-top:16px}
+@media (min-width:760px){.att{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.att button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:700;font-size:14px}
+.att button:focus-visible{outline:2px solid var(--vinho)}
+.att .dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+.att .hot .dot{background:var(--rec)}
+.att b{font:800 20px/1 var(--display);margin-left:auto}
+textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;resize:vertical}
+.fgrid{display:grid;gap:10px}
+@media (min-width:760px){.fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fgrid label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+.fgrid input,.fgrid select{min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff;font-weight:600}
+.msg{white-space:pre-wrap;font-size:15px;margin-top:8px}
+.reply{background:#F3EEFF;border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px;white-space:pre-wrap}
+.err-row{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;word-break:break-word}
+.pay{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px 14px}
+.pay b.v{font:800 17px/1 var(--display);white-space:nowrap}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+
+/* radar da fundadora */
+.rd-hero{background:linear-gradient(150deg,var(--vinho),#7A1340);color:#fff;border-radius:22px;padding:20px;display:grid;gap:6px}
+.rd-hero .eb{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--rosa)}
+.rd-hero h1{color:#fff;font-size:26px}
+.rd-grid{display:grid;gap:12px;margin-top:12px}@media (min-width:860px){.rd-grid{grid-template-columns:1fr 1fr}}
+.rd{display:grid;gap:10px;align-content:start}
+.rd .k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rd h2{font-size:21px}
+.rd p{margin:0;font-size:15px}
+.rd .why{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.rd .why b,.rd .act b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--vinho);margin-bottom:2px}
+.rd .act{background:#FFF7E6;border:1px solid #FBE3B5;border-radius:12px;padding:10px 12px;font-size:14.5px}
+.rd .src{font-size:12.5px;color:var(--muted)}.rd .src a{font-weight:700}
+.rd-q{margin-top:12px;font:700 17px/1.35 var(--display);color:var(--vinho);background:#fff;border:1px dashed var(--rosa);border-radius:16px;padding:14px 16px}
+.rd-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.rd-acts input{flex:1 1 220px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+.rd-past{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;width:100%}
+.rd-past b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rd-past small{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-past .d{font:800 15px/1.1 var(--display);color:var(--vinho)}
+.rd-mini{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px;width:100%;margin-top:16px;background:linear-gradient(150deg,var(--vinho),#7A1340);color:#fff;border-radius:18px;padding:16px}
+.rd-mini .eb{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--rosa)}
+.rd-mini b{font:800 18px/1.25 var(--display)}.rd-mini span{font-size:13.5px;color:rgb(255 255 255 / .8)}
+/* crm */
+.crm-st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}@media (min-width:760px){.crm-st{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.crm-st button{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:2px}
+.crm-st button[aria-pressed=true]{background:var(--vinho);border-color:var(--vinho);color:#fff}
+.crm-st b{font:800 22px/1 var(--display)}.crm-st span{font-size:12.5px;font-weight:700;opacity:.8}
+.crm-c .head{grid-template-columns:40px minmax(0,1fr) auto !important}
+.crm-due{color:#B4232C;font-weight:800}
+.crm-form{display:grid;gap:10px}@media (min-width:760px){.crm-form{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.crm-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+.crm-form input,.crm-form select{min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff;font-weight:600}
+.crm-form .full{grid-column:1/-1}
+.crm-log{display:grid;gap:6px}.crm-log div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;white-space:pre-wrap}.crm-log small{display:block;color:var(--muted);font-size:12px}
+.crm-add{display:flex;gap:8px;flex-wrap:wrap}.crm-add input{flex:1 1 220px;min-height:38px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff}
+/* momentos */
+.mom{padding:14px;display:grid;gap:10px}
+.mom .top1{display:flex;gap:12px;align-items:center}
+.mom .em1{font-size:28px;line-height:1;width:44px;height:44px;border-radius:14px;background:var(--rosa-2);display:grid;place-items:center;flex:none}
+.mom .t{font-weight:800;font-size:15.5px}
+.mom textarea{min-height:96px}
+.mom-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mom-acts a{display:inline-grid;place-items:center;text-decoration:none}
+.fund-miss{background:#FFF7E6;border:1px solid #FBE3B5;border-radius:16px;padding:16px;margin-top:12px}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Abrir o CriaHub"><span class="c">cr<span class="ii">ı<b></b></span>a</span><span class="h">hub</span></a>
+    <span class="tag">Fundadora</span>
+    <span class="sp"></span>
+    <button class="ib" id="disc" aria-pressed="false" title="Borra e-mails e telefones, pra tirar print ou mostrar a tela"><span class="lg-only">Modo</span>discreto</button>
+    <button class="ib" id="reload" aria-label="Atualizar">↻</button>
+  </div>
+  <div class="wrap"><nav class="tabs" id="tabs">
+    <button data-tab="geral" aria-current="page">Visão geral</button>
+    <button data-tab="radar">Radar ☕</button>
+    <button data-tab="creators">Creators</button>
+    <button data-tab="crm">CRM<span class="badge" id="crmBadge" hidden></span></button>
+    <button data-tab="momentos">Momentos<span class="badge" id="momBadge" hidden></span></button>
+    <button data-tab="feedback">Feedback<span class="badge" id="fbBadge" hidden></span></button>
+    <button data-tab="financas">Finanças</button>
+    <button data-tab="lista">Lista de espera</button>
+    <button data-tab="afiliadas">Afiliadas<span class="badge" id="affBadge" hidden></span></button>
+  </nav></div>
+</header>
+<main id="main" class="wrap"><div class="loading">Carregando…</div></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* CriaHub · painel da fundadora (criahub.app.br/admin)
+   Usa o mesmo login do app. Quem decide se a pessoa pode ver é o banco (supabase/admin.sql):
+   todas as funções conferem se ela está em private.admins. Pra qualquer outra conta, nada aparece. */
+(() => {
+  const CFG = window.CRIAHUB_ADMIN_CFG || { url: 'https://dvzfllqcgozecvhodygz.supabase.co', key: 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F' };
+  const sb = window.CRIAHUB_ADMIN_SB || (window.supabase && window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: true, autoRefreshToken: true } }));
+  const $ = id => document.getElementById(id);
+  const main = $('main');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nf = n => Number(n || 0).toLocaleString('pt-BR');
+  const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); };
+
+  const SCREENS = {
+    'inicio': 'Início', 'radar': 'Radar UGC',
+    'rotina.hoje': 'Rotina › Meu dia', 'rotina.metas': 'Rotina › Metas', 'rotina.habitos': 'Rotina › Hábitos', 'rotina.semana': 'Rotina › Semana', 'rotina.conquistas': 'Rotina › Conquistas',
+    'marcas.clientes': 'Marcas › Clientes', 'marcas.contas': 'Marcas › Contas', 'marcas.prospec': 'Marcas › Prospecção', 'marcas.permutas': 'Marcas › Permutas', 'marcas.contratos': 'Marcas › Contratos', 'marcas.licencas': 'Marcas › Licenças', 'marcas.kit': 'Marcas › Mídia kit',
+    'agenda.calendario': 'Agenda › Calendário', 'agenda.entregas': 'Agenda › Entregas', 'agenda.datas': 'Agenda › Datas comerciais',
+    'estudio.briefing': 'Estúdio › Briefing', 'estudio.alta': 'Estúdio › Em alta', 'estudio.revisor': 'Estúdio › Revisor', 'estudio.gravar': 'Estúdio › Gravar', 'estudio.lote': 'Estúdio › Em lote', 'estudio.ideias': 'Estúdio › Ideias', 'estudio.ganchos': 'Estúdio › Ganchos', 'estudio.erros': 'Estúdio › Erros',
+    'financeiro.marcas': 'Finanças › Marcas', 'financeiro.dolar': 'Finanças › US$ / €', 'financeiro.rendas': 'Finanças › Rendas', 'financeiro.gastos': 'Finanças › Gastos', 'financeiro.ano': 'Finanças › Ano', 'financeiro.meta': 'Finanças › Meta', 'financeiro.preco': 'Finanças › Preço', 'financeiro.notas': 'Finanças › Notas fiscais'
+  };
+  const scr = k => SCREENS[k] || k || '—';
+  const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', dreams: 'sonhos', warm: 'aquecimentos', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
+  const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', rendas: 'tem outras rendas', comecando: 'está começando' };
+  const waNum = v => { const w = String(v || '').replace(/\D/g, ''); return w ? (w.length <= 11 ? '55' + w : w) : ''; };
+  const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
+
+  const dur = secsOrMins => { const m = Math.round(secsOrMins); if (m < 1) return '0 min'; if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + String(r).padStart(2, '0') : ''); };
+  const dt = d => !d ? '—' : /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? String(d).slice(8, 10) + '/' + String(d).slice(5, 7) + '/' + String(d).slice(2, 4) : new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' });
+  const dtt = d => d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : '—';
+  const dayLbl = d => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return dd + '/' + m; };
+  const todayStr = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const ago = day => { if (!day) return 'nunca usou'; const t = new Date(todayStr()), d = new Date(String(day).slice(0, 10)); const n = Math.round((t - d) / 864e5); return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : 'há ' + n + ' dias'; };
+  const daysSince = day => day ? Math.round((new Date(todayStr()) - new Date(String(day).slice(0, 10))) / 864e5) : Infinity;
+  const initials = s => (String(s || '?').trim()[0] || '?').toUpperCase();
+
+  const st = { tab: 'geral', ov: null, daily: [], screens: [], users: null, wl: null, metric: 'active', sel: -1,
+    uq: '', uf: 'pro', us: 'recentes', open: null, uscr: {}, wq: '', wk: 'todos', wlim: 50, sure: null, plan: {},
+    fb: [], errs: [], rev: [], ff: 'novo', fopen: null, showErr: false };
+  try { const t = sessionStorage.getItem('criahub:admtab'); if (t) st.tab = t; } catch (_) {}
+  /* dentro do app (aberto pelo botão Painel): links pro app abrem na janela do app, não dentro do painel */
+  const EMBED = window.top !== window.self;
+  if (EMBED) { document.documentElement.classList.add('embed'); document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href="/"]'); if (a) { e.preventDefault(); try { window.top.document.querySelector('[data-act=painelclose]')?.click(); } catch (_) { window.top.location.href = '/'; } } }); }
+  try { if (localStorage.getItem('criahub:admdisc') === '1') { document.body.classList.add('disc'); $('disc').setAttribute('aria-pressed', 'true'); } } catch (_) {}
+
+  /* ---------- entrada ---------- */
+  function showLogin(msg) {
+    $('top').hidden = true;
+    main.innerHTML = `<div class="state"><div class="box">
+      <span class="logo" style="font-size:48px"><span class="c">cr<span class="ii">ı<b></b></span>a</span><span class="h" style="color:var(--vinho)">hub</span></span>
+      <h1 style="margin-top:14px">Painel da fundadora</h1><p class="sub">Entre com a mesma conta que você usa no CriaHub.</p>
+      <form id="lf"><label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+      <label>Senha<input name="pass" type="password" autocomplete="current-password" required></label>
+      <div class="err" id="lerr">${esc(msg || '')}</div><button class="btn" type="submit">Entrar</button></form></div></div>`;
+    $('lf').addEventListener('submit', async e => {
+      e.preventDefault(); const f = e.target; f.querySelector('button').disabled = true; $('lerr').textContent = '';
+      const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.pass.value });
+      if (error) { $('lerr').textContent = 'E-mail ou senha não conferem.'; f.querySelector('button').disabled = false; return; }
+      start();
+    });
+  }
+  function showBlocked(kind) {
+    $('top').hidden = true;
+    const setup = kind === 'setup';
+    main.innerHTML = `<div class="state"><div class="box"><h1>${setup ? 'Falta um passo' : 'Esse espaço é só da fundadora'}</h1>
+      <p class="sub">${setup ? 'O painel ainda não está ligado no banco (ou ganhou partes novas). Rode a versão mais nova do arquivo <b>supabase/admin.sql</b> no SQL Editor do Supabase e atualize esta página.' : 'Você entrou com uma conta que não é de admin.'}</p>
+      <div class="links" style="justify-content:center;margin-top:18px"><a href="/">Voltar ao CriaHub</a>${setup ? '' : '<a href="#" id="out">Entrar com outra conta</a>'}</div></div></div>`;
+    $('out') && $('out').addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); showLogin(); });
+  }
+
+  async function start() {
+    if (!sb) { main.innerHTML = '<div class="empty">Sem conexão. Confere a internet e atualiza a página.</div>'; return; }
+    const { data } = await sb.auth.getSession();
+    if (!data || !data.session) return showLogin();
+    const r = await sb.rpc('is_admin');
+    if (r.error) return showBlocked(/is_admin|function|schema cache/i.test(r.error.message) ? 'setup' : 'no');
+    if (r.data !== true) return showBlocked('no');
+    $('top').hidden = false;
+    loadAll();
+  }
+
+  async function loadAll() {
+    main.innerHTML = '<div class="loading">Carregando…</div>';
+    const [ov, daily, screens, users, wl, fb, errs, rev] = await Promise.all([
+      sb.rpc('admin_overview'), sb.rpc('admin_daily', { p_days: 30 }), sb.rpc('admin_screens', { p_days: 30 }), sb.rpc('admin_users'), sb.rpc('admin_waitlist'),
+      sb.rpc('admin_feedback'), sb.rpc('admin_errors'), sb.rpc('admin_revenue')
+    ]);
+    if ([fb, errs, rev].some(x => x.error && /admin_feedback|admin_errors|admin_revenue|function|schema cache/i.test(x.error.message))) { showBlocked('setup'); return; }
+    const bad = [ov, daily, screens, users, wl, fb, errs, rev].find(x => x.error);
+    if (bad) { main.innerHTML = `<div class="empty">Não consegui carregar agora (${esc(bad.error.message)}). Tenta atualizar.</div>`; return; }
+    st.ov = ov.data; st.daily = daily.data || []; st.screens = screens.data || []; st.users = users.data || []; st.wl = wl.data || [];
+    st.fb = fb.data || []; st.errs = errs.data || []; st.rev = rev.data || [];
+    st.sel = st.daily.length - 1;
+    render(); loadFund(); loadAff();
+  }
+
+  /* ---------- telas ---------- */
+  function render() {
+    document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === st.tab ? 'page' : 'false'));
+    const nNew = (st.fb || []).filter(f => f.status === 'novo').length, bd = $('fbBadge');
+    if (bd) { bd.hidden = !nNew; bd.textContent = nNew; }
+    fundBadges();
+    main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : st.tab === 'feedback' ? vFeedback() : st.tab === 'financas' ? vFin()
+      : st.tab === 'radar' ? vRadar() : st.tab === 'crm' ? vCrm() : st.tab === 'momentos' ? vMom() : st.tab === 'afiliadas' ? vAff() : vGeral();
+  }
+
+  const METRICS = { active: ['Creators ativas', 'creators usaram o app'], signups: ['Cadastros', 'cadastros novos'], mins: ['Minutos no app', 'minutos no app'], waitlist: ['Lista de espera', 'entraram na lista'] };
+  function vGeral() {
+    const o = st.ov || {}, users = o.users || 0;
+    const hello = (() => { const h = Number(new Date().toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'America/Sao_Paulo' })); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; })();
+    const kp = (l, v, d, hi) => `<div class="kpi${hi ? ' hi' : ''}"><div class="l">${l}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+    const pct = n => users ? Math.round(n / users * 100) + '% das cadastradas' : '';
+    const D = st.daily, m = st.metric, max = Math.max(1, ...D.map(x => x[m] || 0)), today = todayStr();
+    const sel = D[st.sel];
+    const used = st.screens.filter(s => SCREENS[s.screen]), maxM = Math.max(1, ...used.map(s => s.mins));
+    const totUsers = Math.max(1, o.active30 || 0);
+    const low = Object.keys(SCREENS).map(k => st.screens.find(s => s.screen === k) || { screen: k, mins: 0, users: 0 }).sort((a, b) => a.users - b.users || a.mins - b.mins).slice(0, 8);
+    return `
+      <h1>${hello}, fundadora 🍒</h1><p class="sub">Tudo que acontece no CriaHub, num lugar só. Sua conta não entra nesses números.</p>
+      ${radarMini()}
+      ${attention()}
+      <div class="kpis">
+        ${kp('Creators cadastradas', nf(users), `+${nf(o.new7)} nos últimos 7 dias`, true)}
+        ${kp('Ativas hoje', nf(o.activeToday), pct(o.activeToday))}
+        ${kp('Ativas em 7 dias', nf(o.active7), pct(o.active7))}
+        ${kp('Ativas em 30 dias', nf(o.active30), pct(o.active30))}
+        ${kp('No plano Pro', nf(o.pro), users ? `${nf(users - (o.pro || 0))} no Grátis` : '')}
+        ${kp('Lista de espera', nf(o.waitlist), `+${nf(o.waitlist7)} nos últimos 7 dias`)}
+        ${kp('Horas no app', dur((o.secs30 || 0) / 60), 'somando todas, últimos 30 dias')}
+        ${kp('Tempo médio por dia', dur((o.avgDaySecs || 0) / 60), 'por creator, nos dias que ela abre')}
+        ${kp('Recebido no mês', brl(finStats().month), 'pagamentos registrados', true)}
+        ${kp('Receita recorrente', brl(finStats().mrr), 'por mês, com as Pro ativas')}
+      </div>
+      <section class="sec card">
+        <div class="sec-h"><div><h2>Últimos 30 dias</h2><p class="sub">Toque numa barra pra ver o dia.</p></div>
+          <div class="chips">${Object.entries(METRICS).map(([k, [l]]) => `<button class="chip" data-metric="${k}" aria-pressed="${k === m}">${l}</button>`).join('')}</div></div>
+        <div class="bars" role="group" aria-label="${METRICS[m][0]} por dia">${D.map((x, i) => `<button class="b${i === st.sel ? ' on' : ''}${String(x.day).slice(0, 10) === today ? ' today' : ''}" data-bar="${i}" aria-label="${dayLbl(x.day)}: ${nf(x[m])} ${METRICS[m][1]}"><i style="height:${Math.round((x[m] || 0) / max * 100)}%"></i></button>`).join('')}</div>
+        <div class="bars-x"><span>${D[0] ? dayLbl(D[0].day) : ''}</span><span>hoje</span></div>
+        <div class="tip">${sel ? `<b>${dayLbl(sel.day)}</b> · ${nf(sel.active)} ativas · ${nf(sel.signups)} cadastros · ${dur(sel.mins)} no app · ${nf(sel.waitlist)} na lista` : ''}</div>
+      </section>
+      <div class="two sec">
+        <section class="card"><h2>O que mais usam</h2><p class="sub" style="margin-bottom:14px">Tempo nas telas, últimos 30 dias</p>
+          ${used.length ? `<div class="rank">${used.slice(0, 10).map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${dur(s.mins)} · ${nf(s.users)} ${s.users === 1 ? 'creator' : 'creators'}</span><span class="t"><i style="width:${Math.max(2, Math.round(s.mins / maxM * 100))}%"></i></span></div>`).join('')}</div>` : '<div class="empty">Ainda sem uso registrado. Os números começam a aparecer quando as creators abrirem o app.</div>'}
+        </section>
+        <section class="card"><h2>O que menos usam</h2><p class="sub" style="margin-bottom:14px">Telas que quase ninguém abre: vale explicar melhor, mudar de lugar ou repensar</p>
+          <div class="rank low">${low.map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${s.users ? `${nf(s.users)} de ${nf(o.active30 || 0)} · ${dur(s.mins)}` : 'ninguém abriu'}</span><span class="t"><i style="width:${Math.round(s.users / totUsers * 100)}%"></i></span></div>`).join('')}</div>
+        </section>
+      </div>`;
+  }
+
+  function finStats() {
+    const today = todayStr(), mk = d => String(d).slice(0, 7), thisM = today.slice(0, 7);
+    const pm = new Date(today); pm.setDate(1); pm.setMonth(pm.getMonth() - 1); const lastM = pm.toISOString().slice(0, 7);
+    const R = st.rev || [], sum = L => L.reduce((a, r) => a + Number(r.amount || 0), 0);
+    const pros = (st.users || []).filter(u => u.plan === 'pro' && !u.is_admin);
+    const active = pros.filter(u => !u.plan_until || String(u.plan_until).slice(0, 10) >= today);
+    const overdue = pros.filter(u => u.plan_until && String(u.plan_until).slice(0, 10) < today);
+    const soon = active.filter(u => u.plan_until && daysUntil(u.plan_until) <= 7);
+    const mrr = active.reduce((a, u) => { const last = R.find(r => r.user_id === u.user_id && r.period !== 'avulso'); return a + (last ? Number(last.amount) / (last.period === 'anual' ? 12 : 1) : 0); }, 0);
+    return { month: sum(R.filter(r => mk(r.paid_at) === thisM)), last: sum(R.filter(r => mk(r.paid_at) === lastM)), total: sum(R), mrr, active, overdue, soon, thisM };
+  }
+  const daysUntil = d => Math.round((new Date(String(d).slice(0, 10)) - new Date(todayStr())) / 864e5);
+  const brl = n => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  function attention() {
+    const nNew = (st.fb || []).filter(f => f.status === 'novo').length, nErr = (st.errs || []).filter(e => new Date(e.last_at) > Date.now() - 7 * 864e5).length;
+    const F = finStats(), venc = F.soon.length + F.overdue.length;
+    const sumidas = (st.users || []).filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length;
+    const it = (go, n, l, hot) => `<button data-go="${go}" class="${hot ? 'hot' : ''}"><span class="dot"></span>${l}<b>${n}</b></button>`;
+    return `<h2 class="sec" style="margin-top:22px">Precisa da sua atenção</h2><div class="att">
+      ${it('feedback', nf(nNew), 'Feedbacks novos', nNew)}${it('feedback:erros', nf(nErr), 'Erros do app (7 dias)', nErr)}
+      ${it('financas', nf(venc), 'Pro vencendo ou vencido', venc)}${it('creators:sumidas', nf(sumidas), 'Sumidas há 7+ dias', sumidas)}
+      ${st.crm ? it('crm:hoje', nf(crmDue().length), 'Follow-ups do CRM', crmDue().length) : ''}${st.mom ? it('momentos', nf(st.mom.length), 'Momentos pra celebrar', st.mom.length) : ''}</div>`;
+  }
+  function userList() {
+    const q = st.uq.trim().toLowerCase();
+    let L = (st.users || []).filter(u => !q || [u.name, u.email, u.instagram, u.whatsapp].join(' ').toLowerCase().includes(q));
+    if (st.uf === 'gratis') L = L.filter(u => u.plan !== 'pro');
+    if (st.uf === 'pro') L = L.filter(u => u.plan === 'pro');
+    if (st.uf === 'sumidas') L = L.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7);
+    if (st.uf === 'vencendo') L = L.filter(u => u.plan === 'pro' && u.plan_until && daysUntil(u.plan_until) <= 7);
+    const by = { recentes: (a, b) => new Date(b.created_at) - new Date(a.created_at), tempo: (a, b) => b.mins_30 - a.mins_30, ultima: (a, b) => daysSince(a.last_seen) - daysSince(b.last_seen) }[st.us];
+    return L.sort(by);
+  }
+  function vCreators() {
+    const all = st.users || [], L = userList();
+    const n = { todas: all.length, gratis: all.filter(u => u.plan !== 'pro').length, pro: all.filter(u => u.plan === 'pro').length, sumidas: all.filter(u => !u.is_admin && daysSince(u.last_seen) >= 7).length, vencendo: all.filter(u => u.plan === 'pro' && u.plan_until && daysUntil(u.plan_until) <= 7).length };
+    return `<div class="sec-h"><div><h1>Creators</h1><p class="sub">${nf(all.length)} contas no CriaHub. Toque numa creator pra ver os detalhes e mudar o plano.</p></div>
+      <button class="btn ghost sm" data-csv="users">Baixar planilha</button></div>
+      <div class="tools"><input class="search" type="search" placeholder="Buscar por nome, e-mail, @ ou WhatsApp" value="${esc(st.uq)}" data-q="u" aria-label="Buscar creator">
+        <select class="sel" data-sort aria-label="Ordenar"><option value="recentes"${st.us === 'recentes' ? ' selected' : ''}>Mais recentes</option><option value="tempo"${st.us === 'tempo' ? ' selected' : ''}>Mais tempo no app</option><option value="ultima"${st.us === 'ultima' ? ' selected' : ''}>Usou por último</option></select></div>
+      <div class="seg ctabs" role="group" aria-label="Plano">${[['pro', '⭐ Pro'], ['gratis', 'Grátis'], ['todas', 'Todas']].map(([k, l]) => `<button data-uf="${k}" aria-pressed="${st.uf === k || (k === 'pro' && st.uf === 'vencendo')}">${l} · ${nf(n[k])}</button>`).join('')}</div>
+      <div class="chips" style="margin:10px 0 14px">${st.uf === 'pro' || st.uf === 'vencendo' ? `<button class="chip" data-uf="vencendo" aria-pressed="${st.uf === 'vencendo'}">Pro vencendo · ${nf(n.vencendo)}</button>` : ''}<button class="chip" data-uf="sumidas" aria-pressed="${st.uf === 'sumidas'}">Sumidas há 7+ dias · ${nf(n.sumidas)}</button></div>
+      <div class="list" id="ulist">${L.length ? L.map(personCard).join('') : '<div class="empty">Nenhuma creator encontrada.</div>'}</div>`;
+  }
+  /* abre o Gmail do CriaHub no navegador já com o e-mail escrito (o mailto: não abre nada quando não há app de e-mail) */
+  const gmail = (to, su, body) => 'https://mail.google.com/mail/?authuser=criahubb@gmail.com&view=cm&fs=1&to=' + encodeURIComponent(to || '') + (su ? '&su=' + encodeURIComponent(su) : '') + (body ? '&body=' + encodeURIComponent(body) : '');
+  function personCard(u) {
+    const open = st.open === u.user_id, total = Object.values(u.counts || {}).reduce((a, b) => a + b, 0);
+    const p = st.plan[u.user_id] || u.plan;
+    return `<article class="person"><button class="head" data-open="${u.user_id}" aria-expanded="${open}">
+      <span class="av">${esc(initials(u.name || u.email))}</span>
+      <span style="min-width:0"><span class="nm">${esc(u.name || 'Sem nome')} <span class="pill${u.plan === 'pro' ? ' pro' : ''}">${u.plan === 'pro' ? 'Pro' : 'Grátis'}</span>${u.plan === 'pro' && u.plan_until ? (daysUntil(u.plan_until) < 0 ? '<span class="pill warn">vencido</span>' : daysUntil(u.plan_until) <= 7 ? '<span class="pill warn">vence ' + dt(u.plan_until) + '</span>' : '') : ''}${u.is_admin ? '<span class="pill me">você</span>' : ''}${u.confirmed ? '' : '<span class="pill warn">e-mail não confirmado</span>'}</span>
+        <span class="em pv">${esc(u.email)}${u.instagram ? ' · @' + esc(u.instagram) : ''}</span>
+        <span class="meta">Entrou ${dt(u.created_at)} · usou ${ago(u.last_seen)}${u.top_screen ? ' · mais usa: ' + esc(scr(u.top_screen)) : ''}</span></span>
+      <span class="right"><b>${dur(u.mins_30)}</b>${nf(u.days_30)} ${u.days_30 === 1 ? 'dia' : 'dias'}/30</span></button>
+      ${open ? `<div class="det">
+        <div><h3>Contato</h3><div class="links" style="margin-top:0">
+          <a class="pv" href="${esc(gmail(u.email))}" target="_blank" rel="noopener">${esc(u.email)}</a>
+          ${u.instagram ? `<a class="pv" href="https://instagram.com/${encodeURIComponent(u.instagram)}" target="_blank" rel="noopener">@${esc(u.instagram)}</a>` : ''}
+          ${u.whatsapp ? `<a class="pv" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</div>
+          <p class="note">${[(u.kinds || []).map(k => KIND_APP[k] || k).join(', '), u.from_waitlist ? 'veio da lista de espera' : '', Number(u.paid_total) ? 'já pagou ' + brl(u.paid_total) : '', u.feedbacks ? u.feedbacks + (u.feedbacks === 1 ? ' mensagem enviada' : ' mensagens enviadas') : ''].filter(Boolean).join(' · ') || (u.instagram ? '' : 'Sem @ ainda. Ela pode colocar em Ajustes › Seu @ do Instagram.')}</p></div>
+        ${u.plan === 'pro' && !u.is_admin ? `<div><h3>E-mail de boas-vindas ao Pro</h3><p class="note" style="margin:0">${(st.mom || []).some(m => m.user_id === u.user_id && m.kind === 'virou_pro') ? '⚠️ Ainda não foi. O envio automático falhou: confira a senha de app do Gmail do CriaHub. Pela aba Momentos dá pra mandar na mão.' : '✓ Enviado, ou ela virou Pro antes do envio automático existir (12/11).'}</p></div>` : ''}
+        <div><h3>No app (não abre o conteúdo, só conta)</h3>${total ? `<div class="counts">${Object.entries(u.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span><b>${nf(v)}</b> ${esc(COLS[k] || k)}</span>`).join('')}</div>` : '<p class="sub">Ainda não cadastrou nada (sem contar os exemplos).</p>'}</div>
+        <div><h3>Onde passa o tempo · últimos 30 dias</h3>${uscreens(u.user_id)}</div>
+        <div class="meta">Abriu o app ${nf(u.opens_30)} ${u.opens_30 === 1 ? 'vez' : 'vezes'} em 30 dias · ${dur(u.mins_total)} no total · último login ${dtt(u.last_sign_in_at)}</div>
+        <div><h3>Plano</h3><div class="planbox">
+          <span class="seg" role="group" aria-label="Plano"><button data-plan="free" aria-pressed="${p !== 'pro'}">Grátis</button><button data-plan="pro" aria-pressed="${p === 'pro'}">Pro</button></span>
+          <label class="until">Pro até<input id="puntil" type="date" value="${esc(u.plan_until ? String(u.plan_until).slice(0, 10) : '')}" title="Deixe vazio pra não ter data de fim"></label>
+          <input id="pnote" placeholder="Anotação (ex.: testadora, cortesia, pagou via Pix)" value="${esc(u.plan_note || '')}" maxlength="200">
+          <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
+          <div class="chips" style="margin-top:8px"><button class="chip" data-gift="${u.user_id}|36">🎁 Presente Cria Beta (3 anos)</button><button class="chip" data-gift="${u.user_id}|1">1 mês de cortesia</button><button class="chip" data-gift="${u.user_id}|0">Sem data de fim</button></div>
+          <div class="chips" style="margin-top:8px">${(st.aff || []).some(a => a.user_id === u.user_id) ? '<span class="note" style="margin:0">💸 Já é afiliada · veja na aba Afiliadas</span>' : `<button class="chip" data-affmake="${u.user_id}|1|${esc(u.name || u.email || '')}">💸 Tornar afiliada Cria Beta (30% → 20%)</button><button class="chip" data-affmake="${u.user_id}|0|${esc(u.name || u.email || '')}">💸 Tornar afiliada (20%)</button>`}</div>
+          ${u.is_admin ? '' : `<div class="chips" style="margin-top:14px"><button class="chip" data-del="${u.user_id}" data-delmail="${esc(u.email)}" style="color:#B3261E">🗑 Excluir esta conta</button></div>`}
+          ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}${u.plan_until ? ' · pago até ' + dt(u.plan_until) : ''}. Pagamento novo? Registre em Finanças que a data se atualiza sozinha.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
+      </div>` : ''}</article>`;
+  }
+  function uscreens(id) {
+    const L = st.uscr[id];
+    if (!L) return '<p class="sub">Carregando…</p>';
+    if (!L.length) return '<p class="sub">Sem uso registrado nos últimos 30 dias.</p>';
+    const mx = Math.max(1, ...L.map(s => s.mins));
+    return `<div class="rank">${L.slice(0, 8).map(s => `<div class="r"><span class="n">${esc(scr(s.screen))}</span><span class="m">${dur(s.mins)} · ${nf(s.days)} ${s.days === 1 ? 'dia' : 'dias'}</span><span class="t"><i style="width:${Math.max(2, Math.round(s.mins / mx * 100))}%"></i></span></div>`).join('')}</div>`;
+  }
+
+  function wlList() {
+    const q = st.wq.trim().toLowerCase();
+    return (st.wl || []).filter(w => (st.wk === 'todos' || w.kind === st.wk) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q)));
+  }
+  function vLista() {
+    const all = st.wl || [], L = wlList();
+    const byKind = Object.keys(KINDS).map(k => [k, all.filter(w => w.kind === k).length]);
+    const src = {}; all.forEach(w => { const s = w.source || 'site'; src[s] = (src[s] || 0) + 1; });
+    const pains = all.filter(w => w.pain).slice(0, 6);
+    return `<div class="sec-h"><div><h1>Lista de espera</h1><p class="sub">${nf(all.length)} ${all.length === 1 ? 'pessoa' : 'pessoas'} esperando o dia 15/12.</p></div>
+      <button class="btn ghost sm" data-csv="wl">Baixar planilha</button></div>
+      <div class="two">
+        <section class="card"><h2>Quem são</h2><div class="rank" style="margin-top:12px">${byKind.map(([k, v]) => `<div class="r"><span class="n">${KINDS[k]}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${all.length ? Math.round(v / all.length * 100) : 0}%"></i></span></div>`).join('')}</div></section>
+        <section class="card"><h2>De onde vieram</h2><p class="sub">Use links como criahub.app.br/lista?origem=bio</p><div class="rank" style="margin-top:12px">${Object.entries(src).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => `<div class="r"><span class="n">${esc(k)}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${Math.round(v / Math.max(1, all.length) * 100)}%"></i></span></div>`).join('') || '<p class="sub">Ainda ninguém.</p>'}</div></section>
+      </div>
+      ${pains.length ? `<section class="sec"><div class="sec-h"><div><h2>O que mais atrapalha</h2><p class="sub">As respostas mais recentes. Ideia de conteúdo pronta.</p></div></div><div class="quotes">${pains.map(w => `<div class="quote">“${esc(w.pain)}”<small>${esc((w.name || '').split(' ')[0])} · ${KINDS[w.kind] || ''}</small></div>`).join('')}</div></section>` : ''}
+      <section class="sec"><h2>Todas as inscrições</h2>
+      <div class="tools"><input class="search" type="search" placeholder="Buscar nome, e-mail, @ ou resposta" value="${esc(st.wq)}" data-q="w" aria-label="Buscar na lista">
+        <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="list">${L.length ? L.slice(0, st.wlim).map(wlCard).join('') : '<div class="empty">Ninguém por aqui com esse filtro.</div>'}</div>
+      ${L.length > st.wlim ? `<button class="btn ghost more" data-more>Ver mais (${nf(L.length - st.wlim)})</button>` : ''}</section>`;
+  }
+  function wlCard(w) {
+    const ig = (w.instagram || '').replace(/^@/, ''), wa = String(w.whatsapp || '').replace(/\D/g, '');
+    const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '';
+    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}</div>
+      <div class="em pv">${esc(w.email)}</div><div class="meta">${dtt(w.created_at)} · veio de: ${esc(w.source || 'site')}</div></div>
+      <button class="btn danger sm${st.sure === w.id ? ' sure' : ''}" data-rm="${w.id}">${st.sure === w.id ? 'Confirmar' : 'Remover'}</button></div>
+      ${w.pain ? `<div class="pain">“${esc(w.pain)}”</div>` : ''}
+      ${ig || waNum ? `<div class="links">${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="pv">@${esc(ig)}</a>` : ''}${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="pv">WhatsApp</a>` : ''}</div>` : ''}</article>`;
+  }
+
+  const FBK = { erro: 'Deu erro', ideia: 'Ideia', duvida: 'Dúvida', elogio: 'Elogio' };
+  const FBS = { novo: 'Novo', vendo: 'Vendo', resolvido: 'Resolvido' };
+  function vFeedback() {
+    const all = st.fb || [], n = k => all.filter(f => k === 'todos' || f.status === k).length;
+    const L = all.filter(f => st.ff === 'todos' || f.status === st.ff);
+    const byKind = Object.keys(FBK).map(k => [k, all.filter(f => f.kind === k).length]);
+    return `<div class="sec-h"><div><h1>Feedback</h1><p class="sub">O que as creators mandam em Ajustes › Fale com o CriaHub. A sua resposta aparece pra ela dentro do app.</p></div></div>
+      <div class="chips" style="margin-bottom:10px">${[['novo', 'Novos'], ['vendo', 'Vendo'], ['resolvido', 'Resolvidos'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip" data-ff="${k}" aria-pressed="${st.ff === k}">${l} · ${nf(n(k))}</button>`).join('')}</div>
+      <p class="sub" style="margin-bottom:14px">${byKind.map(([k, v]) => `${FBK[k]}: <b>${nf(v)}</b>`).join(' · ')}</p>
+      <div class="list">${L.length ? L.map(fbCard).join('') : `<div class="empty">${st.ff === 'novo' ? 'Nenhuma mensagem nova. Tudo em dia ✨' : 'Nada por aqui.'}</div>`}</div>
+      <section class="sec card" id="erros"><div class="sec-h"><div><h2>Erros do app</h2><p class="sub">O app avisa sozinho quando alguma coisa quebra pra uma creator. Últimos 30 dias.</p></div></div>
+        ${(st.errs || []).length ? `<div class="list">${st.errs.map(e => `<div class="person wl"><div class="row1"><div style="min-width:0"><div class="err-row">${esc(e.msg)}</div>
+          <div class="meta">${nf(e.n)} ${e.n === 1 ? 'vez' : 'vezes'} · ${nf(e.users)} ${e.users === 1 ? 'creator' : 'creators'} · último ${dtt(e.last_at)}${e.screens ? ' · tela: ' + esc(String(e.screens).split(', ').map(scr).join(', ')) : ''}</div></div></div></div>`).join('')}</div>
+          <p class="note">Se um erro se repete, me manda print dessa lista que eu corrijo no app.</p>` : '<div class="empty">Nenhum erro registrado. 🎉</div>'}
+      </section>`;
+  }
+  function fbCard(f) {
+    const open = st.fopen === f.id;
+    return `<article class="person wl"><div class="row1"><div style="min-width:0">
+      <div class="nm">${esc(f.name || 'Sem nome')} <span class="pill${f.kind === 'erro' ? ' warn' : ''}">${FBK[f.kind] || f.kind}</span><span class="pill${f.status === 'resolvido' ? ' ok' : f.status === 'vendo' ? ' me' : ''}">${FBS[f.status]}</span></div>
+      <div class="em pv">${esc(f.email || '')}</div><div class="meta">${dtt(f.created_at)}${f.screen ? ' · estava em: ' + esc(scr(f.screen)) : ''}${f.ua ? ' · ' + (/iPhone|iPad/.test(f.ua) ? 'iPhone' : /Android/.test(f.ua) ? 'Android' : 'computador') : ''}</div></div>
+      <button class="btn ghost sm" data-fopen="${f.id}">${open ? 'Fechar' : f.reply ? 'Ver' : 'Responder'}</button></div>
+      <div class="msg">${esc(f.message)}</div>
+      ${f.reply ? `<div class="reply"><b>Sua resposta</b> · ${dtt(f.replied_at)}<br>${esc(f.reply)}</div>` : ''}
+      ${open ? `<div style="margin-top:12px;display:grid;gap:8px"><textarea class="ta" id="freply" maxlength="2000" placeholder="Escreva sua resposta. Ela aparece pra creator em Ajustes › Fale com o CriaHub.">${esc(f.reply || '')}</textarea>
+        <div class="planbox"><span class="seg" role="group" aria-label="Status">${Object.entries(FBS).map(([k, l]) => `<button data-fst="${k}" aria-pressed="${(st.fst || f.status) === k}">${l}</button>`).join('')}</span>
+        <button class="btn sm" data-fsave="${f.id}">Salvar</button></div></div>` : ''}</article>`;
+  }
+
+  const METHODS = { pix: 'Pix', cartao: 'Cartão', google_play: 'Google Play', app_store: 'App Store', boleto: 'Boleto', outro: 'Outro' };
+  const PERIODS = { mensal: 'Mensal', anual: 'Anual', avulso: 'Avulso' };
+  function vFin() {
+    const F = finStats(), R = st.rev || [];
+    const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(todayStr()); d.setDate(1); d.setMonth(d.getMonth() - (5 - i)); return d.toISOString().slice(0, 7); });
+    const byM = months.map(m => R.filter(r => String(r.paid_at).slice(0, 7) === m).reduce((a, r) => a + Number(r.amount), 0)), mx = Math.max(1, ...byM);
+    const mName = m => new Date(m + '-15').toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+    const byMethod = {}; R.forEach(r => { byMethod[r.method] = (byMethod[r.method] || 0) + Number(r.amount); });
+    const users = (st.users || []).filter(u => !u.is_admin).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+    const venc = [...F.overdue, ...F.soon].sort((a, b) => String(a.plan_until).localeCompare(String(b.plan_until)));
+    const kp = (l, v, d, hi) => `<div class="kpi${hi ? ' hi' : ''}"><div class="l">${l}</div><div class="v" style="font-size:24px">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+    return `<div class="sec-h"><div><h1>Finanças do CriaHub</h1><p class="sub">Quem está pagando, quanto entrou e quem vence. Registre aqui cada pagamento.</p></div>
+      <button class="btn ghost sm" data-csv="rev">Baixar planilha</button></div>
+      <div class="kpis">${kp('Recebido no mês', brl(F.month), '', true)}${kp('Mês passado', brl(F.last), F.last ? (F.month >= F.last ? '▲ ' : '▼ ') + Math.round(Math.abs(F.month - F.last) / F.last * 100) + '% este mês' : '')}
+        ${kp('Receita recorrente', brl(F.mrr), 'por mês, com as Pro ativas')}${kp('Pro ativas', nf(F.active.length), F.overdue.length ? nf(F.overdue.length) + ' com pagamento vencido' : 'nenhuma vencida')}</div>
+      <section class="sec card"><h2>Registrar pagamento</h2><p class="sub" style="margin-bottom:12px">Mensal ou anual de uma creator: ela vira Pro e a data de vencimento se ajusta sozinha.</p>
+        <form id="payf" class="fgrid">
+          <label>Creator<select name="user"><option value="">Outra pessoa (digitar nome)</option>${users.map(u => `<option value="${u.user_id}">${esc(u.name || u.email)}</option>`).join('')}</select></label>
+          <label>Nome (se não tiver conta)<input name="payer" maxlength="120" placeholder="Ex.: Fulana"></label>
+          <label>Valor (R$)<input name="amount" type="text" required placeholder="19,90" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?"></label>
+          <label>Data<input name="paid" type="date" required value="${todayStr()}"></label>
+          <label>Forma<select name="method">${Object.entries(METHODS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
+          <label>Período<select name="period">${Object.entries(PERIODS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></label>
+          <label style="grid-column:1/-1">Anotação<input name="note" maxlength="200" placeholder="Opcional. Ex.: cupom de lançamento"></label>
+          <div><button class="btn" type="submit">Registrar</button></div></form></section>
+      ${venc.length ? `<section class="sec"><h2>Vencimentos</h2><p class="sub" style="margin-bottom:12px">Pro vencido ou vencendo nos próximos 7 dias. Bom momento pra mandar um lembrete.</p><div class="list">${venc.map(u => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(u.name || u.email)}</div><div class="meta">${daysUntil(u.plan_until) < 0 ? 'venceu ' + dt(u.plan_until) : 'vence ' + dt(u.plan_until)}</div></div>
+        ${u.whatsapp ? `<a class="btn ghost sm" style="display:inline-grid;place-items:center;text-decoration:none" href="https://wa.me/${waNum(u.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="btn ghost sm" data-vsend="${u.user_id}" title="Manda agora o lembrete pronto pelo Gmail do CriaHub">Mandar lembrete</button>`}<span class="pill warn">${daysUntil(u.plan_until) < 0 ? 'vencido' : daysUntil(u.plan_until) + ' dias'}</span></div>`).join('')}</div></section>` : ''}
+      <div class="two sec">
+        <section class="card"><h2>Últimos 6 meses</h2><div class="bars" style="height:150px">${byM.map((v, i) => `<div class="b" title="${brl(v)}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div>
+          <div class="bars-x">${months.map(mName).map(m => `<span>${m}</span>`).join('')}</div><p class="note">Total desde o começo: <b>${brl(F.total)}</b></p></section>
+        <section class="card"><h2>Por forma de pagamento</h2><div class="rank" style="margin-top:12px">${Object.keys(byMethod).length ? Object.entries(byMethod).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r"><span class="n">${METHODS[k] || k}</span><span class="m">${brl(v)}</span><span class="t"><i style="width:${Math.round(v / Math.max(1, F.total) * 100)}%"></i></span></div>`).join('') : '<p class="sub">Ainda sem pagamentos.</p>'}</div></section>
+      </div>
+      <section class="sec"><h2>Pagamentos</h2><div class="list" style="margin-top:12px">${R.length ? R.slice(0, 200).map(r => `<div class="person pay"><div style="min-width:0"><div class="nm">${esc(r.payer || '—')}</div><div class="meta">${dt(r.paid_at)} · ${METHODS[r.method] || r.method} · ${PERIODS[r.period] || r.period}${r.note ? ' · ' + esc(r.note) : ''}</div></div>
+        <b class="v">${brl(r.amount)}</b><button class="btn danger sm${st.sure === r.id ? ' sure' : ''}" data-rmpay="${r.id}">${st.sure === r.id ? 'Confirmar' : 'Apagar'}</button></div>`).join('') : '<div class="empty">Nenhum pagamento registrado ainda. Quando a primeira creator pagar o Pro, registre aqui em cima.</div>'}</div></section>`;
+  }
+
+  /* ---------- planilhas ---------- */
+  function csv(rows, name) {
+    const s = rows.map(r => r.map(v => { const t = String(v ?? ''); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + s], { type: 'text/csv;charset=utf-8' }));
+    a.download = name + '-' + todayStr() + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const csvUsers = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'Plano', 'Pago até', 'Já pagou', 'Entrou em', 'Último uso', 'Minutos (30 dias)', 'Dias ativos (30)', 'Mais usa', ...Object.values(COLS)],
+    ...userList().map(u => [u.name, u.email, u.instagram ? '@' + u.instagram : '', u.whatsapp || '', u.plan === 'pro' ? 'Pro' : 'Grátis', u.plan_until ? dt(u.plan_until) : '', Number(u.paid_total || 0).toFixed(2).replace('.', ','), dt(u.created_at), u.last_seen ? dt(u.last_seen) : '', u.mins_30, u.days_30, scr(u.top_screen), ...Object.keys(COLS).map(k => (u.counts || {})[k] || 0)])], 'criahub-creators');
+  const csvWl = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'O que faz', 'O que mais atrapalha', 'Veio de', 'Entrou em', 'E-mail de boas-vindas'],
+    ...wlList().map(w => [w.name, w.email, w.instagram, w.whatsapp, KINDS[w.kind] || '', w.pain, w.source, dtt(w.created_at), w.welcomed_at ? 'enviado' : ''])], 'criahub-lista-de-espera');
+
+  const csvRev = () => csv([['Quem pagou', 'E-mail', 'Valor', 'Data', 'Forma', 'Período', 'Anotação'],
+    ...(st.rev || []).map(r => [r.payer, r.email, Number(r.amount).toFixed(2).replace('.', ','), dt(r.paid_at), METHODS[r.method] || r.method, PERIODS[r.period] || r.period, r.note])], 'criahub-financas');
+
+  /* ---------- ações ---------- */
+  document.addEventListener('click', async e => {
+    const t = e.target.closest('button, a'); if (!t) return;
+    const d = t.dataset;
+    if (t.closest('#tabs') && d.tab) { st.tab = d.tab; st.sure = null; try { sessionStorage.setItem('criahub:admtab', st.tab); } catch (_) {} render(); window.scrollTo(0, 0); return; }
+    if (t.id === 'reload') { loadAll(); return; }
+    if (t.id === 'disc') { const on = !document.body.classList.toggle('disc') ? false : true; t.setAttribute('aria-pressed', String(on)); try { localStorage.setItem('criahub:admdisc', on ? '1' : ''); } catch (_) {} toast(on ? 'Modo discreto ligado' : 'Modo discreto desligado'); return; }
+    if (d.metric) { st.metric = d.metric; render(); return; }
+    if (d.bar) { st.sel = +d.bar; render(); return; }
+    if (d.uf) { st.uf = d.uf; render(); return; }
+    if (d.csv) { d.csv === 'users' ? csvUsers() : d.csv === 'rev' ? csvRev() : csvWl(); return; }
+    if (d.go) { const [tab, sub] = d.go.split(':'); st.tab = tab; if (tab === 'creators' && sub) st.uf = sub; if (tab === 'crm' && sub) st.cf = sub; if (tab === 'feedback') st.ff = 'novo'; render(); if (sub === 'erros') document.getElementById('erros')?.scrollIntoView(); else window.scrollTo(0, 0); return; }
+    if (d.ff) { st.ff = d.ff; st.fopen = null; render(); return; }
+    if (d.fopen) { st.fopen = st.fopen === d.fopen ? null : d.fopen; st.fst = null; render(); if (st.fopen) $('freply')?.focus(); return; }
+    if (d.fst) { st.fst = d.fst; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
+    if (d.fsave) {
+      const f = st.fb.find(x => x.id === d.fsave), reply = ($('freply') || {}).value?.trim() || '';
+      const status = st.fst || (reply && reply !== (f.reply || '') ? 'resolvido' : f.status);
+      t.disabled = true; const r = await sb.rpc('admin_feedback_update', { p_id: f.id, p_status: status, p_reply: reply || null }); t.disabled = false;
+      if (r.error) { toast('Não consegui salvar.'); return; }
+      f.status = status; if (reply && reply !== f.reply) { f.reply = reply; f.replied_at = new Date().toISOString(); }
+      st.fopen = null; st.fst = null; toast(reply ? 'Resposta enviada pra ela 💌' : 'Salvo'); render(); return;
+    }
+    if (d.rmpay) {
+      if (st.sure !== d.rmpay) { st.sure = d.rmpay; render(); setTimeout(() => { if (st.sure === d.rmpay) { st.sure = null; if (st.tab === 'financas') render(); } }, 4000); return; }
+      t.disabled = true; const r = await sb.rpc('admin_delete_payment', { p_id: d.rmpay });
+      if (r.error) { t.disabled = false; toast('Não consegui apagar.'); return; }
+      st.rev = st.rev.filter(x => x.id !== d.rmpay); st.sure = null; toast('Pagamento apagado'); render(); return;
+    }
+    if (d.more !== undefined) { st.wlim += 50; render(); return; }
+    if (d.open) {
+      st.open = st.open === d.open ? null : d.open; render();
+      if (st.open && !st.uscr[st.open]) { const id = st.open; const r = await sb.rpc('admin_user_screens', { p_user: id }); st.uscr[id] = r.error ? [] : r.data || []; if (st.tab === 'creators') render(); }
+      return;
+    }
+    if (d.gift) { const [id, m] = d.gift.split('|'); st.plan[id] = 'pro'; document.querySelectorAll('[data-plan]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.plan === 'pro')));
+      const el = $('puntil'), note = $('pnote');
+      if (+m) { const x = new Date(todayStr() + 'T12:00:00'); x.setMonth(x.getMonth() + +m); const ds = x.toLocaleDateString('en-CA'); if (el) el.value = ds;
+        const br = ds.split('-').reverse().join('/'); if (note) note.value = +m === 36 ? `Cria Beta · presente até ${br} · depois R$ 24,90 de fundadora` : `Cortesia de 1 mês · até ${br}`; }
+      else if (el) el.value = '';
+      toast('Confere e toque em Salvar plano'); return; }
+    if (d.plan) { st.plan[st.open] = d.plan; t.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); return; }
+    if (d.saveplan) {
+      const id = d.saveplan, u = st.users.find(x => x.user_id === id), plan = st.plan[id] || u.plan, note = ($('pnote') || {}).value?.trim() || null;
+      t.disabled = true;
+      const r = await sb.rpc('admin_set_plan', { p_user: id, p_plan: plan, p_note: note });
+      if (r.error) { t.disabled = false; toast('Não consegui salvar. Tenta de novo.'); return; }
+      const until = ($('puntil') || {}).value || null, curU = u.plan_until ? String(u.plan_until).slice(0, 10) : null;
+      if (until !== curU) {
+        const r2 = await sb.rpc('admin_set_until', { p_user: id, p_until: until });
+        if (r2.error) { t.disabled = false; toast(/admin_set_until|function|schema cache/i.test(r2.error.message) ? 'Plano salvo. Pra salvar a data, rode o fundadora.sql no Supabase.' : 'Plano salvo, mas não consegui salvar a data.'); return; }
+        u.plan_until = until;
+      }
+      t.disabled = false;
+      if (u.plan !== plan) u.plan_since = new Date().toISOString();
+      u.plan = plan; u.plan_note = note; delete st.plan[id];
+      st.ov && (st.ov.pro = st.users.filter(x => x.plan === 'pro' && !x.is_admin).length);
+      toast(plan === 'pro' ? 'Agora ela é Pro ✨' : 'Plano Grátis salvo'); render(); return;
+    }
+    if (d.rm) {
+      if (st.sure !== d.rm) { st.sure = d.rm; render(); setTimeout(() => { if (st.sure === d.rm) { st.sure = null; if (st.tab === 'lista') render(); } }, 4000); return; }
+      t.disabled = true;
+      const r = await sb.rpc('admin_waitlist_remove', { p_id: d.rm });
+      if (r.error) { t.disabled = false; toast('Não consegui remover.'); return; }
+      st.wl = st.wl.filter(w => w.id !== d.rm); st.sure = null; if (st.ov) st.ov.waitlist = st.wl.length;
+      toast('Removida da lista'); render(); return;
+    }
+  });
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'payf') return; e.preventDefault();
+    const f = e.target, user = f.user.value || null, amount = Number(String(f.amount.value).replace(',', '.'));
+    if (!user && !f.payer.value.trim()) { toast('Escolha a creator ou digite o nome'); return; }
+    if (!(amount >= 0)) { toast('Confere o valor'); return; }
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
+    const r = await sb.rpc('admin_add_payment', { p_user: user, p_amount: amount, p_paid: f.paid.value, p_method: f.method.value, p_period: f.period.value, p_note: f.note.value.trim() || null, p_payer: f.payer.value.trim() || null });
+    if (r.error) { btn.disabled = false; toast('Não consegui registrar.'); return; }
+    const [rev, users] = await Promise.all([sb.rpc('admin_revenue'), sb.rpc('admin_users')]);
+    if (!rev.error) st.rev = rev.data || []; if (!users.error) st.users = users.data || [];
+    toast('Pagamento registrado 💸'); render();
+  });
+  document.addEventListener('input', e => {
+    const q = e.target.dataset && e.target.dataset.q; if (!q) return;
+    if (q === 'c') return;
+    if (q === 'u') st.uq = e.target.value; else { st.wq = e.target.value; st.wlim = 50; }
+    const pos = e.target.selectionStart; render();
+    const el = document.querySelector(`[data-q="${q}"]`); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (_) {} }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.matches('[data-sort]')) { st.us = e.target.value; render(); }
+    if (e.target.matches('[data-wk]')) { st.wk = e.target.value; st.wlim = 50; render(); }
+  });
+
+  /* =========== ferramentas da fundadora: Radar, CRM, Momentos (supabase/fundadora.sql) =========== */
+  Object.assign(st, { fd: null, crm: null, mom: null, momStats: null, fundMissing: false, rOpen: null, rSaved: false, cf: 'ativos', ck: 'todos', cq: '', copen: null, clog: {}, momMsg: {}, momSent: {} });
+  async function loadFund() {
+    const [fd, crm, mom, ms] = await Promise.all([sb.rpc('admin_founder', { p_days: 30 }), sb.rpc('admin_crm'), sb.rpc('admin_moments'), sb.rpc('admin_moments_stats')]);
+    if ([fd, crm, mom].some(x => x.error && /admin_founder|admin_crm|admin_moments|function|schema cache/i.test(x.error.message))) { st.fundMissing = true; render(); return; }
+    st.fd = fd.error ? [] : fd.data || []; st.crm = crm.error ? [] : crm.data || []; st.mom = mom.error ? [] : mom.data || []; st.momStats = ms.error ? null : ms.data;
+    render();
+  }
+  const fundMiss = () => `<div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/fundadora.sql</b> no SQL Editor do Supabase (depois do admin.sql) e atualize esta página.</p></div>`;
+  function fundBadges() {
+    const c = $('crmBadge'), m = $('momBadge'), n1 = st.crm ? crmDue().length : 0, n2 = st.mom ? st.mom.length : 0;
+    if (c) { c.hidden = !n1; c.textContent = n1; } if (m) { m.hidden = !n2; m.textContent = n2; }
+  }
+  const longDate = d => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00'); const s = x.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); return s.charAt(0).toUpperCase() + s.slice(1); };
+  const safeUrl = u => /^https?:\/\//i.test(String(u || '')) ? String(u) : '';
+
+  /* ---- Radar ---- */
+  function radarMini() {
+    if (!st.fd || !st.fd.length) return '';
+    const r = st.fd[0], d = r.data || {}, isToday = String(r.date).slice(0, 10) === todayStr();
+    return `<button class="rd-mini" data-tab-go="radar"><span class="eb">${isToday ? 'Radar da fundadora · hoje' : 'Último Radar · ' + dt(r.date)}${r.done ? ' · lido ✓' : ''}</span>
+      <b>${esc((d.lesson && d.lesson.title) || d.headline || 'Seu insight do dia')}</b><span>${esc((d.news && d.news.title) || '')}</span></button>`;
+  }
+  function radarDay(r) {
+    const d = r.data || {}, n = d.news || {}, l = d.lesson || {}, ds = String(r.date).slice(0, 10);
+    return `<div class="rd-hero"><span class="eb">${esc(longDate(ds))}${ds === todayStr() ? ' · hoje' : ''}</span><h1>${esc(d.headline || 'Seu Radar de hoje')}</h1></div>
+      <div class="rd-grid">
+        ${l.title ? `<section class="card rd"><span class="k">🎓 Aprendizado do dia${l.area ? ' · ' + esc(l.area) : ''}</span><h2>${esc(l.title)}</h2>
+          ${l.idea ? `<p>${esc(l.idea)}</p>` : ''}${l.example ? `<p class="sub" style="font-size:14px"><b>Exemplo:</b> ${esc(l.example)}</p>` : ''}
+          ${l.action ? `<div class="act"><b>Faça hoje no CriaHub</b>${esc(l.action)}</div>` : ''}
+          ${l.source ? `<span class="src">Fonte: ${safeUrl(l.url) ? `<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.source)}</a>` : esc(l.source)}</span>` : ''}</section>` : ''}
+        ${n.title ? `<section class="card rd"><span class="k">📰 Notícia do dia${n.when ? ' · ' + esc(n.when) : ''}</span><h2>${esc(n.title)}</h2>
+          ${n.summary ? `<p>${esc(n.summary)}</p>` : ''}${n.why ? `<div class="why"><b>O que isso ensina pra fundadora</b>${esc(n.why)}</div>` : ''}
+          ${n.source ? `<span class="src">Fonte: ${safeUrl(n.url) ? `<a href="${esc(safeUrl(n.url))}" target="_blank" rel="noopener">${esc(n.source)}</a>` : esc(n.source)}</span>` : ''}</section>` : ''}
+      </div>
+      ${d.question ? `<div class="rd-q">💭 ${esc(d.question)}</div>` : ''}
+      <div class="rd-acts"><button class="btn sm${r.done ? ' ghost' : ''}" data-rdone="${ds}">${r.done ? 'Lido ✓' : 'Marcar como lido'}</button>
+        <button class="btn ghost sm" data-rsave="${ds}">${r.saved ? '⭐ Salvo' : '☆ Salvar'}</button>
+        <input id="rnote" maxlength="1000" placeholder="Sua anotação: o que você vai aplicar?" value="${esc(r.note || '')}"><button class="btn ghost sm" data-rnote="${ds}">Salvar anotação</button></div>`;
+  }
+  function vRadar() {
+    if (st.fundMissing) return `<h1>Radar da fundadora</h1>${fundMiss()}`;
+    if (!st.fd) return '<div class="loading">Carregando…</div>';
+    const L = st.fd, cur = L.find(r => String(r.date).slice(0, 10) === st.rOpen) || L[0];
+    const past = L.filter(r => r !== cur && (!st.rSaved || r.saved));
+    if (!L.length) return `<h1>Radar da fundadora ☕</h1><p class="sub">Todo dia, às 7h, uma notícia de marketing e um aprendizado pra você crescer junto com o CriaHub.</p>
+      <div class="empty" style="margin-top:16px">O primeiro Radar chega amanhã de manhã ✨</div>`;
+    return `${radarDay(cur)}
+      <section class="sec"><div class="sec-h"><div><h2>Dias anteriores</h2><p class="sub">Toque pra reler. Os salvos ficam guardados.</p></div>
+        <div class="chips"><button class="chip" data-rsf="0" aria-pressed="${!st.rSaved}">Todos</button><button class="chip" data-rsf="1" aria-pressed="${st.rSaved}">⭐ Salvos</button></div></div>
+        <div class="list">${past.length ? past.map(r => { const d = r.data || {}; return `<button class="rd-past" data-ropen="${String(r.date).slice(0, 10)}"><span class="d">${dt(r.date).slice(0, 5)}</span><span style="min-width:0"><b>${esc((d.lesson && d.lesson.title) || d.headline || '')}</b><small>${esc((d.news && d.news.title) || '')}</small></span><span>${r.saved ? '⭐' : ''}${r.done ? ' ✓' : ''}</span></button>`; }).join('') : '<div class="empty">Nada por aqui ainda.</div>'}</div></section>`;
+  }
+
+  /* ---- CRM ---- */
+  const CK = { testadora: 'Testadora', afiliada: 'Afiliada', creator: 'Creator', lista: 'Lista de espera', parceria: 'Parceria', imprensa: 'Imprensa', marca: 'Marca', outro: 'Outro' };
+  const CS = { novo: 'Novo', contatada: 'Contatada', conversando: 'Conversando', fechado: 'Fechado', pausado: 'Pausado' };
+  const crmDue = () => (st.crm || []).filter(c => c.next_date && String(c.next_date).slice(0, 10) <= todayStr() && c.stage !== 'fechado' && c.stage !== 'pausado');
+  function crmList() {
+    const q = st.cq.trim().toLowerCase();
+    const ok = c => (st.cf === 'todos' || (st.cf === 'hoje' ? crmDue().includes(c) : st.cf === 'ativos' ? c.stage !== 'fechado' && c.stage !== 'pausado' : c.stage === st.cf))
+      && (st.ck === 'todos' || c.kind === st.ck) && (!q || [c.name, c.email, c.instagram, c.whatsapp, c.notes].join(' ').toLowerCase().includes(q));
+    return (st.crm || []).filter(c => c.id === st.copen || ok(c));
+  }
+  function crmForm(c) {
+    const v = c || {}, o = (O, cur) => Object.entries(O).map(([k, l]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${l}</option>`).join('');
+    return `<form class="crm-form" id="crmf" data-id="${esc(v.id || '')}">
+      <label>Nome<input name="name" required maxlength="100" value="${esc(v.name || '')}" placeholder="Ex.: Julia"></label>
+      <label>Quem é<select name="kind">${o(CK, v.kind || 'testadora')}</select></label>
+      <label>Etapa<select name="stage">${o(CS, v.stage || 'novo')}</select></label>
+      <label>Instagram<input name="instagram" maxlength="60" value="${esc(v.instagram ? '@' + v.instagram : '')}" placeholder="@perfil"></label>
+      <label>WhatsApp<input name="whatsapp" maxlength="30" inputmode="tel" value="${esc(v.whatsapp || '')}" placeholder="61 99999-9999"></label>
+      <label>E-mail<input name="email" type="email" maxlength="160" value="${esc(v.email || '')}"></label>
+      <label>Próximo follow-up<input name="next_date" type="date" value="${esc(v.next_date ? String(v.next_date).slice(0, 10) : '')}"></label>
+      <label class="full" style="grid-column:2/-1">Anotações<input name="notes" maxlength="2000" value="${esc(v.notes || '')}" placeholder="O que combinaram, do que ela gosta, como conheceu"></label>
+      <div class="full planbox"><button class="btn sm" type="submit">${v.id ? 'Salvar' : 'Adicionar contato'}</button>${v.id ? `<button type="button" class="btn danger sm${st.sure === v.id ? ' sure' : ''}" data-crmdel="${v.id}">${st.sure === v.id ? 'Confirmar' : 'Apagar'}</button>` : '<button type="button" class="btn ghost sm" data-crmcancel="1">Cancelar</button>'}</div></form>`;
+  }
+  function crmCard(c) {
+    const open = st.copen === c.id, ig = c.instagram, wa = waNum(c.whatsapp), due = c.next_date && String(c.next_date).slice(0, 10) <= todayStr() && c.stage !== 'fechado' && c.stage !== 'pausado';
+    const L = st.clog[c.id];
+    return `<article class="person crm-c"><button class="head" data-copen="${c.id}" aria-expanded="${open}"><span class="av">${esc(initials(c.name))}</span>
+      <span style="min-width:0"><span class="nm">${esc(c.name)} <span class="pill">${CK[c.kind] || c.kind}</span><span class="pill${c.stage === 'fechado' ? ' ok' : c.stage === 'pausado' ? ' warn' : c.stage === 'conversando' ? ' me' : ''}">${CS[c.stage] || c.stage}</span>${c.plan ? `<span class="pill${c.plan === 'pro' ? ' pro' : ''}">tem conta · ${c.plan === 'pro' ? 'Pro' : 'Grátis'}</span>` : ''}</span>
+        <span class="em pv">${[c.instagram ? '@' + esc(c.instagram) : '', esc(c.email || '')].filter(Boolean).join(' · ')}</span>
+        <span class="meta">${c.next_date ? `<span class="${due ? 'crm-due' : ''}">Follow-up ${due && String(c.next_date).slice(0, 10) < todayStr() ? 'atrasado: ' : ''}${dt(c.next_date)}</span> · ` : ''}${c.last_log ? 'Última conversa: ' + esc(String(c.last_log).slice(0, 60)) : 'Sem conversa anotada'}</span></span>
+      <span class="right">${c.logs ? `<b>${nf(c.logs)}</b>${c.logs === 1 ? 'conversa' : 'conversas'}` : ''}</span></button>
+      ${open ? `<div class="det">
+        <div class="links" style="margin-top:0">${wa ? `<a class="pv" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${ig ? `<a class="pv" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Direct</a><a class="pv" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">Perfil</a>` : ''}${c.email ? `<a class="pv" href="${esc(gmail(c.email))}" target="_blank" rel="noopener">E-mail</a>` : ''}</div>
+        <div><h3>Próximo follow-up</h3><div class="chips"><button class="chip" data-cnext="${c.id}|1">Amanhã</button><button class="chip" data-cnext="${c.id}|3">Em 3 dias</button><button class="chip" data-cnext="${c.id}|7">Em 1 semana</button><button class="chip" data-cnext="${c.id}|0">Sem follow-up</button></div></div>
+        <div><h3>Conversas</h3><div class="crm-add"><input id="clog" maxlength="1000" placeholder="O que vocês conversaram? Ex.: mandei o convite, ela topou testar"><button class="btn sm" data-caddlog="${c.id}">Anotar</button></div>
+          <div class="crm-log" style="margin-top:8px">${!L ? '<p class="sub">Carregando…</p>' : L.length ? L.map(x => `<div>${esc(x.body)}<small>${dtt(x.created_at)}</small></div>`).join('') : '<p class="sub">Nenhuma conversa anotada ainda.</p>'}</div></div>
+        <div><h3>Dados</h3>${crmForm(c)}</div></div>` : ''}</article>`;
+  }
+  function vCrm() {
+    if (st.fundMissing) return `<h1>CRM</h1>${fundMiss()}`;
+    if (!st.crm) return '<div class="loading">Carregando…</div>';
+    const all = st.crm, L = crmList(), n = k => k === 'ativos' ? all.filter(c => c.stage !== 'fechado' && c.stage !== 'pausado').length : k === 'hoje' ? crmDue().length : all.filter(c => c.stage === k).length;
+    return `<div class="sec-h"><div><h1>CRM da fundadora</h1><p class="sub">Testadoras, afiliadas, creators, parcerias e imprensa: em que pé está cada conversa e quando chamar de novo.</p></div>
+      <div class="planbox"><button class="btn ghost sm" data-crmimport="1">Trazer da lista e do app</button><button class="btn sm" data-copen="new">+ Novo contato</button></div></div>
+      ${st.copen === 'new' ? `<section class="card" style="margin-top:12px"><h2 style="margin-bottom:12px">Novo contato</h2>${crmForm(null)}</section>` : ''}
+      <div class="crm-st">${[['hoje', 'Chamar hoje'], ['ativos', 'Em andamento'], ['novo', 'Novos'], ['conversando', 'Conversando'], ['fechado', 'Fechados'], ['pausado', 'Pausados']].map(([k, l]) => `<button data-cf="${k}" aria-pressed="${st.cf === k}"><b>${nf(n(k))}</b><span>${l}</span></button>`).join('')}</div>
+      <div class="tools" style="margin-top:0"><input class="search" type="search" placeholder="Buscar nome, @, e-mail ou anotação" value="${esc(st.cq)}" data-q="c" aria-label="Buscar no CRM">
+        <select class="sel" data-ck aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(CK).map(([k, l]) => `<option value="${k}"${st.ck === k ? ' selected' : ''}>${l}</option>`).join('')}</select>
+        <button class="chip" data-cf="todos" aria-pressed="${st.cf === 'todos'}">Ver todos · ${nf(all.length)}</button></div>
+      <div class="list">${L.length ? L.map(crmCard).join('') : `<div class="empty">${all.length ? 'Ninguém com esse filtro.' : 'Seu CRM está vazio. Toque em <b>Trazer da lista e do app</b> pra começar com quem já chegou, ou adicione suas testadoras.'}</div>`}</div>`;
+  }
+
+  /* ---- Momentos ---- */
+  const brDate = r => { const x = String(r || '').slice(0, 10).split('-'); return x.length === 3 ? `${x[2]}/${x[1]}` : ''; };
+  const MK = {
+    aniversario: ['🎂', d => `Aniversário ${d === todayStr() ? 'hoje' : 'em ' + dt(d).slice(0, 5)}`, n => `Oi, ${n}! Vi aqui que o seu aniversário tá chegando 🎂 Quero te desejar um ano lindo, cheio de marcas incríveis e de conquistas. Obrigada por fazer parte do CriaHub! Com carinho, Naomi`],
+    primeira_marca: ['🎉', () => 'Organizou a primeira marca', n => `${n}, passando pra comemorar com você: primeira marca organizada no CriaHub! 🎉 Que seja a primeira de muitas. Se precisar de qualquer coisa, me chama aqui. Naomi`],
+    primeiro_video: ['🎬', () => 'Primeiro vídeo no ar', n => `${n}, primeiro vídeo no ar com o CriaHub! 🎬 Passei só pra comemorar com você. Bora pro próximo! Naomi`],
+    primeiro_pagamento: ['💸', () => 'Primeiro pagamento recebido', n => `${n}, primeiro pagamento registrado no CriaHub! 💸 Dinheiro de creator merece comemoração. Fico muito feliz de fazer parte disso. Naomi`],
+    '30_dias': ['🗓️', () => '30 dias de CriaHub', n => `${n}, hoje faz 30 dias que você está no CriaHub! 🗓️ Obrigada por confiar. Me conta: o que mais te ajudou até agora e do que você sente falta? A sua resposta muda o app. Naomi`],
+    virou_pro: ['✨', () => 'Virou Pro', n => `${n}, bem-vinda ao CriaHub Pro! ✨ Obrigada demais por apoiar o app. Qualquer dúvida, me chama direto aqui. Naomi`],
+    pro_vence: ['⏳', () => 'Pro vence em 3 dias', (n, m) => `Oi, ${n}! Passando pra avisar que o seu CriaHub Pro vence dia ${brDate(m && m.ref)}. Pra continuar com tudo do Pro, é só renovar em criahub.app.br/#pro (Pix, boleto ou cartão). Se a sua assinatura é no cartão, a renovação é automática. Qualquer dúvida, me chama! Naomi`],
+    pro_venceu: ['🔔', () => 'Pro venceu e não renovou', (n, m) => `Oi, ${n}! O seu CriaHub Pro venceu dia ${brDate(m && m.ref)}. Tudo o que você cadastrou continua salvo. Pra voltar a usar o Pro, é só renovar em criahub.app.br/#pro. Se você já pagou, me avisa que eu confiro na hora. Naomi`],
+    sumida: ['💌', () => 'Sumiu há uma semana', n => `Oi, ${n}! Senti sua falta no CriaHub 💌 Tá tudo bem? Se alguma coisa travou ou ficou confusa, me conta que eu te ajudo. Naomi`]
+  };
+  const momKey = m => m.user_id + '|' + m.kind + '|' + (m.ref || '');
+  const first = s => String(s || '').trim().split(/\s+/)[0] || '';
+  function vMom() {
+    if (st.fundMissing) return `<h1>Momentos</h1>${fundMiss()}`;
+    if (!st.mom) return '<div class="loading">Carregando…</div>';
+    const L = st.mom, s30 = st.momStats ? st.momStats.sent30 : 0, a30 = st.momStats ? st.momStats.auto30 || 0 : 0, rec = (st.momStats && st.momStats.recent) || [];
+    const brH = +new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }) % 24, today = todayStr();
+    const when = m => m.kind === 'aniversario' ? (String(m.happened).slice(0, 10) === today ? (brH < 10 ? 'O e-mail de parabéns sai sozinho hoje às 10h' : 'O e-mail de parabéns já devia ter saído hoje: confira o Gmail') : `O e-mail de parabéns sai sozinho no dia, ${dt(m.happened).slice(0, 5)}, às 10h`)
+      : `Aconteceu em ${dt(m.happened).slice(0, 5)} · o recado sai sozinho ${brH < 10 ? 'hoje' : 'amanhã'} às 10h`;
+    return `<div class="sec-h"><div><h1>Momentos</h1><p class="sub">Todo dia às 10h o recado de cada conquista sai sozinho: e-mail pelo Gmail do CriaHub e notificação no celular dela. Aqui fica só o que ainda não saiu. Se quiser mandar antes, edite o texto e toque em Mandar e-mail agora: ele sai na hora.</p></div>
+      <span class="pill ok" style="font-size:12px">${nf(s30 + a30)} ${s30 + a30 === 1 ? 'recado' : 'recados'} em 30 dias${a30 ? ` · ${nf(a30)} ${a30 === 1 ? 'saiu sozinho' : 'saíram sozinhos'}` : ''}</span></div>
+      <div class="list" style="margin-top:12px">${L.length ? L.map(m => {
+        const k = momKey(m), K = MK[m.kind] || ['⭐', () => m.kind, n => `Oi, ${n}!`], txt = st.momMsg[k] ?? K[2](first(m.name) || 'cria', m), wa = waNum(m.whatsapp), ig = m.instagram;
+        return `<article class="person mom"><div class="top1"><span class="em1" aria-hidden="true">${K[0]}</span><div style="min-width:0"><div class="t">${esc(K[1](String(m.happened).slice(0, 10)))}</div>
+          <div class="em pv">${esc(m.name || '')}${ig ? ' · @' + esc(ig) : ''}</div><div class="em" style="margin-top:2px">${esc(when(m))}</div></div></div>
+          <textarea class="ta" data-mtxt="${esc(k)}" maxlength="1000" aria-label="Recado">${esc(txt)}</textarea>
+          <div class="mom-acts">${wa ? `<a class="btn sm" href="https://wa.me/${wa}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" data-msent="${esc(k)}">WhatsApp</a>` : ''}
+            ${ig ? `<a class="btn sm${wa ? ' ghost' : ''}" href="https://ig.me/m/${encodeURIComponent(ig)}" target="_blank" rel="noopener" data-mcopy="${esc(k)}">Direct (copia o texto)</a>` : ''}
+            ${m.email ? `<button class="btn sm${wa || ig ? ' ghost' : ''}" data-msend="${esc(k)}" title="Manda agora pelo Gmail do CriaHub, com o texto acima">Mandar e-mail agora</button>` : ''}
+            <button class="btn ghost sm" data-mcopy="${esc(k)}">Copiar</button>
+            <span style="flex:1"></span><button class="btn sm${st.momSent[k] ? '' : ' ghost'}" data-mdone="${esc(k)}">${st.momSent[k] ? 'Já mandei: marcar como enviado' : 'Marcar como enviado'}</button><button class="btn ghost sm" data-mskip="${esc(k)}">Pular</button></div></article>`; }).join('')
+        : '<div class="empty">Nenhum momento novo agora. Quando uma creator fechar a primeira marca, fizer 30 dias de app ou estiver de aniversário, aparece aqui ✨</div>'}</div>
+      ${rec.length ? `<h2 style="margin-top:22px">Saíram sozinhos</h2><div class="list" style="margin-top:8px">${rec.map(r => `<div class="person" style="padding:10px 14px"><div class="t" style="font-size:14px">${(MK[r.kind] || ['⭐'])[0]} ${esc(r.name || '')} · ${esc(MK[r.kind] ? MK[r.kind][1](String(r.done_at).slice(0, 10)) : r.kind)}</div><div class="em">${esc(dt(r.done_at))}</div></div>`).join('')}</div>` : ''}
+      <p class="note">Aparecem: aniversário (7 dias antes), Pro vencendo (3 dias antes) e Pro vencido (no dia seguinte, se não renovou), primeira marca, primeiro vídeo no ar, primeiro pagamento, 30 dias de app, virou Pro e quem sumiu há uma semana. A data é quando aconteceu, não um prazo pra você. Se um card fica aqui mais de um dia, o e-mail não está saindo: confira a senha de app do Gmail nos segredos do Supabase. O painel só conta o que ela cadastrou, sem abrir o conteúdo.</p>`;
+  }
+  async function momFinish(k, how) {
+    const m = st.mom.find(x => momKey(x) === k); if (!m) return;
+    const r = await sb.rpc('admin_moment_done', { p_user: m.user_id, p_kind: m.kind, p_ref: m.ref || '', p_how: how });
+    if (r.error) { toast('Não consegui salvar.'); return; }
+    st.mom = st.mom.filter(x => momKey(x) !== k); if (how === 'enviado' && st.momStats) st.momStats.sent30++;
+    toast(how === 'enviado' ? 'Recado marcado como enviado 💌' : 'Pulado'); render();
+  }
+  const copyTxt = async t => { try { await navigator.clipboard.writeText(t); return true; } catch (_) { return false; } };
+
+  document.addEventListener('click', async e => {
+    const t = e.target.closest('button, a'); if (!t) return; const d = t.dataset;
+    if (d.tabGo) { st.tab = d.tabGo; try { sessionStorage.setItem('criahub:admtab', st.tab); } catch (_) {} render(); window.scrollTo(0, 0); return; }
+    if (d.ropen) { st.rOpen = d.ropen; render(); window.scrollTo(0, 0); return; }
+    if (d.rsf !== undefined) { st.rSaved = d.rsf === '1'; render(); return; }
+    if (d.rdone || d.rsave || d.rnote) {
+      const ds = d.rdone || d.rsave || d.rnote, r = st.fd.find(x => String(x.date).slice(0, 10) === ds); if (!r) return;
+      const args = { p_date: ds, p_saved: d.rsave ? !r.saved : null, p_done: d.rdone ? !r.done : null, p_note: d.rnote ? (($('rnote') || {}).value || '').trim() : null };
+      t.disabled = true; const res = await sb.rpc('admin_founder_mark', args); t.disabled = false;
+      if (res.error) { toast('Não consegui salvar.'); return; }
+      if (d.rsave) r.saved = !r.saved; if (d.rdone) r.done = !r.done; if (d.rnote) r.note = args.p_note;
+      toast(d.rnote ? 'Anotação salva' : d.rsave ? (r.saved ? 'Salvo ⭐' : 'Tirado dos salvos') : (r.done ? 'Lido ✓' : 'Desmarcado')); render(); return;
+    }
+    if (d.cf) { st.cf = d.cf; st.copen = null; render(); return; }
+    if (d.crmcancel) { st.copen = null; render(); return; }
+    if (d.copen) {
+      st.copen = st.copen === d.copen ? null : d.copen; st.sure = null; render();
+      if (st.copen && st.copen !== 'new' && !st.clog[st.copen]) { const id = st.copen, r = await sb.rpc('admin_crm_log', { p_id: id }); st.clog[id] = r.error ? [] : r.data || []; if (st.tab === 'crm') render(); }
+      return;
+    }
+    if (d.crmimport) { t.disabled = true; const r = await sb.rpc('admin_crm_import'); if (r.error) { t.disabled = false; toast('Não consegui trazer agora.'); return; } const c = await sb.rpc('admin_crm'); if (!c.error) st.crm = c.data || []; toast(r.data ? `${r.data} ${r.data === 1 ? 'contato novo' : 'contatos novos'} no CRM` : 'Todo mundo já estava no CRM'); render(); return; }
+    if (d.cnext) { const [id, n] = d.cnext.split('|'), c = st.crm.find(x => x.id === id); const nd = +n ? new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : null;
+      const r = await sb.rpc('admin_crm_quick', { p_id: id, p_stage: null, p_next: nd, p_clear_next: !nd }); if (r.error) { toast('Não consegui salvar.'); return; }
+      c.next_date = nd; toast(nd ? 'Follow-up marcado pra ' + dt(nd) : 'Sem follow-up'); render(); return; }
+    if (d.caddlog) { const id = d.caddlog, body = (($('clog') || {}).value || '').trim(); if (!body) { $('clog')?.focus(); return; }
+      t.disabled = true; const r = await sb.rpc('admin_crm_add_log', { p_id: id, p_body: body }); t.disabled = false; if (r.error) { toast('Não consegui anotar.'); return; }
+      const c = st.crm.find(x => x.id === id); (st.clog[id] = st.clog[id] || []).unshift({ id: 'n' + Date.now(), body, created_at: new Date().toISOString() });
+      if (c) { c.last_log = body; c.logs = (c.logs || 0) + 1; if (c.stage === 'novo') c.stage = 'contatada'; } toast('Conversa anotada'); render(); return; }
+    if (d.crmdel) { if (st.sure !== d.crmdel) { st.sure = d.crmdel; render(); return; }
+      const r = await sb.rpc('admin_crm_delete', { p_id: d.crmdel }); if (r.error) { toast('Não consegui apagar.'); return; }
+      st.crm = st.crm.filter(x => x.id !== d.crmdel); st.copen = null; st.sure = null; toast('Contato apagado'); render(); return; }
+    if (d.mcopy) { const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.mcopy)}"]`), ok = await copyTxt((ta && ta.value) || st.momMsg[d.mcopy] || ''); st.momSent[d.mcopy] = true; if (t.tagName === 'BUTTON') toast(ok ? 'Recado copiado ✨' : 'Não consegui copiar'); else toast(ok ? 'Texto copiado. No Direct dela, cole e envie. Depois volte e toque em “Já mandei”.' : 'Não consegui copiar. Copie o texto à mão.'); setTimeout(render, 400); return; }
+    if (d.msent) { st.momSent[d.msent] = true; setTimeout(render, 400); return; }
+    if (d.vsend) {   /* lembrete de vencimento do Pro, com texto pronto, enviado na hora */
+      const u = (st.users || []).find(x => x.user_id === d.vsend); if (!u) return;
+      const n = first(u.name) || 'cria', late = daysUntil(u.plan_until) < 0, dd = brDate(u.plan_until);
+      const txt = late ? (MK.pro_venceu[2](n, { ref: u.plan_until })) : (MK.pro_vence[2](n, { ref: u.plan_until }));
+      t.disabled = true; t.textContent = 'Mandando…'; let msg = 'sem resposta';
+      try { const { data: ss } = await sb.auth.getSession(); const tok = ss && ss.session && ss.session.access_token;
+        const r = await fetch(CFG.url + '/functions/v1/boas-vindas', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.key, Authorization: 'Bearer ' + (tok || '') }, body: JSON.stringify({ kind: 'recado', user_id: u.user_id, subject: late ? `${n}, seu CriaHub Pro venceu dia ${dd}` : `${n}, seu CriaHub Pro vence dia ${dd}`, text: txt }) });
+        msg = await r.text(); } catch (_) { msg = 'sem internet'; }
+      if (msg === 'enviado') { t.textContent = 'Lembrete enviado ✓'; toast('Lembrete enviado 💌'); return; }
+      t.disabled = false; t.textContent = 'Mandar lembrete';
+      toast(/nope|sem login|401/i.test(msg) ? 'A função boas-vindas ainda está na versão antiga: publique a nova no Supabase.' : 'O e-mail não saiu: ' + String(msg).slice(0, 120)); return; }
+    if (d.msend) {   /* manda o e-mail na hora (função boas-vindas, só pra admin) e tira o card */
+      const m = st.mom.find(x => momKey(x) === d.msend); if (!m) return;
+      const ta = document.querySelector(`[data-mtxt="${CSS.escape(d.msend)}"]`), txt = ((ta && ta.value) || st.momMsg[d.msend] || '').trim(); if (!txt) { toast('Escreva o recado antes'); return; }
+      t.disabled = true; t.textContent = 'Mandando…';
+      let msg = 'sem resposta';
+      try { const { data: ss } = await sb.auth.getSession(); const tok = ss && ss.session && ss.session.access_token;
+        const r = await fetch(CFG.url + '/functions/v1/boas-vindas', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.key, Authorization: 'Bearer ' + (tok || '') }, body: JSON.stringify({ kind: 'recado', user_id: m.user_id, subject: 'Um recado da Naomi, do CriaHub', text: txt }) });
+        msg = await r.text(); } catch (_) { msg = 'sem internet'; }
+      if (msg === 'enviado') { toast('E-mail enviado 💌'); await momFinish(d.msend, 'enviado'); return; }
+      t.disabled = false; t.textContent = 'Mandar e-mail agora';
+      toast(/nope|sem login|401/i.test(msg) ? 'A função boas-vindas ainda está na versão antiga: publique a nova no Supabase.' : 'O e-mail não saiu: ' + String(msg).slice(0, 120)); return; }
+    if (d.mdone) { await momFinish(d.mdone, 'enviado'); return; }
+    if (d.mskip) { await momFinish(d.mskip, 'pulado'); return; }
+  });
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset && el.dataset.mtxt !== undefined) { st.momMsg[el.dataset.mtxt] = el.value; const a = el.closest('.mom').querySelector('a[href^="https://wa.me"]'); if (a) a.href = a.href.split('?')[0] + '?text=' + encodeURIComponent(el.value); return; }
+    if (el.dataset && el.dataset.q === 'c') { st.cq = el.value; const pos = el.selectionStart; render(); const n = document.querySelector('[data-q="c"]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (_) {} } }
+  }, true);
+  document.addEventListener('change', e => { if (e.target.matches('[data-ck]')) { st.ck = e.target.value; render(); } });
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'crmf') return; e.preventDefault();
+    const f = e.target, p = { id: f.dataset.id || null }; ['name', 'kind', 'stage', 'instagram', 'whatsapp', 'email', 'next_date', 'notes'].forEach(k => { p[k] = (f.elements[k].value || '').trim(); });
+    const b = f.querySelector('button[type=submit]'); b.disabled = true;
+    const r = await sb.rpc('admin_crm_save', { p }); b.disabled = false;
+    if (r.error) { toast(/já está no CRM/.test(r.error.message) ? 'Esse e-mail já está no CRM' : 'Não consegui salvar.'); return; }
+    const c = await sb.rpc('admin_crm'); if (!c.error) st.crm = c.data || [];
+    st.copen = p.id ? p.id : null; toast(p.id ? 'Contato salvo' : 'Contato adicionado ✨'); render();
+  });
+
+  /* =========== programa de afiliadas (supabase/afiliadas.sql) =========== */
+  Object.assign(st, { aff: null, affMissing: false, affSure: null });
+  async function loadAff() {
+    const r = await sb.rpc('admin_affiliates');
+    if (r.error) { st.affMissing = /admin_affiliates|function|schema cache/i.test(r.error.message); st.aff = []; } else st.aff = r.data || [];
+    const b = $('affBadge'), n = st.aff.filter(a => Number(a.to_pay) > 0).length; if (b) { b.hidden = !n; b.textContent = n; }
+    if (st.tab === 'afiliadas' || st.tab === 'creators') render();
+  }
+  const brl2 = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
+  function vAff() {
+    if (st.affMissing) return `<h1>Afiliadas</h1><div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/afiliadas.sql</b> no SQL Editor do Supabase e atualize esta página.</p></div>`;
+    const A = st.aff || [], tot = A.reduce((s, a) => s + Number(a.to_pay || 0), 0), paid = A.reduce((s, a) => s + Number(a.paid || 0), 0);
+    return `<h1>Afiliadas</h1>
+      <p class="sub">Todo dia 1 a 10: faça o Pix de cada afiliada com valor a pagar e toque em “Marquei como pago”. Pra criar uma afiliada, abra a pessoa na aba Creators.</p>
+      <div class="kpis" style="margin:14px 0"><div class="kpi"><span>Afiliadas</span><b>${A.filter(a => a.active).length}</b></div><div class="kpi"><span>A pagar</span><b>${brl2(tot)}</b></div><div class="kpi"><span>Já pago</span><b>${brl2(paid)}</b></div></div>
+      ${A.length ? A.map(a => `<article class="card" style="margin-bottom:10px;padding:14px 16px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(a.name)}${a.active ? '' : ' <span class="note">(pausada)</span>'}</b><span class="note" style="margin:0">${a.rate_first !== a.rate_after ? `${a.rate_first}% por ${a.first_months} meses, depois ${a.rate_after}%` : `${a.rate_after}%`}${a.note ? ' · ' + esc(a.note) : ''}</span></div>
+        <p class="sub" style="margin:6px 0">Código <b>${esc(a.code)}</b> · ${a.referred} indicada${a.referred == 1 ? '' : 's'} · ${a.pro_active} no Pro · já recebeu ${brl2(a.paid)}</p>
+        <p class="sub" style="margin:0 0 8px">Pix: ${a.pix_key ? `<b>${esc(a.pix_type || '')} ${esc(a.pix_key)}</b> <button class="chip" data-affcopy="${esc(a.pix_key)}">copiar</button>` : '<i>ainda não cadastrou a chave</i>'}</p>
+        <div class="chips">${Number(a.to_pay) > 0 ? `<button class="btn sm" data-affpaid="${a.user_id}">${st.affSure === a.user_id ? `Confirmar: paguei ${brl2(a.to_pay)}` : `Marquei como pago · ${brl2(a.to_pay)}`}</button>` : '<span class="note" style="margin:0">Nada a pagar agora ✓</span>'}
+          <button class="chip" data-affcopy="https://criahub.app.br/lista?origem=${esc(a.code)}">Link da lista</button><button class="chip" data-affcopy="https://criahub.app.br/?ref=${esc(a.code)}">Link do app</button>
+          <button class="chip" data-afftoggle="${a.user_id}|${a.active ? 0 : 1}">${a.active ? 'Pausar' : 'Reativar'}</button></div>
+      </article>`).join('') : '<p class="sub">Nenhuma afiliada ainda. Abra uma pessoa em Creators e toque em “Tornar afiliada”.</p>'}`;
+  }
+  document.addEventListener('click', async e => {
+    const t = e.target.closest && e.target.closest('[data-affmake],[data-affpaid],[data-afftoggle],[data-affcopy]'); if (!t) return;
+    e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+    if (d.affcopy) { try { await navigator.clipboard.writeText(d.affcopy); toast('Copiado'); } catch (_) { toast('Não consegui copiar'); } return; }
+    if (d.affmake) {
+      const [uid, beta, name] = d.affmake.split('|');
+      const sug = String(name || '').split(/[\s@]/)[0].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const code = (window.prompt('Código do link dela (sem espaço nem acento):', sug) || '').trim(); if (!code) return;
+      const r = await sb.rpc('admin_aff_make', { p_user: uid, p_code: code, p_beta: beta === '1' });
+      if (r.error) { toast(r.error.message.replace(/^.*?:\s*/, '') || 'Não consegui'); return; }
+      toast('Afiliada criada 💸 código ' + r.data.code); loadAff(); return;
+    }
+    if (d.affpaid) {
+      if (st.affSure !== d.affpaid) { st.affSure = d.affpaid; render(); setTimeout(() => { if (st.affSure === d.affpaid) { st.affSure = null; if (st.tab === 'afiliadas') render(); } }, 5000); return; }
+      st.affSure = null; const r = await sb.rpc('admin_aff_paid', { p_user: d.affpaid });
+      if (r.error) { toast('Não consegui marcar'); return; } toast('Marcado como pago ✓'); loadAff(); return;
+    }
+    if (d.afftoggle) { const [uid, on] = d.afftoggle.split('|'); const r = await sb.rpc('admin_aff_toggle', { p_user: uid, p_active: on === '1' }); if (r.error) { toast('Não consegui'); return; } loadAff(); }
+  }, true);
+
+  /* =========== excluir conta (supabase/excluir-conta.sql) =========== */
+  document.addEventListener('click', async e => {
+    const t = e.target.closest && e.target.closest('[data-del]'); if (!t) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const mail = t.dataset.delmail || '';
+    const typed = (window.prompt(`Excluir a conta ${mail} pra sempre?\n\nApaga a conta, tudo que ela cadastrou no app e o e-mail da lista de espera. Não dá pra desfazer.\n\nPra confirmar, digite o e-mail da conta:`) || '').trim().toLowerCase();
+    if (!typed) return;
+    if (typed !== mail.toLowerCase()) { toast('O e-mail não bate. Nada foi excluído.'); return; }
+    const r = await sb.rpc('admin_delete_user', { p_user: t.dataset.del, p_waitlist: true });
+    if (r.error) { toast(/admin_delete_user|schema cache|function/i.test(r.error.message) ? 'Falta rodar supabase/excluir-conta.sql no Supabase' : r.error.message.replace(/^.*?:\s*/, '')); return; }
+    st.users = (st.users || []).filter(u => u.user_id !== t.dataset.del); st.open = null; render(); toast('Conta excluída: ' + mail);
+  }, true);
+  sb && sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') showLogin('Sua sessão terminou. Entre de novo.'); });
+
+  start();
+})();
+</script>
+</body>
+</html>

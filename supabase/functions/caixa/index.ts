@@ -2,6 +2,10 @@
    • POST do Postmark (webhook de entrada, ?t=<segredo>) → guarda remetente, assunto, data e um trechinho
    • POST {action:'lembrar', key} do agendador → 1 lembrete no celular para e-mail sem "Abrir"/"Já vi" há 24h
    • POST {action:'aniver', key} do agendador (9h) → parabéns no celular de quem faz aniversário hoje
+   • POST {action:'aquecer', key} do agendador (a cada minuto, só quando tem alarme vencido) → avisa que o
+     cronômetro do aquecimento acabou (tabela public.warm_alerts, rode supabase/aquecimento-alarme.sql)
+   • POST {action:'novidade', key, news, teste?} (rode supabase/novidade-metricas.sql) → avisa de uma novidade do app
+     por e-mail e no celular, uma vez por creator
    Não guarda o e-mail inteiro, não lê a caixa de ninguém e não usa IA: a classificação é por palavras.
 
    Como ligar (uma vez só), no painel do Supabase:
@@ -75,10 +79,10 @@ async function vapid() {
   webpush.setVapidDetails(env('VAPID_SUBJECT') || 'mailto:contato@criahub.app.br', P, K); return true;
 }
 /* manda pra todos os aparelhos dela; apaga inscrições que não existem mais */
-async function pushTo(uid: string, msg: Record<string, string>) {
+async function pushTo(uid: string, msg: Record<string, string>, ttl = 6 * 3600) {
   const { data: subs } = await sb.from('push_subs').select('endpoint,sub').eq('user_id', uid); let n = 0; const gone: string[] = [];
   for (const s of subs || []) {
-    try { await webpush.sendNotification(s.sub, JSON.stringify(msg), { TTL: 6 * 3600 }); n++; }
+    try { await webpush.sendNotification(s.sub, JSON.stringify(msg), { TTL: ttl, urgency: ttl < 3600 ? 'high' : 'normal' }); n++; }
     catch (e) { const c = (e as { statusCode?: number }).statusCode; if (c === 404 || c === 410) gone.push(s.endpoint); }
   }
   if (gone.length) await sb.from('push_subs').delete().in('endpoint', gone);
@@ -125,6 +129,82 @@ async function aniver() {
   return Response.json({ ok: true, people: (who || []).length, sent });
 }
 
+/* alarme do aquecimento: manda os alarmes vencidos (cada um uma vez só) */
+async function aquecer() {
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
+  const { data: due, error } = await sb.from('warm_alerts').select('id').is('sent_at', null).lte('send_at', new Date().toISOString()).limit(500);
+  if (error) return new Response(error.message, { status: 500 });
+  const ids = (due || []).map(r => r.id); let sent = 0, users = 0;
+  if (ids.length) {
+    /* marca antes de mandar: se o agendador rodar duas vezes, ninguém recebe repetido */
+    const { data: mine } = await sb.from('warm_alerts').update({ sent_at: new Date().toISOString() }).in('id', ids).is('sent_at', null).select('user_id,title,body,tag,url');
+    for (const a of mine || []) { users++; sent += await pushTo(a.user_id, { title: a.title, body: a.body || '', tag: a.tag || 'aquecer', url: a.url || '/#contas', alarm: '1' }, 900); }
+  }
+  await sb.from('warm_alerts').delete().lt('created_at', new Date(Date.now() - 2 * 864e5).toISOString());
+  return Response.json({ ok: true, alarms: users, sent });
+}
+
+/* momentos: todo dia às 10h, o recado de cada conquista sai sozinho (e-mail + notificação).
+   O e-mail vai pela função boas-vindas; só quando ele sai o momento some da aba Momentos do painel. */
+const MOM_PUSH: Record<string, (n: string, ref: string) => [string, string]> = {
+  aniversario: n => [`Feliz aniversário${n ? ', ' + n : ''}! 🎂`, 'Te mandei um recado no e-mail 💌'],
+  primeira_marca: n => [`Primeira marca organizada${n ? ', ' + n : ''}! 🎉`, 'Que seja a primeira de muitas. Te mandei um recado no e-mail 💌'],
+  primeiro_video: n => [`Primeiro vídeo no ar${n ? ', ' + n : ''}! 🎬`, 'Bora pro próximo! Te mandei um recado no e-mail 💌'],
+  primeiro_pagamento: n => [`Primeiro pagamento registrado! 💸`, 'Dinheiro de creator merece comemoração 💌'],
+  '30_dias': n => [`30 dias de CriaHub${n ? ', ' + n : ''}! 🗓️`, 'Obrigada por confiar. Te mandei uma pergunta no e-mail 💌'],
+  virou_pro: n => [`Bem-vinda ao Pro${n ? ', ' + n : ''}! ✨`, 'Tudo do Pro já está liberado na sua conta.'],
+  pro_vence: (n, r) => [`Seu Pro vence dia ${r.slice(8, 10)}/${r.slice(5, 7)} ⏳`, 'Toque pra renovar e continuar com tudo do Pro.'],
+  pro_venceu: n => [`Seu Pro venceu${n ? ', ' + n : ''} 💌`, 'Seus dados continuam salvos. Toque pra renovar.'],
+  sumida: n => [`Senti sua falta${n ? ', ' + n : ''} 💌`, 'Tá tudo bem? Se algo travou, me conta.'],
+};
+async function momentos() {
+  const hook = env('WAITLIST_HOOK_SECRET'), base = Deno.env.get('SUPABASE_URL');
+  if (!hook) return Response.json({ ok: false, why: 'falta o segredo WAITLIST_HOOK_SECRET' });
+  const { data: due, error } = await sb.rpc('moments_auto');
+  if (error) return new Response(error.message, { status: 500 });
+  const push = await vapid(); let mails = 0, pushes = 0; const fails: string[] = [];
+  for (const m of (due || []) as any[]) {
+    if (!m.email || !MOM_PUSH[m.kind]) continue;
+    const body = m.kind === 'virou_pro'
+      ? { kind: 'pro', user_id: m.user_id, email: m.email, name: m.name, ref: m.ref }
+      : { kind: 'momento', moment: m.kind, user_id: m.user_id, email: m.email, name: m.name, ref: m.ref };
+    const r = await fetch(`${base}/functions/v1/boas-vindas`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hook-secret': hook }, body: JSON.stringify(body) }).catch(() => null);
+    const txt = r ? await r.text() : 'sem resposta';
+    if (!r || !r.ok || txt !== 'enviado') { fails.push(`${m.kind}: ${txt.slice(0, 120)}`); continue; }
+    mails++;
+    const n = String(m.name || '').trim().split(/\s+/)[0], [title, msg] = MOM_PUSH[m.kind](n, String(m.ref || ''));
+    if (push && m.kind !== 'aniversario') pushes += await pushTo(m.user_id, { title, body: msg, tag: 'momento-' + m.kind, url: m.kind.startsWith('pro_ven') ? '/#pro' : '/#inicio' });
+  }
+  return Response.json({ ok: true, due: (due || []).length, mails, pushes, fails });
+}
+
+/* novidade do app: e-mail + notificação no celular, uma vez por creator (tabela public.news_sent).
+   {action:'novidade', key, news:'metricas', teste:true} manda só pras admins, pra conferir antes.
+   Manda até 60 por vez (pra função não estourar o tempo); rode de novo que continua de onde parou. */
+const NEWS_PUSH: Record<string, [string, string, string]> = {
+  metricas: ['Novidade: Análise de Métricas 📊', 'Mande os prints das estatísticas do seu vídeo e descubra o que deu certo e o que fazer no próximo.', '/#metricas'],
+};
+async function novidade(news: string, teste: boolean) {
+  const hook = env('WAITLIST_HOOK_SECRET'), base = Deno.env.get('SUPABASE_URL');
+  if (!NEWS_PUSH[news]) return Response.json({ ok: false, why: 'novidade desconhecida' });
+  if (!hook) return Response.json({ ok: false, why: 'falta o segredo WAITLIST_HOOK_SECRET' });
+  const { data: who, error } = await sb.rpc('news_feed', { p_news: news, p_test: teste, p_limit: 60 });
+  if (error) return new Response(error.message, { status: 500 });
+  const push = await vapid(), [title, body, url] = NEWS_PUSH[news]; let mails = 0, pushes = 0; const fails: string[] = [];
+  for (const u of (who || []) as any[]) {
+    let mailed = false;
+    if (u.email) {
+      const r = await fetch(`${base}/functions/v1/boas-vindas`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hook-secret': hook }, body: JSON.stringify({ kind: 'novidade', news, user_id: u.user_id, email: u.email, name: u.name }) }).catch(() => null);
+      const txt = r ? await r.text() : 'sem resposta';
+      if (r && r.ok && txt === 'enviado') { mailed = true; mails++; } else fails.push(`${u.email}: ${txt.slice(0, 120)}`);
+    }
+    const n = push ? await pushTo(u.user_id, { title, body, tag: 'novidade-' + news, url }, 24 * 3600) : 0; pushes += n;
+    if (!teste && (mailed || n)) await sb.from('news_sent').upsert({ user_id: u.user_id, news, mail: mailed, pushes: n });
+  }
+  const { data: left } = teste ? { data: null } : await sb.rpc('news_left', { p_news: news });
+  return Response.json({ ok: true, teste, people: (who || []).length, mails, pushes, faltam: left, fails });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -132,5 +212,8 @@ Deno.serve(async req => {
   let b: Record<string, any> = {}; try { b = await req.json(); } catch { /* vazio */ }
   if (b.action === 'lembrar' && await keyOk('cron', b.key)) return lembrar();
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
+  if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
+  if (b.action === 'momentos' && await keyOk('cron', b.key)) return momentos();
+  if (b.action === 'novidade' && await keyOk('cron', b.key)) return novidade(String(b.news || ''), b.teste === true);
   return new Response('forbidden', { status: 403 });
 });
