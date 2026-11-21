@@ -6,6 +6,8 @@
      cronômetro do aquecimento acabou (tabela public.warm_alerts, rode supabase/aquecimento-alarme.sql)
    • POST {action:'novidade', key, news, teste?} (rode supabase/novidade-metricas.sql) → avisa de uma novidade do app
      por e-mail e no celular, uma vez por creator
+   • POST {action:'dolar', key, min, teste?} (rode supabase/dolar-alta.sql) → nos dias úteis, de hora em hora: se o dólar
+     subiu `min`% ou mais no dia, avisa no celular (uma vez por dia) quem tem ganhos em dólar cadastrados
    Não guarda o e-mail inteiro, não lê a caixa de ninguém e não usa IA: a classificação é por palavras.
 
    Como ligar (uma vez só), no painel do Supabase:
@@ -205,6 +207,30 @@ async function novidade(news: string, teste: boolean) {
   return Response.json({ ok: true, teste, people: (who || []).length, mails, pushes, faltam: left, fails });
 }
 
+/* dólar em alta: aviso no celular pra quem cadastrou ganhos em dólar (marca, pagamento ou outra renda em US$).
+   No máximo uma vez por dia (tabela public.fx_alerts); quem desligou na aba US$ não recebe.
+   {action:'dolar', key, teste:true} manda só pras admins, com a cotação de agora, pra conferir. */
+const brNum = (n: number, d = 2) => n.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+async function dolar(min: number, teste: boolean) {
+  const j = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL').then(r => r.json()).catch(() => null);
+  const q = j && j.USDBRL, rate = +(q?.bid), pct = +(q?.pctChange);
+  if (!rate || !isFinite(pct)) return Response.json({ ok: false, why: 'sem cotação agora (tenta de novo na próxima hora)' });
+  if (!teste && pct < min) return Response.json({ ok: true, avisou: false, rate, pct });
+  const day = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  /* marca o dia antes de mandar: se o agendador rodar duas vezes, ninguém recebe repetido */
+  if (!teste && (await sb.from('fx_alerts').insert({ day, rate, pct })).error) return Response.json({ ok: true, avisou: false, why: 'já avisou hoje', rate, pct });
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
+  const { data: who, error } = await sb.rpc('fx_usd_users', { p_test: teste });
+  if (error) return new Response(error.message, { status: 500 });
+  const msg = teste
+    ? { title: '💵 Teste do aviso do dólar', body: `Agora: US$ 1 = R$ ${brNum(rate)} (${pct >= 0 ? '+' : ''}${brNum(pct, 1)}% hoje). Quando subir ${brNum(min, 1)}% ou mais, chega um aviso assim.`, tag: 'dolar', url: '/#dolar' }
+    : { title: `💵 O dólar subiu ${brNum(pct, 1)}% hoje`, body: `US$ 1 = R$ ${brNum(rate)}. Toque pra ver quanto valem seus ganhos em dólar.`, tag: 'dolar', url: '/#dolar' };
+  let sent = 0;
+  for (const u of (who || []) as any[]) sent += await pushTo(u.user_id, msg, 6 * 3600);
+  if (!teste) await sb.from('fx_alerts').update({ users: (who || []).length, sent }).eq('day', day);
+  return Response.json({ ok: true, avisou: true, teste, rate, pct, people: (who || []).length, sent });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -214,6 +240,7 @@ Deno.serve(async req => {
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
   if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
   if (b.action === 'momentos' && await keyOk('cron', b.key)) return momentos();
+  if (b.action === 'dolar' && await keyOk('cron', b.key)) return dolar(Math.max(0.1, +b.min || 1), b.teste === true);
   if (b.action === 'novidade' && await keyOk('cron', b.key)) return novidade(String(b.news || ''), b.teste === true);
   return new Response('forbidden', { status: 403 });
 });

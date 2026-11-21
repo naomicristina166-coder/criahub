@@ -342,7 +342,7 @@ window.CRIAHUB_CONFIG = {
       return box('<span class="sub">Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o app pelo ícone da Tela de Início (iPhone).</span>');
     }
     if (Notification.permission === 'denied') return box('<span class="sub">As notificações estão bloqueadas para o CriaHub. Libere nos ajustes do celular (Notificações › CriaHub) e volte aqui.</span>');
-    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
+    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda, a sua retrospectiva do mês todo dia 1º e, se você recebe em dólar, um aviso quando ele subir.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
     return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar UGC todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
@@ -378,7 +378,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'dolar') { if (window.criahubOpenDolar) window.criahubOpenDolar(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
     /* toda vez que o app abre com as notificações ligadas: confere a inscrição deste aparelho e regrava no servidor.
        Se o navegador trocou o endereço (acontece no Android) ou a chave mudou, as notificações voltam sem ela fazer nada. */
@@ -836,6 +836,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .wp-it select{flex:1 1 100%;min-height:40px}
 .bd-sel{display:flex;gap:8px;flex-wrap:wrap}.bd-sel select{flex:1 1 120px}.bd-home{flex-direction:row;align-items:center;gap:14px;background:linear-gradient(135deg,var(--accent-soft),var(--surface))}.bd-e{font-size:44px;line-height:1}
 .ml-it{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.ml-it.seen{opacity:.72}.ml-it .row-btns{margin-top:4px;align-items:center}.ml-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.ml-k{font-size:12.5px;font-weight:700;color:var(--accent-ink)}.ml-sn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ml-code{border-color:var(--accent)}.ml-addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.ml-addr code{flex:1 1 200px;min-width:0;overflow-wrap:anywhere;padding:8px 10px;border-radius:10px;background:var(--accent-soft);font-size:13.5px}.ml-addr input{flex:1 1 200px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit}.ml-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.ml-steps li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}.ml-priv{padding-top:4px}
+.fx-alert{display:flex;gap:12px;align-items:center;padding:14px 16px}.fx-alert>div{flex:1;min-width:0}.fx-alert-i{font-size:22px}
 .tr-it{display:flex;flex-direction:column;gap:6px}.tr-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.tr-how{font-size:14px}
 .tr-f{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px}.tr-top h2{font-size:19px;margin-top:4px}
 .tr-warn{display:flex;flex-direction:column;gap:4px;border-color:color-mix(in oklab, var(--warn) 45%, var(--line));font-size:14px}.tr-warn span{color:var(--muted)}
@@ -1225,6 +1226,7 @@ if (TABS.some(x => x[0] === location.hash.slice(1))) S.tab = location.hash.slice
 /* aviso do Em alta abre direto na aba */
 let mailHash = location.hash === '#emails'; if (mailHash) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 if (location.hash === '#emalta') { S.tab = 'estudio'; S.f.sview = 'alta'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+if (location.hash === '#dolar') { S.tab = 'financeiro'; S.f.fview = 'dolar'; S.f.cur = 'USD'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 if (location.hash === '#metricas') { S.tab = 'estudio'; S.f.sview = 'metricas'; try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
 const LS = 'criahub:v1';
@@ -2825,6 +2827,11 @@ function fxOutHtml() {
   const gross = v * r, net = gross * (1 - fee);
   return `<div class="pr-lines"><div class="bb" style="grid-template-columns:minmax(0,1fr) auto"><span class="name">Em reais pela cotação</span><span class="amt">${brl(gross)}</span></div>${fee ? `<div class="bb" style="grid-template-columns:minmax(0,1fr) auto"><span class="name">Taxa de recebimento (${(fee * 100).toLocaleString('pt-BR')}%)</span><span class="amt">− ${brl(gross - net)}</span></div>` : ''}</div><div class="pr-total"><span>Cai na sua conta (aprox.)</span><b>${brl(net)}</b></div>`;
 }
+/* aviso no celular quando o dólar sobe 1% ou mais no dia (a função caixa manda; aqui só liga e desliga) */
+function fxAlertBox() {
+  const on = S.profile.fxAlert !== 'off', push = window.criahubPushOn ? window.criahubPushOn() : false;
+  return `<div class="card fx-alert"><span class="fx-alert-i" aria-hidden="true">🔔</span><div><b>Aviso quando o dólar subir</b><div class="sub">${on ? (push ? 'Ligado. Quando o dólar subir 1% ou mais no dia, chega uma notificação (no máximo uma por dia, só em dias úteis).' : 'Ligado, mas as notificações deste aparelho estão desligadas. Ative em Ajustes › Notificações pra receber.') : 'Desligado. Você não recebe aviso quando o dólar sobe.'}</div></div><button class="btn sm ${on ? 'ghost' : ''}" data-act="fxalert">${on ? 'Desligar' : 'Ligar'}</button></div>`;
+}
 function vDollar() {
   const c = S.f.cur || 'USD', M = CURS[c], F = FXD[c], r = fxRate(c), manual = !!+S.profile[M.manual], mk = S.f.month, lw = c === 'USD' ? 'dólar' : 'euro';
   const of = o => o.currency === c;
@@ -2836,6 +2843,7 @@ function vDollar() {
   <div class="curtabs" role="group" aria-label="Moeda">${Object.entries(CURS).map(([k, v]) => `<button data-cur="${k}" aria-pressed="${c === k}"><span>${v.sym}</span>${v.name}<small>${fxRate(k) ? fxFmt(fxRate(k)) : '—'}</small></button>`).join('')}</div>
   <div class="card fx-top"><div class="eyebrow">${M.name} hoje${manual ? ' · cotação manual' : F.date ? ' · ' + esc(F.kind || 'PTAX') + ' de ' + esc(fmtD(F.date)) : ''}</div><div class="fx-big">${r ? fxFmt(r) : '—'}</div>
     <div class="sub">${manual ? `Você definiu essa cotação. <button class="link" data-act="fxauto">Usar a automática${F.rate ? ' (' + fxFmt(F.rate) + ')' : ''}</button>` : F.rate ? `${esc(F.note || 'Cotação oficial do Banco Central, atualizada todo dia de manhã')}${F.source ? ' · fonte: ' + esc(F.source) : ''}.` : 'A cotação automática chega na próxima atualização diária.'}</div></div>
+  ${c === 'USD' ? fxAlertBox() : ''}
   <section class="card section"><h2>Converter ${lw} para real</h2>
     <div class="grid2"><div class="field"><label for="fx_in">Quanto você fez (${M.sym})</label><input type="number" id="fx_in" min="0" step="0.01" inputmode="decimal" placeholder="Ex.: 500" value="${esc(FXC[c])}"></div>
     <div class="field"><label for="fx_fee">Taxa da plataforma (%)</label><input type="number" id="fx_fee" min="0" max="50" step="0.1" inputmode="decimal" placeholder="Ex.: 1,5" value="${esc(S.profile.fxFee || '')}"><span class="hint">Wise, Payoneer, PayPal etc. Use 0 se não souber.</span></div></div>
@@ -4587,6 +4595,7 @@ Regras: português do Brasil; no máximo ${PKM.tone === 'direta' ? 70 : 130} pal
     else { try { await navigator.clipboard.writeText(data); toast('Planilha copiada. Cole numa planilha.'); } catch (_) { toast('Não consegui gerar a planilha aqui.'); } }
     return; }
   if (d.cur) { S.f.cur = d.cur; render(); return; }
+  if (d.act === 'fxalert') { const off = S.profile.fxAlert !== 'off'; await saveProfile({ fxAlert: off ? 'off' : 'on' }); toast(off ? 'Aviso do dólar desligado' : 'Aviso do dólar ligado 🔔'); return; }
   if (d.act === 'fxauto') { await saveProfile({ [CURS[S.f.cur || 'USD'].manual]: '' }); toast('Usando a cotação automática'); return; }
   if (d.prlang) { PR.lang = d.prlang; document.querySelectorAll('[data-prlang]').forEach(c => c.setAttribute('aria-pressed', c.dataset.prlang === PR.lang)); prUpdate(); return; }
   if (d.act === 'prcopy') { const v = $('#pr_txt')?.value || ''; try { await navigator.clipboard.writeText(v); toast('Proposta copiada'); } catch (_) { $('#pr_txt')?.select(); toast('Texto selecionado. Use o copiar do seu aparelho.'); } return; }
@@ -5956,6 +5965,7 @@ const mxEng = m => { const v = mxNum(m.views) || mxNum(m.alcance); if (!v) retur
 const mxFmt = (k, v) => { const n = mxNum(v); if (n === null) return ''; if (k === 'retencao' || k === 'nao_seguidores') return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'; if (k === 'tempo_medio') return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 's'; return (k === 'seguidores' ? '+' : '') + nCompact(n); };
 const mxList = () => [...S.data.metrics].sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
 const mxGoalName = k => (MX_GOALS.find(g => g[0] === k) || MX_GOALS[0])[1];
+window.criahubOpenDolar = () => { if (sheet) closeForm(); S.tab = 'financeiro'; S.f.fview = 'dolar'; S.f.cur = 'USD'; render(); window.scrollTo(0, 0); };
 window.criahubOpenMetricas = () => { if (sheet) closeForm(); S.tab = 'estudio'; S.f.sview = 'metricas'; render(); window.scrollTo(0, 0); };
 
 function mxHistory() {
