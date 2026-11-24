@@ -463,7 +463,7 @@ window.CRIAHUB_CONFIG = {
 [hidden]{display:none!important}
 html{height:100%}body{min-height:100%}
 /* iPhone: barras fixas em camada própria, pra não descolarem nem ficarem no meio da tela ao rolar */
-.tabs,.warmbars{transform:translateZ(0);-webkit-transform:translateZ(0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.tabs,.warmbars{transform:translate3d(0,var(--vvfix,0px),0);-webkit-transform:translate3d(0,var(--vvfix,0px),0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 body.warming main{padding-bottom:calc(200px + var(--wbh,0px))}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -5235,6 +5235,31 @@ function wPhase(a) {
 let WTS = []; try { WTS = JSON.parse(localStorage.getItem('criahub:warmTs') || '[]'); const old = JSON.parse(localStorage.getItem('criahub:warmT') || 'null'); if (old && !WTS.some(w => w.aid === old.aid)) WTS.push(old); localStorage.removeItem('criahub:warmT'); } catch (_) {}
 if (!Array.isArray(WTS)) WTS = [];
 let wTick = null;
+/* iPhone: às vezes o iOS desenha as barras fixas (menu de baixo e aquecimento) no meio da tela, depois do teclado ou ao rolar.
+   Aqui a gente mede onde o menu ficou e, se não estiver colado no fim da tela visível, puxa ele (e a barra do aquecimento) de volta pro lugar. */
+(() => {
+  const vv = window.visualViewport; if (!vv) return;
+  const root = document.documentElement; let raf = 0;
+  const typing = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('input,textarea,select,[contenteditable="true"]')); };
+  const pin = () => { raf = 0;
+    const t = document.getElementById('tabs');
+    const cur = parseFloat(root.style.getPropertyValue('--vvfix')) || 0;
+    let d = 0;
+    if (t && !typing() && getComputedStyle(t).display !== 'none') {
+      const want = vv.offsetTop + vv.height, got = t.getBoundingClientRect().bottom - cur;
+      d = Math.round(want - got); if (Math.abs(d) < 2 || Math.abs(d) > window.innerHeight) d = 0;
+    }
+    if (d !== cur) root.style.setProperty('--vvfix', d + 'px');
+  };
+  const q = () => { if (!raf) raf = requestAnimationFrame(pin); };
+  vv.addEventListener('resize', q); vv.addEventListener('scroll', q);
+  window.addEventListener('scroll', q, { passive: true }); window.addEventListener('resize', q);
+  window.addEventListener('orientationchange', () => setTimeout(q, 300)); window.addEventListener('pageshow', q);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(q, 100); });
+  document.addEventListener('focusout', () => setTimeout(() => { window.scrollTo(window.scrollX, window.scrollY); q(); }, 80));
+  document.addEventListener('touchend', () => setTimeout(q, 350), { passive: true });
+  setInterval(q, 1500); q();
+})();
 const wtOf = aid => WTS.find(w => w.aid === aid);
 const wSave = () => { try { WTS.length ? localStorage.setItem('criahub:warmTs', JSON.stringify(WTS)) : localStorage.removeItem('criahub:warmTs'); } catch (_) {} };
 const wLeft = w => { const now = w.pausedAt || Date.now(), open = !w.end; return { open, ms: open ? now - w.start : Math.max(0, w.end - now) }; };
@@ -5278,7 +5303,7 @@ function warmBar() {
   const sig = rows.map(({ w, a }) => [w.aid, w.slot, w.start, !!w.pausedAt, a.handle].join(':')).join('|');
   if (el.dataset.sig === sig) { rows.forEach(({ w }) => { const t = el.querySelector(`[data-wt="${w.aid}"]`); if (t) t.textContent = tm(w); }); }
   else { el.dataset.sig = sig; el.innerHTML = rows.map(({ w, a }) => { const { open } = wLeft(w);
-    return `<div class="warmbar${w.pausedAt ? ' paused' : ''}${many ? ' mini' : ''}"><div><b>${w.pausedAt ? 'Pausado' : 'Aquecendo'} ${esc(a.handle)}</b><small>${esc(WSLOTS[w.slot][0])}${!w.pausedAt && open && !many ? ' · pare quando quiser' : ''}</small></div><span class="wt num" data-wt="${w.aid}">${tm(w)}</span><button class="iconbtn wpause" data-warmpause="${w.aid}" aria-label="${w.pausedAt ? 'Continuar' : 'Pausar'} ${esc(a.handle)}">${w.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="${w.aid}">Concluir</button><button class="iconbtn" data-warmstop="${w.aid}" aria-label="Cancelar ${esc(a.handle)}">${ic('x')}</button></div>`; }).join(''); }
+    return `<div class="warmbar${w.pausedAt ? ' paused' : ''}${many ? ' mini' : ''}"><span class="wt num" data-wt="${w.aid}">${tm(w)}</span><div class="wtx"><small>${w.pausedAt ? 'Pausado' : 'Aquecendo'} · ${esc(WSLOTS[w.slot][0])}</small><b>${esc(a.handle)}</b></div><button class="iconbtn wpause" data-warmpause="${w.aid}" aria-label="${w.pausedAt ? 'Continuar' : 'Pausar'} ${esc(a.handle)}">${w.pausedAt ? '▶' : '❚❚'}</button><button class="btn sm" data-warmdone="${w.aid}">Concluir</button><button class="iconbtn" data-warmstop="${w.aid}" aria-label="Cancelar ${esc(a.handle)}">${ic('x')}</button></div>`; }).join(''); }
   { const h = el.offsetHeight + 'px'; if (document.body.style.getPropertyValue('--wbh') !== h) document.body.style.setProperty('--wbh', h); }
   rows.forEach(({ w }) => { wNotify(w, false); const { open, ms } = wLeft(w); if (!open && !ms && !w.pausedAt) warmFinish(w.aid, true); });
 }
@@ -5445,6 +5470,17 @@ function warmPending() {
 .warmbar b{display:block;font-size:14px}.warmbar small{display:block;font-size:12px;color:#F4C9D8}
 .warmbar .wt{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
 .warmbar .btn{background:#F4C9D8;color:#420725;border:0}.warmbar .iconbtn{background:rgb(255 255 255 / .12);color:#fff;border:0}
+/* cronômetro em destaque, sozinho na linha de baixo; o @ da conta fica em cima, inteiro, sem invadir o número */
+.warmbar{grid-template-columns:minmax(0,1fr) auto auto auto !important;grid-template-areas:"tx tx tx tx" "wt p d s";gap:6px 8px;padding:10px 10px 10px 14px}
+.warmbar .wtx{grid-area:tx;min-width:0}
+.warmbar .wt{grid-area:wt;justify-self:start;font-size:34px;line-height:1;color:#fff;letter-spacing:.5px}
+.warmbar .wpause{grid-area:p}.warmbar .btn{grid-area:d}.warmbar>.iconbtn:last-child{grid-area:s}
+.warmbar.paused .wt{color:#F4C9D8}
+.warmbar .wtx b,.warmbar .wtx small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.warmbar .wtx small{font-size:11px;color:#F4C9D8;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.warmbar .wtx b{font-size:15px}
+.warmbar.mini .wt{font-size:26px}
+@media (max-width:360px){.warmbar .wt{font-size:28px}}
 `; document.head.appendChild(st); })();
 /* ================= seus 3 melhores vídeos (mais views) pro portfólio ================= */
 function topVideos(days) {
