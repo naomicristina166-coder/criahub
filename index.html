@@ -504,6 +504,10 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke
 @media (prefers-reduced-motion: reduce){.logo .ii b{animation:none}}
 .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--fg)}
 .painel-top{background:var(--accent,#420725);border-color:var(--accent,#420725);color:#fff}
+/* atalho da afiliada: no celular fica no topo, ao lado de Ajustes; no notebook fica embaixo do menu lateral */
+.aff-top{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 12px;border-radius:999px;border:0;background:var(--accent,#420725);color:#fff;font-weight:700;font-size:13px;white-space:nowrap}
+.aff-top svg{width:18px;height:18px}
+.nav.aff-nav{color:var(--accent,#420725);font-weight:700}
 .iconbtn svg{width:20px;height:20px}
 
 @media (min-width:900px){
@@ -1350,9 +1354,10 @@ function renderShell() {
     <button class="nav" data-act="toggletheme">${ic(isDark() ? 'sun' : 'moon')}${isDark() ? 'Modo claro' : 'Modo escuro'}</button>
     <button class="nav" data-act="settings">${ic('gear')}Ajustes</button>
     ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel admin</button>` : ''}
+    ${AFF ? `<button class="nav aff-nav" data-act="aff">${ic('financeiro')}Afiliada</button>` : ''}
     <div class="sync">${syncTxt}</div>
     </div>`);
-  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
+  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${AFF ? `<button class="aff-top" data-act="aff" aria-label="Painel de afiliada">${ic('financeiro')}<span>Afiliada</span></button>` : ''}${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
 
@@ -6577,7 +6582,7 @@ async function affLoad() {
   let ref = null; try { ref = localStorage.getItem('criahub:ref'); } catch (_) {}
   if (ref) { try { await sb.rpc('aff_claim', { p_code: ref }); localStorage.removeItem('criahub:ref'); } catch (_) {} }
   try { const { data, error } = await sb.rpc('aff_me'); AFF = error ? null : data; } catch (_) { AFF = null; }
-  AFF_READY = true; if (sheet && sheet.col === 'aff') openAff();
+  AFF_READY = true; if (AFF) renderShell(); if (sheet && sheet.col === 'aff') openAff();
 }
 const affBrl = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 const affMonth = m => { const d = new Date(String(m).slice(0, 10) + 'T12:00:00'); const t = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); return t.charAt(0).toUpperCase() + t.slice(1); };
