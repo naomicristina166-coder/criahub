@@ -230,6 +230,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   <div class="wrap"><nav class="tabs" id="tabs">
     <button data-tab="geral" aria-current="page">Visão geral</button>
     <button data-tab="radar">Radar ☕</button>
+    <button data-tab="fora">Lá fora 🌎</button>
     <button data-tab="creators">Creators</button>
     <button data-tab="crm">CRM<span class="badge" id="crmBadge" hidden></span></button>
     <button data-tab="momentos">Momentos<span class="badge" id="momBadge" hidden></span></button>
@@ -336,7 +337,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     st.ov = ov.data; st.daily = daily.data || []; st.screens = screens.data || []; st.users = users.data || []; st.wl = wl.data || [];
     st.fb = fb.data || []; st.errs = errs.data || []; st.rev = rev.data || [];
     st.sel = st.daily.length - 1;
-    render(); loadFund(); loadAff();
+    render(); loadFund(); loadAff(); loadFora();
   }
 
   /* ---------- telas ---------- */
@@ -346,7 +347,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (bd) { bd.hidden = !nNew; bd.textContent = nNew; }
     fundBadges();
     main.innerHTML = st.tab === 'creators' ? vCreators() : st.tab === 'lista' ? vLista() : st.tab === 'feedback' ? vFeedback() : st.tab === 'financas' ? vFin()
-      : st.tab === 'radar' ? vRadar() : st.tab === 'crm' ? vCrm() : st.tab === 'momentos' ? vMom() : st.tab === 'afiliadas' ? vAff() : vGeral();
+      : st.tab === 'radar' ? vRadar() : st.tab === 'fora' ? vFora() : st.tab === 'crm' ? vCrm() : st.tab === 'momentos' ? vMom() : st.tab === 'afiliadas' ? vAff() : vGeral();
   }
 
   const METRICS = { active: ['Creators ativas', 'creators usaram o app'], signups: ['Cadastros', 'cadastros novos'], mins: ['Minutos no app', 'minutos no app'], waitlist: ['Lista de espera', 'entraram na lista'] };
@@ -948,6 +949,45 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       if (r.error) { toast('Não consegui marcar'); return; } toast('Marcado como pago ✓'); loadAff(); return;
     }
     if (d.afftoggle) { const [uid, on] = d.afftoggle.split('|'); const r = await sb.rpc('admin_aff_toggle', { p_user: uid, p_active: on === '1' }); if (r.error) { toast('Não consegui'); return; } loadAff(); }
+  }, true);
+
+  /* =========== Radar lá fora: novidades de fora, toda sexta (supabase/radar-fora.sql) =========== */
+  Object.assign(st, { fora: null, foraMissing: false, foraOpen: null });
+  async function loadFora() {
+    const r = await sb.rpc('admin_fora', { p_weeks: 26 });
+    if (r.error) { st.foraMissing = /admin_fora|function|schema cache/i.test(r.error.message); st.fora = []; } else st.fora = r.data || [];
+    if (st.tab === 'fora') render();
+  }
+  function vFora() {
+    if (st.foraMissing) return `<h1>Lá fora 🌎</h1><div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/radar-fora.sql</b> no SQL Editor do Supabase e atualize esta página.</p></div>`;
+    if (!st.fora) return '<div class="loading">Carregando…</div>';
+    const L = st.fora;
+    const head = `<h1>Lá fora 🌎</h1><p class="sub">Toda sexta de manhã, 3 novidades de fora que ainda não chegaram no Brasil, já explicadas. Leia, escolha e toque em <b>Guardar ideia</b>: ela vai pras suas Ideias no app.</p>`;
+    if (!L.length) return head + '<div class="empty" style="margin-top:16px">As primeiras novidades chegam na sexta de manhã ✨</div>';
+    const cur = L.find(w => String(w.week).slice(0, 10) === st.foraOpen) || L[0], d = cur.data || {}, wk = String(cur.week).slice(0, 10), saved = cur.saved || [];
+    const items = (d.items || []).map((x, i) => `<section class="card rd"><span class="k">${esc(x.kind || 'Novidade')}${x.where ? ' · ' + esc(x.where) : ''}</span><h2>${esc(x.title || '')}</h2>
+        ${x.what ? `<p>${esc(x.what)}</p>` : ''}${x.why ? `<div class="why"><b>Por que faria sucesso no Brasil</b>${esc(x.why)}</div>` : ''}
+        ${x.how ? `<div class="act"><b>Como você poderia usar</b>${esc(x.how)}</div>` : ''}
+        ${x.source ? `<span class="src">Fonte: ${safeUrl(x.url) ? `<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.source)}</a>` : esc(x.source)}${x.when ? ' · ' + esc(x.when) : ''}</span>` : ''}
+        <div class="rd-acts" style="margin-top:10px"><button class="btn sm${saved.includes(i) ? ' ghost' : ''}" data-forasave="${wk}|${i}" ${saved.includes(i) ? 'disabled' : ''}>${saved.includes(i) ? 'Guardada nas Ideias ✓' : '💡 Guardar ideia'}</button></div></section>`).join('');
+    const past = L.filter(w => w !== cur);
+    return `${head}<div class="rd-hero" style="margin-top:14px"><span class="eb">Semana de ${esc(dt(wk))}</span><h1>${esc(d.headline || 'Novidades de fora')}</h1></div>
+      <div class="rd-grid">${items}</div>
+      ${past.length ? `<section class="sec"><div class="sec-h"><div><h2>Semanas anteriores</h2></div></div><div class="list">${past.map(w => { const x = w.data || {}; return `<button class="rd-past" data-foraopen="${String(w.week).slice(0, 10)}"><span class="d">${dt(w.week).slice(0, 5)}</span><span style="min-width:0"><b>${esc(x.headline || '')}</b><small>${esc((x.items || []).map(i => i.title).join(' · '))}</small></span><span>${(w.saved || []).length ? '💡' : ''}</span></button>`; }).join('')}</div></section>` : ''}`;
+  }
+  document.addEventListener('click', async e => {
+    const t = e.target.closest && e.target.closest('[data-forasave],[data-foraopen]'); if (!t) return;
+    e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
+    if (d.foraopen) { st.foraOpen = d.foraopen; render(); window.scrollTo(0, 0); return; }
+    const [wk, idx] = d.forasave.split('|'), w = (st.fora || []).find(x => String(x.week).slice(0, 10) === wk), x = w && (w.data.items || [])[+idx]; if (!x) return;
+    t.disabled = true;
+    const { data: { session } } = await sb.auth.getSession(); const uid = session && session.user && session.user.id;
+    const id = Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+    const idea = { id, title: 'Lá fora: ' + x.title, tag: 'Lá fora', status: 'nova', notes: [x.what, x.why ? 'Por que no Brasil: ' + x.why : '', x.how ? 'Como usar: ' + x.how : '', safeUrl(x.url) ? 'Fonte: ' + x.url : ''].filter(Boolean).join('\n'), created: new Date().toISOString() };
+    const r1 = uid ? await sb.from('items').upsert({ id, user_id: uid, col: 'ideas', data: idea, updated_at: new Date().toISOString() }) : { error: 1 };
+    if (r1.error) { t.disabled = false; toast('Não consegui guardar'); return; }
+    await sb.rpc('admin_fora_save', { p_week: wk, p_idx: +idx }); w.saved = [...(w.saved || []), +idx];
+    toast('Guardada em Estúdio › Ideias 💡'); render();
   }, true);
 
   /* =========== excluir conta (supabase/excluir-conta.sql) =========== */
