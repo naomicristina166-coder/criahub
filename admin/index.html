@@ -919,7 +919,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (st.affMissing) return `<h1>Afiliadas</h1><div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/afiliadas.sql</b> no SQL Editor do Supabase e atualize esta página.</p></div>`;
     const A = st.aff || [], tot = A.reduce((s, a) => s + Number(a.to_pay || 0), 0), paid = A.reduce((s, a) => s + Number(a.paid || 0), 0);
     return `<h1>Afiliadas</h1>
-      <p class="sub">Todo dia 1 a 10: faça o Pix de cada afiliada com valor a pagar e toque em “Marquei como pago”. Pra criar uma afiliada, abra a pessoa na aba Creators.</p>
+      <p class="sub">Todo dia 10: faça o Pix de cada afiliada com valor a pagar e toque em “Marquei como pago”. Pra criar uma afiliada, abra a pessoa na aba Creators.</p>
       <div class="kpis" style="margin:14px 0"><div class="kpi"><span>Afiliadas</span><b>${A.filter(a => a.active).length}</b></div><div class="kpi"><span>A pagar</span><b>${brl2(tot)}</b></div><div class="kpi"><span>Já pago</span><b>${brl2(paid)}</b></div></div>
       ${A.length ? A.map(a => `<article class="card" style="margin-bottom:10px;padding:14px 16px">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(a.name)}${a.active ? '' : ' <span class="note">(pausada)</span>'}</b><span class="note" style="margin:0">${a.rate_first !== a.rate_after ? `${a.rate_first}% por ${a.first_months} meses, depois ${a.rate_after}%` : `${a.rate_after}%`}${a.note ? ' · ' + esc(a.note) : ''}</span></div>

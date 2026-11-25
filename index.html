@@ -6601,7 +6601,7 @@ function openAff() {
       ${launched ? '' : `<span class="sub" style="font-size:12.5px">Depois do lançamento: <code>${esc(L.app)}</code> <button type="button" class="link" data-affcopy="${esc(L.app)}">copiar</button></span>`}
     </div>
     <div class="card section" style="gap:6px"><b>Como você ganha</b>
-      <span class="sub">${esc(rule)} Vale pra plano mensal e anual (no anual parcelado, conta cada parcela paga). A comissão de cada mês é paga por Pix até o dia 10 do mês seguinte.</span></div>
+      <span class="sub">${esc(rule)} Vale pra plano mensal e anual (no anual parcelado, conta cada parcela paga). A comissão de cada mês é paga por Pix todo dia 10 do mês seguinte.</span></div>
     <div class="card section" style="gap:8px"><b>Onde você recebe</b>
       <div class="aff-pix"><select id="aff_pt" aria-label="Tipo de chave Pix">${['cpf', 'cnpj', 'email', 'celular', 'aleatória'].map(t => `<option value="${t}"${A.pix_type === t ? ' selected' : ''}>${t === 'cpf' ? 'CPF' : t === 'cnpj' ? 'CNPJ' : t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}</select>
       <input id="aff_pk" placeholder="Sua chave Pix" maxlength="120" value="${esc(A.pix_key || '')}"><button type="button" class="btn sm ghost" data-act="affpix">Salvar</button></div>
