@@ -5001,7 +5001,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.g
    Quem decide o plano é a tabela public.plans (a fundadora muda no Painel admin; depois, o pagamento). */
 /* pagamento pelo Asaas: links em public.pay_links (função "pagamento"); quem está na lista paga o preço de fundadora */
 const PAY = { links: {}, founder: false, email: '', ready: false };
-const PAY_OPEN_LIST = '2026-12-15', PAY_OPEN_ALL = '2026-12-17', PAY_FOUNDER_END = '2026-12-21';
+const PAY_OPEN_LIST = '2026-12-15', PAY_OPEN_ALL = '2026-12-17', PAY_FOUNDER_END = '2026-12-31';
 async function payLoad() {
   const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
   try { const { data } = await sb.from('pay_links').select('key,url,value'); PAY.links = Object.fromEntries((data || []).map(x => [x.key, x])); } catch (_) {}
@@ -5104,7 +5104,7 @@ function openPro(reason) {
     <div class="sh"><h2>CriaHub Pro ✨</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="sub">${esc(why)}</div>
     <ul>${PRO_LIST.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${PAY.founder && today() <= PAY_FOUNDER_END ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 21/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
+    <div class="pro-price"><span class="sub">Mensal</span><b>R$ 29,90 <small style="font-size:14px;font-weight:600">por mês</small></b><span class="sub">ou anual por R$ 239, em até 12x de R$ 19,92 no cartão</span></div>${PAY.founder && today() <= PAY_FOUNDER_END ? '<div class="pro-price" style="border-color:var(--accent,#420725)"><span class="sub">🍒 Cria Fundadora · quem está na lista e assina até 31/12</span><b>R$ 24,90 <small style="font-size:14px;font-weight:600">por mês, congelado</small></b><span class="sub">ou R$ 199 no anual, em até 12x de R$ 16,58</span></div>' : ''}
     <div class="sub">Pix, boleto, cartão de crédito ou débito. Tudo que você cadastrou continua igual quando muda de plano.</div>
     ${pb.box}${pb.note}${pb.adm}
     ${pb.btns ? `<div class="foot"><div class="r">${pb.btns}</div></div>` : ''}
