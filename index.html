@@ -343,7 +343,7 @@ window.CRIAHUB_CONFIG = {
     }
     if (Notification.permission === 'denied') return box('<span class="sub">As notificações estão bloqueadas para o CriaHub. Libere nos ajustes do celular (Notificações › CriaHub) e volte aqui.</span>');
     if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
-    return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar UGC todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
+    return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar Cria todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
   /* alarme do aquecimento: agenda no servidor (toca mesmo com o app fechado) e mostra a notificação na hora */
@@ -1000,7 +1000,7 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 .fx-mini{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;text-align:left;cursor:pointer;padding:12px 14px}
 .fx-mini b{font-family:var(--display);font-size:18px;color:var(--accent-ink)}
 
-/* ---------- radar ugc ---------- */
+/* ---------- radar cria ---------- */
 .ndot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rec);margin-left:auto;animation:recPulse 1.6s ease-out infinite}
 .news-home{text-align:left;display:flex;flex-direction:column;gap:8px;cursor:pointer;width:100%;background:var(--accent-soft);border-color:transparent}
 .news-home .q{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.25;color:var(--accent-ink)}
@@ -1342,7 +1342,7 @@ function renderShell() {
   const syncTxt = S.mode === 'remote' ? 'Sincronizado na sua conta' : 'Salvo neste navegador';
   setHTML($('#side'), `${LOGO}<div class="tagline">quem cria, se organiza.</div>
     ${TABS.map(([k, l]) => `<button class="nav" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}${l}</button>`).join('')}
-    <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar UGC${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
+    <button class="nav" data-tab="radar" ${S.tab === 'radar' ? 'aria-current="page"' : ''}>${ic('radar')}Radar Cria${newsUnseen() ? '<span class="ndot" aria-label="novidade"></span>' : ''}</button>
     <button class="nav" data-chat="1">${ic('chat')}Chat CriaHub</button>
     <button class="nav" data-learn="1">${ic('book')}Aprenda o CriaHub</button>
     <div class="spacer"></div>
@@ -1352,7 +1352,7 @@ function renderShell() {
     ${painelOn() ? `<button class="nav" data-act="painel">${ic('painel')}Painel admin</button>` : ''}
     <div class="sync">${syncTxt}</div>
     </div>`);
-  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar UGC${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
+  setHTML($('#top'), `${LOGO}<div style="display:flex;gap:8px"><button class="iconbtn" data-tab="radar" aria-label="Radar Cria${newsUnseen() ? ', notícias novas' : ''}" style="position:relative">${ic('radar')}${newsUnseen() ? '<span class="ndot" style="position:absolute;top:6px;right:6px;margin:0"></span>' : ''}</button><button class="iconbtn" data-chat="1" aria-label="Chat CriaHub">${ic('chat')}</button><button class="iconbtn" data-act="toggletheme" aria-label="${isDark() ? 'Mudar para modo claro' : 'Mudar para modo escuro'}">${ic(isDark() ? 'sun' : 'moon')}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${ic('gear')}</button>${painelOn() ? `<button class="iconbtn painel-top" data-act="painel" aria-label="Painel admin" title="Painel admin">${ic('painel')}</button>` : ''}</div>`);
   setHTML($('#tabs'), TABS.map(([k, l]) => `<button class="tab" data-tab="${k}" ${S.tab === k ? 'aria-current="page"' : ''}>${ic(k)}<span>${l}</span></button>`).join(''));
 }
 
@@ -1477,7 +1477,7 @@ function homeNews() {
   const ed = S.news[0];
   if (!ed) return S.newsReady ? '' : '';
   const items = (ed.items || []).slice(0, 3), unseen = newsUnseen();
-  return `<section class="section"><div class="row-h"><h2>Radar UGC ${unseen ? '<span class="pill p-acc" style="font-size:11px;vertical-align:middle">novo</span>' : ''}</h2><button class="link" data-tab="radar">Ler tudo</button></div>
+  return `<section class="section"><div class="row-h"><h2>Radar Cria ${unseen ? '<span class="pill p-acc" style="font-size:11px;vertical-align:middle">novo</span>' : ''}</h2><button class="link" data-tab="radar">Ler tudo</button></div>
     <button class="card news-home" data-tab="radar"><div class="eyebrow">${esc(newsDate(ed.date))} · ${(ed.items || []).length} notícias</div>
     ${ed.headline ? `<div class="q">${esc(ed.headline)}</div>` : ''}
     <ul class="tips">${items.map(n => `<li><span>${esc(n.title)}</span></li>`).join('')}</ul></button></section>`;
@@ -1497,8 +1497,8 @@ function vNews() {
   const f = S.f.newsF || 'todas';
   const items = (ed?.items || []).filter(n => f === 'todas' || n.region === f || n.topic === f);
   const topics = [...new Set((ed?.items || []).map(n => n.topic).filter(Boolean))];
-  return `<div class="head"><div><h1>Radar UGC</h1><div class="sub">O que está acontecendo no mundo UGC, no Brasil e lá fora. Uma edição nova todo dia de manhã.</div></div></div>
-  ${!eds.length ? `<div class="empty"><strong>${S.newsReady ? 'A primeira edição está a caminho' : 'Carregando o radar…'}</strong>${S.newsReady ? 'O Radar UGC é atualizado todo dia de manhã com as notícias de plataformas, marcas, tendências e ferramentas para creators.' : ''}</div>` : `
+  return `<div class="head"><div><h1>Radar Cria</h1><div class="sub">O que está acontecendo no mundo dos creators: plataformas, publis, mercado e oportunidades, no Brasil e lá fora. Uma edição nova todo dia de manhã.</div></div></div>
+  ${!eds.length ? `<div class="empty"><strong>${S.newsReady ? 'A primeira edição está a caminho' : 'Carregando o radar…'}</strong>${S.newsReady ? 'O Radar Cria é atualizado todo dia de manhã com as notícias de plataformas, marcas, tendências e ferramentas para creators.' : ''}</div>` : `
   <div class="card news-top"><div class="eyebrow">Edição de ${esc(newsDate(ed.date))}${ed.updatedAt ? ' · atualizada às ' + esc(new Date(ed.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })) : ''}</div>
     ${ed.headline ? `<h2>${esc(ed.headline)}</h2>` : ''}</div>
   <div class="chips">${['todas', 'Brasil', 'Mundo', ...topics].map(k => `<button class="chip" data-newsf="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
@@ -2598,7 +2598,7 @@ function checkSteps() {
 /* ---------- "o que é isso?" em cada tela ---------- */
 const HELP = {
   'inicio': ['Início', 'Seu resumo do dia: quanto falta receber, entregas da semana, tarefas e alertas. Toque nos cards pra ir direto ao lugar certo.'],
-  'radar': ['Radar UGC', 'Notícias do mercado de UGC, no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
+  'radar': ['Radar Cria', 'Notícias do mundo dos creators (UGC, influência e conteúdo), no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
   'rotina.hoje': ['Meu dia', 'Suas tarefas do dia: de trabalho e da vida (saúde, casa, estudos…). Marque o que fez. O que ficar pra trás, você traz pra hoje com um toque.'],
   'rotina.metas': ['Metas', 'Objetivos com número, como "fechar 2 marcas" ou "postar 12 vídeos". Você soma o progresso e vê quanto falta.'],
   'rotina.sonhos': ['Vision Board', 'Seus sonhos com imagem: a viagem, o equipamento, a casa. Cada sonho tem uma área, até quando e o porquê. Abra todo dia pra lembrar por que você está fazendo tudo isso.'],
@@ -4729,7 +4729,7 @@ function welcomeLine() {
   const late = open.filter(d => d.due && d.due < t).length, now = open.filter(d => d.due === t).length;
   if (now) return `Você tem ${now} entrega${now > 1 ? 's' : ''} pra hoje.`;
   const tk = S.data.tasks.filter(x => x.date === t && !x.done).length;
-  if (newsUnseen() && !tk) return 'Tem notícia nova no Radar UGC.';
+  if (newsUnseen() && !tk) return 'Tem notícia nova no Radar Cria.';
   if (tk) return `${tk} tarefa${tk > 1 ? 's' : ''} no seu dia. Bora?`;
   if (late) return `Tem ${late} entrega${late > 1 ? 's' : ''} atrasada${late > 1 ? 's' : ''} te esperando.`;
   return 'Quem cria, se organiza.';
@@ -5142,7 +5142,7 @@ function homePend() {
   if (S.profile.mei && day >= 12 && day <= 20 && !dasPaid(monthKey(t)) && !proLocked('financeiro.notas')) add(1, 'DAS do MEI vence dia 20', brl(dasValue()), 'data-fview="notas"');
   const dw = datesWindow()[0]; if (dw) add(1, `Hora de prospectar: ${esc(dw.name)}`, 'As marcas já estão fechando campanhas', 'data-goag="datas"');
   const wp = warmPending(); add(wp.length, `${wp.length} conta${wp.length > 1 ? 's' : ''} pra aquecer agora`, wp.slice(0, 3).map(a => a.handle).join(', ') + ' · ' + WSLOTS[wNow()][0].toLowerCase(), 'data-gomv="contas"');
-  if (newsUnseen()) add(1, 'Radar UGC: notícias novas', S.news[0] && S.news[0].headline ? S.news[0].headline : 'O resumo do mercado de hoje', 'data-tab="radar"');
+  if (newsUnseen()) add(1, 'Radar Cria: notícias novas', S.news[0] && S.news[0].headline ? S.news[0].headline : 'O resumo do mercado de hoje', 'data-tab="radar"');
   return `<section class="section"><div class="row-h"><h2>${it.length ? 'Precisa de você' : 'Tudo em dia'}</h2>${it.length ? `<span class="sub num">${it.length}</span>` : ''}</div>
     ${it.length ? `<div class="pend-list">${(S.f.pendAll ? it : it.slice(0, 3)).join('')}${it.length > 3 ? `<button class="pend-more" data-pendall="1">${S.f.pendAll ? 'Mostrar menos' : `Ver mais ${it.length - 3}`}</button>` : ''}</div>` : '<div class="card pend-ok">Nada pendente agora ✨ Aproveita pra criar.</div>'}</section>`;
 }
@@ -5571,8 +5571,8 @@ var STORIES_DATA = {
     ['🧾', 'Marcas e outras rendas', 'Pagamentos das marcas de um lado; afiliados, freelas e salário do outro. Tudo somado no mês.'],
     ['🐷', 'Cofrinho e MEI', 'O app sugere quanto separar de cada ganho pra reserva, equipamento e impostos, e lembra do DAS.'],
     ['📈', 'Seu ano', 'Veja o seu ano em números e descubra quanto cobrar por vídeo.']] },
-  radar: { name: 'Radar UGC', slides: [
-    ['📰', 'Radar UGC', 'As notícias do mercado de UGC todo dia, num resumo que você lê em 2 minutos.'],
+  radar: { name: 'Radar Cria', slides: [
+    ['📰', 'Radar Cria', 'As notícias do mundo dos creators todo dia, num resumo que você lê em 2 minutos.'],
     ['🧭', 'O que muda pra você', 'Cada notícia vem com o que ela muda na sua rotina de creator.'],
     ['🔴', 'Bolinha = novidade', 'Quando sai notícia nova, aparece a bolinha. Leu, ela some.']] }
 };
