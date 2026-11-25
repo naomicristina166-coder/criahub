@@ -342,8 +342,8 @@ window.CRIAHUB_CONFIG = {
       return box('<span class="sub">Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o app pelo ícone da Tela de Início (iPhone).</span>');
     }
     if (Notification.permission === 'denied') return box('<span class="sub">As notificações estão bloqueadas para o CriaHub. Libere nos ajustes do celular (Notificações › CriaHub) e volte aqui.</span>');
-    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
-    return box(`<span class="sub">Receba avisos no celular: a edição nova do Radar Cria todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
+    if (pushOn()) return box(`<span class="sub">Ligadas ✓ Você recebe as suas tarefas do dia, o Radar do dia, as datas comemorativas, os lembretes do calendário, o Em alta da semana toda segunda e a sua retrospectiva do mês todo dia 1º.${pushMsg ? ' ' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-push="off">Desligar</button></div>`);
+    return box(`<span class="sub">Receba avisos no celular: as suas tarefas do dia (e um aviso 30 min antes das que têm horário), a edição nova do Radar Cria todo dia de manhã, as datas comemorativas para prospectar e os lembretes das suas observações do calendário.${pushMsg ? '<br>' + pushMsg : ''}</span><div class="row-btns"><button type="button" class="btn sm" data-push="on" ${pushBusy ? 'disabled' : ''}>${pushBusy ? 'Ativando…' : 'Ativar notificações'}</button></div>`);
   };
   window.criahubPushOn = () => pushOn();
   /* alarme do aquecimento: agenda no servidor (toca mesmo com o app fechado) e mostra a notificação na hora */
@@ -2599,7 +2599,7 @@ function checkSteps() {
 const HELP = {
   'inicio': ['Início', 'Seu resumo do dia: quanto falta receber, entregas da semana, tarefas e alertas. Toque nos cards pra ir direto ao lugar certo.'],
   'radar': ['Radar Cria', 'Notícias do mundo dos creators (UGC, influência e conteúdo), no Brasil e lá fora, com o que muda pra você. Uma edição nova todo dia de manhã.'],
-  'rotina.hoje': ['Meu dia', 'Suas tarefas do dia: de trabalho e da vida (saúde, casa, estudos…). Marque o que fez. O que ficar pra trás, você traz pra hoje com um toque.'],
+  'rotina.hoje': ['Meu dia', 'Suas tarefas do dia: de trabalho e da vida (saúde, casa, estudos…). Marque o que fez. O que ficar pra trás, você traz pra hoje com um toque. Com as notificações ligadas, o CriaHub te manda o resumo do dia às 7h e avisa 30 min antes das tarefas com horário (dá pra desligar em Ajustes › Avisos).'],
   'rotina.metas': ['Metas', 'Objetivos com número, como "fechar 2 marcas" ou "postar 12 vídeos". Você soma o progresso e vê quanto falta.'],
   'rotina.sonhos': ['Vision Board', 'Seus sonhos com imagem: a viagem, o equipamento, a casa. Cada sonho tem uma área, até quando e o porquê. Abra todo dia pra lembrar por que você está fazendo tudo isso.'],
   'rotina.habitos': ['Hábitos', 'Pequenos cuidados do dia, como beber água ou dormir bem. Marque todo dia e veja quantos dias seguidos você manteve.'],
@@ -4360,6 +4360,9 @@ function openSettings() {
     </div></details>
     <details class="set-g"><summary><span class="set-i">🔔</span><span><b>Avisos</b><small>Notificações e e-mails importantes</small></span></summary><div class="set-b">
     ${window.criahubPushUI ? window.criahubPushUI('ajustes') : ''}
+    <label class="checkline"><input type="checkbox" id="s_tpush" ${S.profile.taskPush === false ? '' : 'checked'}>☀️ Resumo das minhas tarefas do dia, às 7h</label>
+    <label class="checkline"><input type="checkbox" id="s_tpusht" ${S.profile.taskPushTime === false ? '' : 'checked'}>⏰ Aviso 30 min antes das tarefas com horário (dentista, reunião, gravação…)</label>
+    ${window.criahubPushOn && !window.criahubPushOn() ? '<div class="sub">Pra esses avisos chegarem no celular, ative as notificações aqui em cima.</div>' : ''}
     <div class="set-row"><span><b>E-mails importantes</b><small>Propostas, MEI e pagamentos na Início</small></span><button type="button" class="btn sm ghost" data-act="mail">Configurar</button></div>
     </div></details>
     <details class="set-g"><summary><span class="set-i">🗄️</span><span><b>Seus dados</b><small>Exportar, importar, exemplos e conta</small></span></summary><div class="set-b">
@@ -4843,6 +4846,7 @@ document.addEventListener('click', e => {
   if (t.dataset.act === 'painelclose') { closePainel(); return; }
   if (sheet) closeForm(); openPainel();
 }, true);
+document.addEventListener('change', e => { const t = e.target; if (t && (t.id === 's_tpush' || t.id === 's_tpusht')) { saveProfile(t.id === 's_tpush' ? { taskPush: t.checked } : { taskPushTime: t.checked }).then(() => toast(t.checked ? 'Aviso ligado ✓' : 'Aviso desligado')).catch(() => {}); } });
 document.addEventListener('change', e => { if (e.target && e.target.id === 's_painel') { try { localStorage.setItem('criahub:hidepainel', e.target.checked ? '' : '1'); } catch (_) {} renderShell(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('painelLayer')) closePainel(); });
 var ADMIN_P = new Promise(r => setTimeout(() => adminCheck().then(r, r), 1500));

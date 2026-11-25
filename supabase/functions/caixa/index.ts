@@ -205,6 +205,51 @@ async function novidade(news: string, teste: boolean) {
   return Response.json({ ok: true, teste, people: (who || []).length, mails, pushes, faltam: left, fails });
 }
 
+/* tarefas: às 7h, o resumo das tarefas do dia; e, a cada 5 min, o aviso 30 min antes das tarefas com horário.
+   Cada creator liga ou desliga em Ajustes › Avisos (perfil: taskPush e taskPushTime; o padrão é ligado). */
+const brNow = () => new Date(Date.now() - 3 * 3600e3);
+async function pushUsers() {
+  const { data } = await sb.from('push_subs').select('user_id'); return [...new Set((data || []).map((r: any) => r.user_id))];
+}
+async function optedOut(uids: string[], key: string) {
+  if (!uids.length) return new Set<string>();
+  const { data } = await sb.from('profiles').select('user_id').in('user_id', uids).eq(`data->>${key}`, 'false');
+  return new Set((data || []).map((r: any) => r.user_id));
+}
+async function tarefas(modo: string) {
+  if (!(await vapid())) return Response.json({ ok: false, why: 'não achei as chaves das notificações (private.push_vapid)' });
+  const uids = await pushUsers(); if (!uids.length) return Response.json({ ok: true, users: 0, sent: 0 });
+  const off = await optedOut(uids, modo === 'manha' ? 'taskPush' : 'taskPushTime'), on = uids.filter(u => !off.has(u));
+  const br = brNow(), today = br.toISOString().slice(0, 10);
+  const { data: rows, error } = await sb.from('items').select('user_id,id,data').eq('col', 'tasks').in('user_id', on).eq('data->>date', today);
+  if (error) return new Response(error.message, { status: 500 });
+  const open = (rows || []).filter((r: any) => r.data && r.data.done !== true && String(r.data.title || '').trim());
+  let sent = 0, users = 0;
+  if (modo === 'manha') {
+    const byUser = new Map<string, any[]>(); open.forEach((r: any) => byUser.set(r.user_id, [...(byUser.get(r.user_id) || []), r.data]));
+    for (const [uid, list] of byUser) {
+      list.sort((a, b) => String(a.time || '99').localeCompare(String(b.time || '99')));
+      const n = list.length, line = (t: any) => (t.time ? t.time + ' ' : '') + t.title;
+      sent += await pushTo(uid, {
+        title: n === 1 ? '☀️ Você tem 1 tarefa hoje' : `☀️ Você tem ${n} tarefas hoje`,
+        body: list.slice(0, 3).map(line).join(' · ') + (n > 3 ? ` · e mais ${n - 3}` : ''),
+        tag: 'tarefas-' + today, url: '/#rotina' }, 10 * 3600);
+      users++;
+    }
+  } else {
+    const mins = br.getUTCHours() * 60 + br.getUTCMinutes();
+    for (const r of open as any[]) {
+      const m = /^(\d{1,2}):(\d{2})/.exec(String(r.data.time || '')); if (!m) continue;
+      const at = +m[1] * 60 + +m[2], falta = at - mins;
+      if (falta > 25 && falta <= 30) {
+        sent += await pushTo(r.user_id, { title: `⏰ Daqui a 30 min: ${r.data.title}`, body: `Marcado para ${m[1].padStart(2, '0')}:${m[2]}. Toque pra ver o seu dia.`, tag: 'tarefa-' + r.id, url: '/#rotina' }, 1800);
+        users++;
+      }
+    }
+  }
+  return Response.json({ ok: true, modo, users, sent });
+}
+
 Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('ok');
   const url = new URL(req.url);
@@ -214,6 +259,7 @@ Deno.serve(async req => {
   if (b.action === 'aniver' && await keyOk('cron', b.key)) return aniver();
   if (b.action === 'aquecer' && await keyOk('cron', b.key)) return aquecer();
   if (b.action === 'momentos' && await keyOk('cron', b.key)) return momentos();
+  if (b.action === 'tarefas' && await keyOk('cron', b.key)) return tarefas(b.modo === 'manha' ? 'manha' : 'hora');
   if (b.action === 'novidade' && await keyOk('cron', b.key)) return novidade(String(b.news || ''), b.teste === true);
   return new Response('forbidden', { status: 403 });
 });
