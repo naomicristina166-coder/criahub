@@ -6640,7 +6640,8 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
 <p style="opacity:.7">Naomi, fundadora do CriaHub 🍒</p>` },
 ];
 /* só as fundadoras (Crias Beta: comissão maior no começo) e a admin veem o manual */
-function manOk() { return ADMIN || (!!AFF && Number(AFF.rate_first) > Number(AFF.rate_after)); }
+const GUIA_OPEN = new Date('2026-11-28T08:00:00-03:00'); /* as fundadoras veem a partir de sábado, 28/11, 8h (a admin vê antes) */
+function manOk() { return ADMIN || (!!AFF && Number(AFF.rate_first) > Number(AFF.rate_after) && new Date() >= GUIA_OPEN); }
 function manDone() { const d = S.profile && S.profile.manualDone; return Array.isArray(d) ? d : []; }
 function manDoneCount() { const d = manDone(); return MANUAL.filter(m => d.includes(m.id)).length; }
 var MAN_NEWS = null;
