@@ -1504,7 +1504,7 @@ function vNews() {
   <div class="chips">${['todas', 'Brasil', 'Mundo', ...topics].map(k => `<button class="chip" data-newsf="${esc(k)}" aria-pressed="${f === k}">${k === 'todas' ? 'Todas' : esc(k)}</button>`).join('')}</div>
   ${items.length ? `<div class="list" style="gap:12px">${items.map(newsCard).join('')}</div>` : `<div class="empty">Nada nesse filtro hoje.</div>`}
   ${eds.length > 1 ? `<section class="section"><div class="row-h"><h2>Edições anteriores</h2></div><div class="chips">${eds.map(e => `<button class="chip" data-newsday="${esc(e.date)}" aria-pressed="${e.date === day}">${esc(fmtD(e.date))}</button>`).join('')}</div></section>` : ''}
-  <div class="sub" style="text-align:center;font-weight:600">Notícias do mundo UGC, atualizadas todos os dias.</div>`}`;
+  <div class="sub" style="text-align:center;font-weight:600">Notícias do mundo pra creators, atualizadas todos os dias.</div>`}`;
 }
 function homeDay() {
   const t = today(), list = tasksOn(t), done = list.filter(x => x.done).length, late = lateTasks().length, hs = activeHabits();
@@ -2644,7 +2644,7 @@ function openHelp(key) {
   sheet = { col: 'help' };
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="O que é ${esc(h[0])}"><div class="sh"><h2>${esc(h[0])}</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <p style="margin:0;font-size:16px">${esc(h[1])}</p>
-    <details class="gl"><summary>Palavras do mundo UGC</summary><dl>${GLOSS.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></details>
+    <details class="gl"><summary>Palavras do mundo dos creators</summary><dl>${GLOSS.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></details>
     ${STORIES_DATA && STORIES_DATA[key.split('.')[0]] ? `<button type="button" class="btn soft" data-story="${esc(key.split('.')[0])}">Ver os stories dessa aba</button>` : ''}
     <div class="sub">Quer esconder telas que você não usa? Ajustes › Ferramentas que eu uso.</div></div></div>`;
 }
