@@ -5615,7 +5615,7 @@ function openLearn() {
   sheet = { col: 'learn' };
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-label="Aprenda o CriaHub">
     <div class="sh"><h2>Aprenda o CriaHub</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
-    <div class="sub">Os stories de cada aba, pra rever quando quiser. É muita coisa mesmo, vai no seu tempo 💗</div>
+    <div class="sub">Os stories de cada aba, pra facilitar seu aprendizado e você mexer no aplicativo com tranquilidade 💗</div>
     <div class="learn-list">${Object.entries(STORIES_DATA).map(([k, st]) => `<button type="button" class="learn-it" data-story="${k}"><span class="st-emo sm" aria-hidden="true">${st.slides[0][0]}</span><span><b>${esc(st.name)}</b><small>${esc(st.slides[0][2])}</small></span>${ic('right')}</button>`).join('')}</div>
   </div></div>`;
 }
