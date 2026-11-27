@@ -504,26 +504,51 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       <section class="sec"><h2>Todas as inscrições</h2>
       <div class="tools"><input class="search" type="search" placeholder="Buscar nome, e-mail, @ ou resposta" value="${esc(st.wq)}" data-q="w" aria-label="Buscar na lista">
         <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <section class="card" style="margin:0 0 14px;padding:14px 16px"><h2 style="margin:0 0 4px">Convite pro grupo Crias da Lista 🍒</h2>
+        <p class="sub" style="margin:0 0 10px">Cole o link de convite do grupo (WhatsApp › Dados do grupo › Convidar via link). Ele entra sozinho nas mensagens de cada pessoa: no botão do WhatsApp, no e-mail e no texto pra mandar na DM do Instagram.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="wlg" class="search" style="flex:1;min-width:220px" placeholder="https://chat.whatsapp.com/..." value="${esc(wlGroup())}"><button class="btn sm" data-wlgsave>Salvar link</button></div>
+        ${(() => { const E = all.map(w => w.email).filter(Boolean), parts = []; for (let i = 0; i < E.length; i += 40) parts.push(E.slice(i, i + 40)); return parts.length ? `<p class="sub" style="margin:12px 0 6px">E-mail pra todas de uma vez (vai em cópia oculta, ninguém vê o e-mail das outras):</p><div class="wl-acts" style="margin-top:0">${parts.map((P, i) => `<a class="wl-b" href="${esc('https://mail.google.com/mail/?authuser=criahubb@gmail.com&view=cm&fs=1&bcc=' + encodeURIComponent(P.join(',')) + '&su=' + encodeURIComponent(WL_SUBJ) + '&body=' + encodeURIComponent(wlInvite('')))}" target="_blank" rel="noopener">✉️ ${parts.length > 1 ? `E-mail ${i * 40 + 1} a ${i * 40 + P.length}` : `E-mail pra todas (${P.length})`}</a>`).join('')}</div>` : ''; })()}
+      </section>
       <div class="chips" style="margin:0 0 12px">${[['todas', 'Todas'], ['nao', 'Ainda não chamei'], ['sim', 'Já chamei'], ['semig', 'Sem Instagram']].map(([k, l]) => `<button class="chip" data-wc="${k}" aria-pressed="${(st.wc || 'todas') === k}">${l}</button>`).join('')}</div>
       <div class="list">${L.length ? L.slice(0, st.wlim).map(wlCard).join('') : '<div class="empty">Ninguém por aqui com esse filtro.</div>'}</div>
       ${L.length > st.wlim ? `<button class="btn ghost more" data-more>Ver mais (${nf(L.length - st.wlim)})</button>` : ''}</section>`;
+  }
+  const wlGroup = () => { try { return localStorage.getItem('criahub:wlgroup') || ''; } catch (_) { return ''; } };
+  const wlInvite = n => { const g = wlGroup(); return `Oi, ${n || 'Cria'}! Tudo bem? 🍒\n\nAqui é a Naomi, do CriaHub. Você está na nossa lista de espera e, como prometido, abrimos o grupo exclusivo das Crias da Lista. É lá que vou mandar as dicas, os bastidores e a condição especial de quem está na lista.\n\n${g ? 'Entra aqui: ' + g : '[link do grupo]'}\n\nDia 15/12 você entra no app antes de todo mundo ✨`; };
+  const WL_SUBJ = 'Seu convite pro grupo das Crias 🍒';
+  /* de onde veio: se o "origem" do link é o código de uma afiliada, mostra o nome dela */
+  function wlFrom(src) {
+    const s0 = String(src || 'site'), code = s0.replace(/^canvas-(ig|tt|yt)$/, '');
+    const a = (st.aff || []).find(x => x.code === s0);
+    if (a) return `link da ${esc(String(a.name || '').split(' ')[0])} 🍒`;
+    const M = { site: 'site', naomi: 'seu perfil', criahubapp: '@criahubapp', grupo: 'grupo', bio: 'bio', 'canvas-ig': 'conta de Canvas (Instagram)', 'canvas-tt': 'conta de Canvas (TikTok)', 'canvas-yt': 'conta de Canvas (YouTube)', canvas: 'conta de Canvas' };
+    return esc(M[s0] || s0);
   }
   const wlTalked = () => { try { return JSON.parse(localStorage.getItem('criahub:wltalk') || '{}'); } catch (_) { return {}; } };
   function wlCard(w) {
     const ig = (w.instagram || '').replace(/^@/, '').trim(), wa = String(w.whatsapp || '').replace(/\D/g, '');
     const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '', first = (w.name || '').split(' ')[0], talked = wlTalked()[w.id];
-    const mail = gmail(w.email, 'Você está na lista do CriaHub 🍒', `Oi, ${first}! Tudo bem?\n\n`);
+    const msg = wlInvite(first), mail = gmail(w.email, WL_SUBJ, msg);
     return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}${ig ? '' : '<span class="pill warn">sem Instagram</span>'}${talked ? `<span class="pill me">chamei ${esc(talked)}</span>` : ''}</div>
-      <div class="em pv">${esc(w.email)}${ig ? ' · @' + esc(ig) : ''}</div><div class="meta">${dtt(w.created_at)} · veio de: ${esc(w.source || 'site')}</div></div>
+      <div class="em pv">${esc(w.email)}${ig ? ' · @' + esc(ig) : ''}</div><div class="meta">${dtt(w.created_at)} · veio de: <b>${wlFrom(w.source)}</b></div></div>
       <button class="btn danger sm${st.sure === w.id ? ' sure' : ''}" data-rm="${w.id}">${st.sure === w.id ? 'Confirmar' : 'Remover'}</button></div>
       ${w.pain ? `<div class="pain">“${esc(w.pain)}”</div>` : ''}
       <div class="wl-acts">
         ${ig ? `<a class="wl-b ig" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">📸 Abrir Instagram</a><button class="wl-b" data-affcopy="@${esc(ig)}">Copiar @</button>` : ''}
-        ${waNum ? `<a class="wl-b" href="https://wa.me/${waNum}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-        <a class="wl-b" href="${esc(mail)}" target="_blank" rel="noopener">✉️ E-mail</a>
+        ${waNum ? `<a class="wl-b" href="https://wa.me/${waNum}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Convite no WhatsApp</a>` : ''}
+        <a class="wl-b" href="${esc(mail)}" target="_blank" rel="noopener">✉️ Convite por e-mail</a>
+        ${ig ? `<button class="wl-b" data-affcopy="${esc(msg)}">Copiar convite (pra DM)</button>` : ''}
         <button class="wl-b${talked ? ' on' : ''}" data-wltalk="${w.id}">${talked ? '✓ Já chamei' : 'Marcar: já chamei'}</button>
       </div></article>`;
   }
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-wlgsave]'); if (!b) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const v = ($('wlg') || {}).value?.trim() || '';
+    if (v && !/^https:\/\/chat\.whatsapp\.com\//.test(v)) { toast('Cole o link que começa com https://chat.whatsapp.com/'); return; }
+    try { localStorage.setItem('criahub:wlgroup', v); } catch (_) {}
+    toast(v ? 'Link do grupo salvo 🍒' : 'Link apagado'); render();
+  }, true);
   document.addEventListener('click', e => {
     const c = e.target.closest && e.target.closest('[data-wc]'); if (!c) return;
     e.stopImmediatePropagation(); e.preventDefault(); st.wc = c.dataset.wc; st.wlim = 50; render();
