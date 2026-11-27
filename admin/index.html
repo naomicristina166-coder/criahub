@@ -472,7 +472,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
           <input id="pnote" placeholder="Anotação (ex.: testadora, cortesia, pagou via Pix)" value="${esc(u.plan_note || '')}" maxlength="200">
           <button class="btn sm" data-saveplan="${u.user_id}">Salvar plano</button></div>
           <div class="chips" style="margin-top:8px"><button class="chip" data-gift="${u.user_id}|36">🎁 Presente Cria Beta (3 anos)</button><button class="chip" data-gift="${u.user_id}|1">1 mês de cortesia</button><button class="chip" data-gift="${u.user_id}|0">Sem data de fim</button></div>
-          <div class="chips" style="margin-top:8px">${(st.aff || []).some(a => a.user_id === u.user_id) ? '<span class="note" style="margin:0">💸 Já é afiliada · veja na aba Afiliadas</span>' : `<button class="chip" data-affmake="${u.user_id}|1|${esc(u.name || u.email || '')}">💸 Tornar afiliada Cria Beta (30% → 20%)</button><button class="chip" data-affmake="${u.user_id}|0|${esc(u.name || u.email || '')}">💸 Tornar afiliada (20%)</button>`}</div>
+          <div class="chips" style="margin-top:8px">${(st.aff || []).some(a => a.user_id === u.user_id) ? '<span class="note" style="margin:0">💸 Já é afiliada · veja na aba Afiliadas</span>' : `<button class="chip" data-affmake="${u.user_id}|1|${esc(u.name || u.email || '')}">💸 Tornar afiliada Cria Beta (20%)</button><button class="chip" data-affmake="${u.user_id}|0|${esc(u.name || u.email || '')}">💸 Tornar afiliada (20%)</button>`}</div>
           ${u.is_admin ? '' : `<div class="chips" style="margin-top:14px"><button class="chip" data-del="${u.user_id}" data-delmail="${esc(u.email)}" style="color:#B3261E">🗑 Excluir esta conta</button></div>`}
           ${u.plan === 'pro' && u.plan_since ? `<p class="note">Pro desde ${dt(u.plan_since)}${u.plan_until ? ' · pago até ' + dt(u.plan_until) : ''}. Pagamento novo? Registre em Finanças que a data se atualiza sozinha.</p>` : '<p class="note">Enquanto o pagamento não está no ar, é aqui que você libera o Pro na mão (testadoras, cortesias).</p>'}</div>
       </div>` : ''}</article>`;
@@ -974,7 +974,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     if (st.affMissing) return `<h1>Afiliadas</h1><div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/afiliadas.sql</b> no SQL Editor do Supabase e atualize esta página.</p></div>`;
     const A = st.aff || [], tot = A.reduce((s, a) => s + Number(a.to_pay || 0), 0), paid = A.reduce((s, a) => s + Number(a.paid || 0), 0);
     return `<h1>Afiliadas</h1>
-      <p class="sub">Todo dia 10: faça o Pix de cada afiliada com valor a pagar e toque em “Marquei como pago”. Pra criar uma afiliada, abra a pessoa na aba Creators.</p>
+      <p class="sub">Comissão: 20% enquanto a indicada pagar. Quem chegar a 10 indicadas no Pro sobe pra 25% (aparece um botão no card dela). Todo dia 10: faça o Pix de cada afiliada com valor a pagar e toque em “Marquei como pago”. Pra criar uma afiliada, abra a pessoa na aba Creators.</p>
       <div class="kpis" style="margin:14px 0"><div class="kpi"><span>Afiliadas</span><b>${A.filter(a => a.active).length}</b></div><div class="kpi"><span>A pagar</span><b>${brl2(tot)}</b></div><div class="kpi"><span>Já pago</span><b>${brl2(paid)}</b></div></div>
       ${A.length ? A.map(a => `<article class="card" style="margin-bottom:10px;padding:14px 16px">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(a.name)}${a.active ? '' : ' <span class="note">(pausada)</span>'}</b><span class="note" style="margin:0">${a.rate_first !== a.rate_after ? `${a.rate_first}% por ${a.first_months} meses, depois ${a.rate_after}%` : `${a.rate_after}%`}${a.note ? ' · ' + esc(a.note) : ''}</span></div>
@@ -982,6 +982,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
         <p class="sub" style="margin:0 0 8px">Pix: ${a.pix_key ? `<b>${esc(a.pix_type || '')} ${esc(a.pix_key)}</b> <button class="chip" data-affcopy="${esc(a.pix_key)}">copiar</button>` : '<i>ainda não cadastrou a chave</i>'}</p>
         <div class="chips">${Number(a.to_pay) > 0 ? `<button class="btn sm" data-affpaid="${a.user_id}">${st.affSure === a.user_id ? `Confirmar: paguei ${brl2(a.to_pay)}` : `Marquei como pago · ${brl2(a.to_pay)}`}</button>` : '<span class="note" style="margin:0">Nada a pagar agora ✓</span>'}
           <button class="chip" data-affcopy="https://criahub.app.br/lista?origem=${esc(a.code)}">Link da lista</button><button class="chip" data-affcopy="https://criahub.app.br/?ref=${esc(a.code)}">Link do app</button>
+          ${Number(a.pro_active) >= 10 && Number(a.rate_after) < 25 ? `<button class="btn sm" data-affrate="${a.user_id}|25">🎯 Bateu a meta (10 no Pro): subir pra 25%</button>` : ''}
           <button class="chip" data-afftoggle="${a.user_id}|${a.active ? 0 : 1}">${a.active ? 'Pausar' : 'Reativar'}</button></div>
       </article>`).join('') : '<p class="sub">Nenhuma afiliada ainda. Abra uma pessoa em Creators e toque em “Tornar afiliada”.</p>'}`;
   }
@@ -1036,12 +1037,12 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       ${F.length ? F.map(a => { const u = a.u, w = wa(u.whatsapp); return `<article class="card" style="margin-bottom:10px;padding:14px 16px">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(a.name)}${a.active ? '' : ' <span class="note">(pausada)</span>'}</b>${u.plan === 'pro' ? `<span class="pill pro">Pro${u.plan_until ? ' até ' + dt(u.plan_until) : ''}</span>` : '<span class="pill warn">sem Pro</span>'}</div>
         <p class="sub" style="margin:6px 0">${esc(a.email || '')}${u.instagram ? ' · @' + esc(u.instagram) : ''}${u.last_seen ? ' · usou ' + ago(u.last_seen) : ''}</p>
-        <p class="sub" style="margin:0 0 8px">${a.isAff ? `Afiliada · código <b>${esc(a.code)}</b> · ${a.rate_first !== a.rate_after ? `${a.rate_first}% → ${a.rate_after}%` : `${a.rate_after}%`} · ${a.referred} indicada${a.referred == 1 ? '' : 's'} · ${a.pro_active} no Pro · a receber ${brl2(a.to_pay)} · ${a.pix_key ? 'Pix ✓' : '<b>sem chave Pix</b>'}` : '<b>Ainda não é afiliada</b> · abra em Creators pra criar o link dela'}</p>
+        <p class="sub" style="margin:0 0 8px">${a.isAff ? `Afiliada · código <b>${esc(a.code)}</b> · ${a.rate_first !== a.rate_after ? `${a.rate_first}% → ${a.rate_after}%` : `${a.rate_after}%`} · ${a.referred} indicada${a.referred == 1 ? '' : 's'} · ${a.pro_active} de 10 no Pro pra meta dos 25% · a receber ${brl2(a.to_pay)} · ${a.pix_key ? 'Pix ✓' : '<b>sem chave Pix</b>'}` : '<b>Ainda não é afiliada</b> · abra em Creators pra criar o link dela'}</p>
         <div class="chips">${w ? `<a class="chip" href="${esc(w)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${a.isAff ? `<button class="chip" data-affcopy="https://criahub.app.br/lista?origem=${esc(a.code)}">Link da lista</button><button class="chip" data-affcopy="https://criahub.app.br/?ref=${esc(a.code)}">Link do app</button>` : ''}</div>
       </article>`; }).join('') : '<p class="sub">Nenhuma fundadora ainda. Dê o Pro de presente com a observação começando por “Cria Beta”.</p>'}`;
   }
   document.addEventListener('click', async e => {
-    const t = e.target.closest && e.target.closest('[data-affmake],[data-affpaid],[data-afftoggle],[data-affcopy]'); if (!t) return;
+    const t = e.target.closest && e.target.closest('[data-affmake],[data-affpaid],[data-afftoggle],[data-affcopy],[data-affrate]'); if (!t) return;
     e.stopImmediatePropagation(); e.preventDefault(); const d = t.dataset;
     if (d.affcopy) { try { await navigator.clipboard.writeText(d.affcopy); toast('Copiado'); } catch (_) { toast('Não consegui copiar'); } return; }
     if (d.affmake) {
@@ -1057,6 +1058,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       st.affSure = null; const r = await sb.rpc('admin_aff_paid', { p_user: d.affpaid });
       if (r.error) { toast('Não consegui marcar'); return; } toast('Marcado como pago ✓'); loadAff(); return;
     }
+    if (d.affrate) { const [uid, rate] = d.affrate.split('|'); if (!confirm(`Subir a comissão dela pra ${rate}%? Vale pros próximos pagamentos.`)) return; const r = await sb.rpc('admin_aff_rate', { p_user: uid, p_rate: Number(rate) }); if (r.error) { toast('Não consegui'); return; } toast(`Comissão agora é ${rate}% 🎯`); loadAff(); return; }
     if (d.afftoggle) { const [uid, on] = d.afftoggle.split('|'); const r = await sb.rpc('admin_aff_toggle', { p_user: uid, p_active: on === '1' }); if (r.error) { toast('Não consegui'); return; } loadAff(); }
   }, true);
 

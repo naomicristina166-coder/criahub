@@ -6596,7 +6596,7 @@ function manRule() {
   const A = AFF;
   if (A && Number(A.rate_first) !== Number(A.rate_after)) return `Você ganha ${A.rate_first}% de cada mensalidade nos primeiros ${A.first_months} meses de cada indicada e, depois, ${A.rate_after}% enquanto ela continuar assinando.`;
   if (A) return `Você ganha ${A.rate_after}% de cada mensalidade, todo mês, enquanto a indicada continuar assinando.`;
-  return 'Você ganha 20% de cada mensalidade, todo mês, enquanto a indicada continuar assinando (as Crias Beta ganham 30% nos primeiros 12 meses).';
+  return 'Você ganha 20% de cada mensalidade, todo mês, enquanto a indicada continuar assinando.';
 }
 const MANUAL = [
   { id: 'o-que-e', ic: '🍒', t: 'O que é o CriaHub', d: 'A ideia por trás do app, em 1 minuto',
@@ -6627,6 +6627,7 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
   { id: 'ganhos', ic: '💸', t: 'Como você ganha', d: 'Comissão e pagamento',
     b: () => `<p>${esc(manRule())}</p>
 <ul><li>Vale pro plano mensal e pro anual (no anual parcelado, conta cada parcela paga)</li><li>A comissão de cada mês é paga por <b>Pix todo dia 10</b> do mês seguinte</li><li>No painel de afiliada você vê suas indicadas, quem está no Pro e quanto tem a receber</li></ul>
+<div class="man-tip">🎯 <b>Meta:</b> quando você tiver <b>10 indicadas no Pro</b>, sua comissão sobe pra <b>25%</b>.${AFF ? ` Você está com <b>${Number(AFF.pro_active || 0)} de 10</b>${Number(AFF.rate_after) >= 25 ? ' e já está nos 25% 🎉' : ''}.` : ''}</div>
 <div class="man-tip">⚠️ Deixe sua chave Pix salva no painel. Sem ela não tem como receber.</div>` },
   { id: 'duvidas', ic: '❓', t: 'Dúvidas frequentes', d: 'O que mais perguntam',
     b: () => `<p><b>Precisa baixar na loja?</b><br>Não. Abre criahub.app.br e instala pelo próprio site, no iPhone ou Android.</p>
