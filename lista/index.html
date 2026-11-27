@@ -196,6 +196,8 @@ fieldset{border:0;padding:0;margin:18px 0 0}
 .kind{position:relative}
 .kind input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
 .kind span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px;padding:8px 10px;border-radius:14px;background:var(--creme);border:2px solid transparent;font-weight:700;font-size:15px;color:var(--vinho);cursor:pointer}
+.kind span small{display:block;width:100%;font-size:11.5px;font-weight:500;opacity:.75;margin-top:2px}
+.kind span:has(small){flex-wrap:wrap;align-content:center}
 .kind input:checked + span{background:var(--vinho);color:var(--on-vinho)}
 .kind input:focus-visible + span{outline:3px solid var(--lima);outline-offset:2px}
 .consent{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;margin-top:20px;font-size:14px;color:var(--muted)}
@@ -443,12 +445,14 @@ footer a:hover{color:#fff}
             <input type="tel" id="f-wa" name="whatsapp" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="(61) 90000-0000" required>
           </div>
           <fieldset>
-            <legend class="legend">Você faz</legend>
+            <legend class="legend">Que tipo de creator você é? <span class="opt">(marque tudo que fizer sentido)</span></legend>
             <div class="kinds">
-              <label class="kind"><input type="radio" name="kind" value="ugc" required><span>UGC tradicional</span></label>
-              <label class="kind"><input type="radio" name="kind" value="tech"><span>UGC Tech Canvas</span></label>
-              <label class="kind"><input type="radio" name="kind" value="ambos"><span>Os dois</span></label>
-              <label class="kind"><input type="radio" name="kind" value="comecando"><span>Tô começando</span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="ugc"><span>UGC tradicional</span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="tech"><span>UGC Tech Canvas</span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="nano"><span>Nano influenciadora<small>até 10 mil</small></span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="micro"><span>Micro influenciadora<small>10 mil a 100 mil</small></span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="influ"><span>Influenciadora<small>mais de 100 mil</small></span></label>
+              <label class="kind"><input type="checkbox" name="kind" value="comecando"><span>Tô começando</span></label>
             </div>
           </fieldset>
           <div class="field" style="margin-top:18px">
@@ -630,12 +634,12 @@ footer a:hover{color:#fff}
     const name = f.name.value.trim(), email = f.email.value.trim().toLowerCase();
     const instagram = f.instagram.value.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@+/, '');
     const whatsapp = f.whatsapp.value.trim(), pain = f.pain.value.trim();
-    const kind = (form.querySelector('input[name=kind]:checked') || {}).value;
+    const kind = [...form.querySelectorAll('input[name=kind]:checked')].map(x => x.value).join(',');
     if (!name) return fail('Coloca o seu nome.'), f.name.focus();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Confere o seu e-mail.'), f.email.focus();
     if (instagram.length < 2) return fail('Coloca o seu @ do Instagram, é por lá que a gente se fala.'), f.instagram.focus();
     if (whatsapp.replace(/\D/g, '').length < 10) return fail('Coloca o seu WhatsApp com DDD, pra entrar no grupo VIP.'), f.whatsapp.focus();
-    if (!kind) return fail('Conta pra gente o que você faz.');
+    if (!kind) return fail('Marca pelo menos uma opção de que tipo de creator você é.');
     if (pain.length < 3) return fail('Conta pra gente o que mais te atrapalha na rotina. Pode ser bem curtinho.'), f.pain.focus();
     if (!f.consent.checked) return fail('Pra entrar na lista, marque que aceita receber o aviso do lançamento.');
     if (!sb) return fail('Não conseguimos conectar agora. Confere a internet e tenta de novo.');

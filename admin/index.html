@@ -273,7 +273,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   const COLS = { brands: 'marcas', deliveries: 'entregas', ideas: 'ideias', tasks: 'tarefas', payments: 'pagamentos', extras: 'outras rendas', leads: 'prospecções', contracts: 'contratos', goals: 'metas', dreams: 'sonhos', warm: 'aquecimentos', habits: 'hábitos', hlog: 'registros de hábito', briefs: 'briefings', feedbacks: 'feedbacks', expenses: 'gastos', perms: 'permutas', notes: 'notas', accounts: 'contas de marca', retros: 'retrospectivas', videos: 'vídeos' };
   const KIND_APP = { ugc: 'faz UGC', canvas: 'faz UGC Tech Canvas', rendas: 'tem outras rendas', comecando: 'está começando' };
   const waNum = v => { const w = String(v || '').replace(/\D/g, ''); return w ? (w.length <= 11 ? '55' + w : w) : ''; };
-  const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', ambos: 'Os dois', comecando: 'Começando' };
+  const KINDS = { ugc: 'UGC tradicional', tech: 'UGC Tech Canvas', nano: 'Nano influenciadora', micro: 'Micro influenciadora', influ: 'Influenciadora', comecando: 'Começando', ambos: 'UGC (os dois)' };
+  const wlKinds = w => String(w.kind || '').split(',').filter(Boolean).flatMap(k => k === 'ambos' ? ['ugc', 'tech'] : [k]);
+  const wlKindTxt = w => wlKinds(w).map(k => KINDS[k] || k).join(' · ') || '—';
 
   const dur = secsOrMins => { const m = Math.round(secsOrMins); if (m < 1) return '0 min'; if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return h + 'h' + (r ? ' ' + String(r).padStart(2, '0') : ''); };
   const dt = d => !d ? '—' : /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? String(d).slice(8, 10) + '/' + String(d).slice(5, 7) + '/' + String(d).slice(2, 4) : new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' });
@@ -486,12 +488,12 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   function wlList() {
     const q = st.wq.trim().toLowerCase();
     const T = wlTalked();
-    return (st.wl || []).filter(w => (st.wk === 'todos' || w.kind === st.wk) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q))
+    return (st.wl || []).filter(w => (st.wk === 'todos' || wlKinds(w).includes(st.wk)) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q))
       && (st.wc !== 'nao' || !T[w.id]) && (st.wc !== 'sim' || T[w.id]) && (st.wc !== 'semig' || !(w.instagram || '').replace(/^@/, '').trim()));
   }
   function vLista() {
     const all = st.wl || [], L = wlList();
-    const byKind = Object.keys(KINDS).map(k => [k, all.filter(w => w.kind === k).length]);
+    const byKind = Object.keys(KINDS).filter(k => k !== 'ambos').map(k => [k, all.filter(w => wlKinds(w).includes(k)).length]);
     const src = {}; all.forEach(w => { const s = w.source || 'site'; src[s] = (src[s] || 0) + 1; });
     const pains = all.filter(w => w.pain).slice(0, 6);
     return `<div class="sec-h"><div><h1>Lista de espera</h1><p class="sub">${nf(all.length)} ${all.length === 1 ? 'pessoa' : 'pessoas'} esperando o dia 15/12.</p></div>
@@ -500,10 +502,10 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
         <section class="card"><h2>Quem são</h2><div class="rank" style="margin-top:12px">${byKind.map(([k, v]) => `<div class="r"><span class="n">${KINDS[k]}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${all.length ? Math.round(v / all.length * 100) : 0}%"></i></span></div>`).join('')}</div></section>
         <section class="card"><h2>De onde vieram</h2><p class="sub">Use links como criahub.app.br/lista?origem=bio</p><div class="rank" style="margin-top:12px">${Object.entries(src).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => `<div class="r"><span class="n">${esc(k)}</span><span class="m">${nf(v)}</span><span class="t"><i style="width:${Math.round(v / Math.max(1, all.length) * 100)}%"></i></span></div>`).join('') || '<p class="sub">Ainda ninguém.</p>'}</div></section>
       </div>
-      ${pains.length ? `<section class="sec"><div class="sec-h"><div><h2>O que mais atrapalha</h2><p class="sub">As respostas mais recentes. Ideia de conteúdo pronta.</p></div></div><div class="quotes">${pains.map(w => `<div class="quote">“${esc(w.pain)}”<small>${esc((w.name || '').split(' ')[0])} · ${KINDS[w.kind] || ''}</small></div>`).join('')}</div></section>` : ''}
+      ${pains.length ? `<section class="sec"><div class="sec-h"><div><h2>O que mais atrapalha</h2><p class="sub">As respostas mais recentes. Ideia de conteúdo pronta.</p></div></div><div class="quotes">${pains.map(w => `<div class="quote">“${esc(w.pain)}”<small>${esc((w.name || '').split(' ')[0])} · ${esc(wlKindTxt(w))}</small></div>`).join('')}</div></section>` : ''}
       <section class="sec"><h2>Todas as inscrições</h2>
       <div class="tools"><input class="search" type="search" placeholder="Buscar nome, e-mail, @ ou resposta" value="${esc(st.wq)}" data-q="w" aria-label="Buscar na lista">
-        <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+        <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).filter(([k]) => k !== 'ambos').map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <section class="card" style="margin:0 0 14px;padding:14px 16px"><h2 style="margin:0 0 4px">Convite pro grupo Crias da Lista 🍒</h2>
         <p class="sub" style="margin:0 0 10px">Cole o link de convite do grupo (WhatsApp › Dados do grupo › Convidar via link). Ele entra sozinho nas mensagens de cada pessoa: no botão do WhatsApp, no e-mail e no texto pra mandar na DM do Instagram.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="wlg" class="search" style="flex:1;min-width:220px" placeholder="https://chat.whatsapp.com/..." value="${esc(wlGroup())}"><button class="btn sm" data-wlgsave>Salvar link</button></div>
@@ -529,7 +531,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const ig = (w.instagram || '').replace(/^@/, '').trim(), wa = String(w.whatsapp || '').replace(/\D/g, '');
     const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '', first = (w.name || '').split(' ')[0], talked = wlTalked()[w.id];
     const msg = wlInvite(first), mail = gmail(w.email, WL_SUBJ, msg);
-    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}${ig ? '' : '<span class="pill warn">sem Instagram</span>'}${talked ? `<span class="pill me">chamei ${esc(talked)}</span>` : ''}</div>
+    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${esc(wlKindTxt(w))}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}${ig ? '' : '<span class="pill warn">sem Instagram</span>'}${talked ? `<span class="pill me">chamei ${esc(talked)}</span>` : ''}</div>
       <div class="em pv">${esc(w.email)}${ig ? ' · @' + esc(ig) : ''}</div><div class="meta">${dtt(w.created_at)} · veio de: <b>${wlFrom(w.source)}</b></div></div>
       <button class="btn danger sm${st.sure === w.id ? ' sure' : ''}" data-rm="${w.id}">${st.sure === w.id ? 'Confirmar' : 'Remover'}</button></div>
       ${w.pain ? `<div class="pain">“${esc(w.pain)}”</div>` : ''}
@@ -636,7 +638,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
   const csvUsers = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'Plano', 'Pago até', 'Já pagou', 'Entrou em', 'Último uso', 'Minutos (30 dias)', 'Dias ativos (30)', 'Mais usa', ...Object.values(COLS)],
     ...userList().map(u => [u.name, u.email, u.instagram ? '@' + u.instagram : '', u.whatsapp || '', u.plan === 'pro' ? 'Pro' : 'Grátis', u.plan_until ? dt(u.plan_until) : '', Number(u.paid_total || 0).toFixed(2).replace('.', ','), dt(u.created_at), u.last_seen ? dt(u.last_seen) : '', u.mins_30, u.days_30, scr(u.top_screen), ...Object.keys(COLS).map(k => (u.counts || {})[k] || 0)])], 'criahub-creators');
   const csvWl = () => csv([['Nome', 'E-mail', 'Instagram', 'WhatsApp', 'O que faz', 'O que mais atrapalha', 'Veio de', 'Entrou em', 'E-mail de boas-vindas'],
-    ...wlList().map(w => [w.name, w.email, w.instagram, w.whatsapp, KINDS[w.kind] || '', w.pain, w.source, dtt(w.created_at), w.welcomed_at ? 'enviado' : ''])], 'criahub-lista-de-espera');
+    ...wlList().map(w => [w.name, w.email, w.instagram, w.whatsapp, wlKindTxt(w), w.pain, w.source, dtt(w.created_at), w.welcomed_at ? 'enviado' : ''])], 'criahub-lista-de-espera');
 
   const csvRev = () => csv([['Quem pagou', 'E-mail', 'Valor', 'Data', 'Forma', 'Período', 'Anotação'],
     ...(st.rev || []).map(r => [r.payer, r.email, Number(r.amount).toFixed(2).replace('.', ','), dt(r.paid_at), METHODS[r.method] || r.method, PERIODS[r.period] || r.period, r.note])], 'criahub-financas');
