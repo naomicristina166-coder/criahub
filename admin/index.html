@@ -127,6 +127,9 @@ select.sel{min-height:42px;border:1px solid var(--line);border-radius:12px;paddi
 .ctabs{display:flex;width:100%;max-width:520px}.ctabs button{flex:1;padding:11px 14px;font-size:15px}
 .pain{background:var(--rosa-2);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:8px}
 .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.wl-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wl-b{font:inherit;font-size:14px;font-weight:700;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 14px;min-height:42px;display:inline-flex;align-items:center;cursor:pointer}
+.wl-b.ig{background:#420725;border-color:#420725;color:#fff}.wl-b.on{background:#E8F5EE;border-color:#9BD3B4}
 .links a{font-size:13px;font-weight:700;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
 .wl{padding:14px}
 .wl .row1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
@@ -482,7 +485,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
 
   function wlList() {
     const q = st.wq.trim().toLowerCase();
-    return (st.wl || []).filter(w => (st.wk === 'todos' || w.kind === st.wk) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q)));
+    const T = wlTalked();
+    return (st.wl || []).filter(w => (st.wk === 'todos' || w.kind === st.wk) && (!q || [w.name, w.email, w.instagram, w.pain, w.source].join(' ').toLowerCase().includes(q))
+      && (st.wc !== 'nao' || !T[w.id]) && (st.wc !== 'sim' || T[w.id]) && (st.wc !== 'semig' || !(w.instagram || '').replace(/^@/, '').trim()));
   }
   function vLista() {
     const all = st.wl || [], L = wlList();
@@ -499,18 +504,38 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       <section class="sec"><h2>Todas as inscrições</h2>
       <div class="tools"><input class="search" type="search" placeholder="Buscar nome, e-mail, @ ou resposta" value="${esc(st.wq)}" data-q="w" aria-label="Buscar na lista">
         <select class="sel" data-wk aria-label="Filtrar por tipo"><option value="todos">Todos os tipos</option>${Object.entries(KINDS).map(([k, l]) => `<option value="${k}"${st.wk === k ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="chips" style="margin:0 0 12px">${[['todas', 'Todas'], ['nao', 'Ainda não chamei'], ['sim', 'Já chamei'], ['semig', 'Sem Instagram']].map(([k, l]) => `<button class="chip" data-wc="${k}" aria-pressed="${(st.wc || 'todas') === k}">${l}</button>`).join('')}</div>
       <div class="list">${L.length ? L.slice(0, st.wlim).map(wlCard).join('') : '<div class="empty">Ninguém por aqui com esse filtro.</div>'}</div>
       ${L.length > st.wlim ? `<button class="btn ghost more" data-more>Ver mais (${nf(L.length - st.wlim)})</button>` : ''}</section>`;
   }
+  const wlTalked = () => { try { return JSON.parse(localStorage.getItem('criahub:wltalk') || '{}'); } catch (_) { return {}; } };
   function wlCard(w) {
-    const ig = (w.instagram || '').replace(/^@/, ''), wa = String(w.whatsapp || '').replace(/\D/g, '');
-    const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '';
-    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}</div>
-      <div class="em pv">${esc(w.email)}</div><div class="meta">${dtt(w.created_at)} · veio de: ${esc(w.source || 'site')}</div></div>
+    const ig = (w.instagram || '').replace(/^@/, '').trim(), wa = String(w.whatsapp || '').replace(/\D/g, '');
+    const waNum = wa ? (wa.length <= 11 ? '55' + wa : wa) : '', first = (w.name || '').split(' ')[0], talked = wlTalked()[w.id];
+    const mail = gmail(w.email, 'Você está na lista do CriaHub 🍒', `Oi, ${first}! Tudo bem?\n\n`);
+    return `<article class="person wl"><div class="row1"><div style="min-width:0"><div class="nm">${esc(w.name)} <span class="pill">${KINDS[w.kind] || '—'}</span>${w.welcomed_at ? '<span class="pill ok">e-mail enviado</span>' : '<span class="pill warn">sem e-mail</span>'}${ig ? '' : '<span class="pill warn">sem Instagram</span>'}${talked ? `<span class="pill me">chamei ${esc(talked)}</span>` : ''}</div>
+      <div class="em pv">${esc(w.email)}${ig ? ' · @' + esc(ig) : ''}</div><div class="meta">${dtt(w.created_at)} · veio de: ${esc(w.source || 'site')}</div></div>
       <button class="btn danger sm${st.sure === w.id ? ' sure' : ''}" data-rm="${w.id}">${st.sure === w.id ? 'Confirmar' : 'Remover'}</button></div>
       ${w.pain ? `<div class="pain">“${esc(w.pain)}”</div>` : ''}
-      ${ig || waNum ? `<div class="links">${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="pv">@${esc(ig)}</a>` : ''}${waNum ? `<a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="pv">WhatsApp</a>` : ''}</div>` : ''}</article>`;
+      <div class="wl-acts">
+        ${ig ? `<a class="wl-b ig" href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">📸 Abrir Instagram</a><button class="wl-b" data-affcopy="@${esc(ig)}">Copiar @</button>` : ''}
+        ${waNum ? `<a class="wl-b" href="https://wa.me/${waNum}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+        <a class="wl-b" href="${esc(mail)}" target="_blank" rel="noopener">✉️ E-mail</a>
+        <button class="wl-b${talked ? ' on' : ''}" data-wltalk="${w.id}">${talked ? '✓ Já chamei' : 'Marcar: já chamei'}</button>
+      </div></article>`;
   }
+  document.addEventListener('click', e => {
+    const c = e.target.closest && e.target.closest('[data-wc]'); if (!c) return;
+    e.stopImmediatePropagation(); e.preventDefault(); st.wc = c.dataset.wc; st.wlim = 50; render();
+  }, true);
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('[data-wltalk]'); if (!t) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    const m = wlTalked(), id = t.dataset.wltalk;
+    if (m[id]) delete m[id]; else m[id] = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    try { localStorage.setItem('criahub:wltalk', JSON.stringify(m)); } catch (_) {}
+    render();
+  }, true);
 
   const FBK = { erro: 'Deu erro', ideia: 'Ideia', duvida: 'Dúvida', elogio: 'Elogio' };
   const FBS = { novo: 'Novo', vendo: 'Vendo', resolvido: 'Resolvido' };
