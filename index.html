@@ -378,7 +378,7 @@ window.CRIAHUB_CONFIG = {
   }
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-push]'); if (!b) return; e.preventDefault(); e.stopImmediatePropagation(); b.dataset.push === 'on' ? pushEnable() : pushDisable(); }, true);
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.criahub === 'open') { const h = ((ev.data.url || '').split('#')[1] || 'radar'); if (h === 'radar') openRadar(); else if (h === 'mesdecria' || h === 'anodecria') { if (window.criahubOpenRetro) window.criahubOpenRetro(h.slice(0, 3)); } else if (h === 'emalta') { if (window.criahubOpenAlta) window.criahubOpenAlta(); } else if (h === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (h === 'metricas') { if (window.criahubOpenMetricas) window.criahubOpenMetricas(); } else if (h === 'emails') { if (window.criahubOpenMail) window.criahubOpenMail(); } else if (h === 'contas') { if (window.criahubGoContas) window.criahubGoContas(); } else if (h === 'novidade' || h === 'guia') { if (window.criahubOpenGuia) window.criahubOpenGuia(h); } else if (h === 'painel') { try { sessionStorage.setItem('criahub:admtab', 'radar'); } catch (_) {} let n = 0; const t = setInterval(() => { if (window.criahubOpenPainel && (window.criahubOpenPainel(), document.getElementById('painelLayer'))) clearInterval(t); else if (++n > 20) clearInterval(t); }, 300); } else { const g = document.querySelector(`.nav[data-tab=${h}], .tab[data-tab=${h}], [data-tab=${h}]`); if (g) g.click(); } } });
     window.addEventListener('load', () => { if (pushOn()) swReg().catch(() => {}); });
     /* toda vez que o app abre com as notificações ligadas: confere a inscrição deste aparelho e regrava no servidor.
        Se o navegador trocou o endereço (acontece no Android) ou a chave mudou, as notificações voltam sem ela fazer nada. */
@@ -6643,13 +6643,34 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
 function manOk() { return ADMIN || (!!AFF && Number(AFF.rate_first) > Number(AFF.rate_after)); }
 function manDone() { const d = S.profile && S.profile.manualDone; return Array.isArray(d) ? d : []; }
 function manDoneCount() { const d = manDone(); return MANUAL.filter(m => d.includes(m.id)).length; }
-function openManual(openId) {
-  sheet = { col: 'manual' };
+var MAN_NEWS = null;
+async function manNewsLoad() {
+  const sb = window.criahubSupabase; if (!sb || S.mode !== 'remote') return;
+  try { const { data, error } = await sb.rpc('founder_news_list'); if (!error) { const was = JSON.stringify(MAN_NEWS); MAN_NEWS = data || []; if (was !== JSON.stringify(MAN_NEWS) && sheet && sheet.col === 'manual') openManual(sheet.open, sheet.news); } } catch (_) {}
+}
+const MAN_GO = { guia: 'Guia', inicio: 'Início', rotina: 'Rotina', marcas: 'Marcas', agenda: 'Agenda', estudio: 'Estúdio', financeiro: 'Finanças', radar: 'Radar Cria', pro: 'Pro', aff: 'Painel de afiliada' };
+function manNewsHtml(hl) {
+  const L = MAN_NEWS || []; if (!L.length) return '';
+  const d = x => { const t = new Date(x); return isNaN(t) ? '' : t.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); };
+  return `<section class="man-news" id="manNews"><b class="man-nh">Novidades pra vocês 🍒</b>${L.slice(0, 5).map((n, i) => `<article class="man-ni${hl && i === 0 ? ' hl' : ''}"><span class="man-nd">${esc(d(n.at))}</span><b>${esc(n.title)}</b>${n.body ? `<p>${esc(n.body)}</p>` : ''}${n.go && n.go !== 'guia' && MAN_GO[n.go] ? `<button type="button" class="btn sm" data-mgo="${esc(n.go)}">Ver em ${esc(MAN_GO[n.go])} ›</button>` : ''}</article>`).join('')}</section>`;
+}
+window.criahubOpenGuia = (h) => {
+  let n = 0; const t = setInterval(() => {
+    if (manOk()) { clearInterval(t); if (sheet) closeForm(); openManual(null, h === 'novidade'); manNewsLoad(); if (h === 'novidade') setTimeout(() => { const e = document.getElementById('manNews'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 600); }
+    else if (++n > 30) clearInterval(t);
+  }, 300);
+};
+if (location.hash === '#novidade' || location.hash === '#guia') { const h = location.hash.slice(1); try { history.replaceState(null, '', location.pathname); } catch (_) {} setTimeout(() => window.criahubOpenGuia(h), 1200); }
+function openManual(openId, newsHl) {
+  sheet = { col: 'manual', open: openId, news: newsHl };
+  if (MAN_NEWS === null) { MAN_NEWS = []; manNewsLoad(); }
   const done = manDone(), n = manDoneCount(), pct = Math.round(n / MANUAL.length * 100);
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet man-sheet" role="dialog" aria-modal="true" aria-label="Guia da Fundadora">
     <div class="sh"><h2>Guia da Fundadora 📖</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <p class="sub" style="margin:0">Tudo o que você precisa saber pra usar, explicar e divulgar o CriaHub.</p>
     <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${n === MANUAL.length ? 'Guia completo! ✨' : 'Seu progresso'}</span><span class="num">${n} de ${MANUAL.length} aulas</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
+    ${manNewsHtml(newsHl)}
+    <b class="man-nh" style="margin-top:4px">As aulas</b>
     <div class="man-list">${MANUAL.map((m, i) => { const ok = done.includes(m.id); return `<details class="man-l${ok ? ' ok' : ''}" data-mid="${m.id}"${openId === m.id ? ' open' : ''}><summary><span class="man-n">${ok ? '✓' : i + 1}</span><span><b>${m.ic} ${esc(m.t)}</b><small>${esc(m.d)}</small></span></summary><div class="man-b">${m.b()}
       <button type="button" class="btn sm${ok ? ' ghost' : ''}" data-mdone="${m.id}">${ok ? 'Lida ✓' : i < MANUAL.length - 1 ? 'Li! Próxima aula ›' : 'Concluir o guia ✨'}</button></div></details>`; }).join('')}</div>
   </div></div>`;
@@ -6682,8 +6703,14 @@ function openAff() {
   </div></div>`;
 }
 document.addEventListener('click', async e => {
-  const t = e.target.closest && e.target.closest('[data-act="aff"],[data-act="affpix"],[data-affcopy],[data-act="manual"],[data-mdone]'); if (!t) return;
+  const t = e.target.closest && e.target.closest('[data-act="aff"],[data-act="affpix"],[data-affcopy],[data-act="manual"],[data-mdone],[data-mgo]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.mgo) {
+    const g = t.dataset.mgo; closeForm();
+    if (g === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (g === 'aff') openAff();
+    else { const b = document.querySelector(`.nav[data-tab=${g}], .tab[data-tab=${g}], [data-tab=${g}]`); if (b) b.click(); }
+    return;
+  }
   if (t.dataset.act === 'manual') { if (!manOk()) return; if (sheet) closeForm(); openManual(); return; }
   if (t.dataset.mdone) {
     const id = t.dataset.mdone, d = manDone(), i = MANUAL.findIndex(m => m.id === id);
@@ -6705,6 +6732,11 @@ document.addEventListener('click', async e => {
 (() => { const st = document.createElement('style'); st.textContent = `
 .man-cta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--fg);font:inherit;cursor:pointer}
 .man-cta b{display:block;font-size:15px}.man-cta small{display:block;font-size:12.5px;opacity:.7;margin-top:1px}.man-ic{font-size:24px}.man-go{margin-left:auto;font-size:22px;opacity:.5}
+.man-news{display:flex;flex-direction:column;gap:8px}
+.man-nh{font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.man-ni{border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.man-ni.hl{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.man-ni p{margin:0;font-size:14px;line-height:1.5;white-space:pre-line}.man-nd{font-size:12px;opacity:.6}
 .man-list{display:flex;flex-direction:column;gap:8px}
 .man-l{border:1px solid var(--line);border-radius:16px}
 .man-l>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
