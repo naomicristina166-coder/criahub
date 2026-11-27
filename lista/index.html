@@ -435,8 +435,8 @@ footer a:hover{color:#fff}
             <input type="email" id="f-email" name="email" autocomplete="email" inputmode="email" maxlength="160" required>
           </div>
           <div class="field">
-            <label for="f-ig">Seu @ no Instagram <span class="opt">(opcional)</span></label>
-            <input type="text" id="f-ig" name="instagram" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="@seuperfil">
+            <label for="f-ig">Seu @ no Instagram</label>
+            <input type="text" id="f-ig" name="instagram" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="@seuperfil" required>
           </div>
           <div class="field">
             <label for="f-wa">WhatsApp <span class="opt">(pra entrar no grupo VIP das Crias)</span></label>
@@ -633,6 +633,7 @@ footer a:hover{color:#fff}
     const kind = (form.querySelector('input[name=kind]:checked') || {}).value;
     if (!name) return fail('Coloca o seu nome.'), f.name.focus();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Confere o seu e-mail.'), f.email.focus();
+    if (instagram.length < 2) return fail('Coloca o seu @ do Instagram, é por lá que a gente se fala.'), f.instagram.focus();
     if (whatsapp.replace(/\D/g, '').length < 10) return fail('Coloca o seu WhatsApp com DDD, pra entrar no grupo VIP.'), f.whatsapp.focus();
     if (!kind) return fail('Conta pra gente o que você faz.');
     if (pain.length < 3) return fail('Conta pra gente o que mais te atrapalha na rotina. Pode ser bem curtinho.'), f.pain.focus();
