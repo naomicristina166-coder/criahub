@@ -956,16 +956,19 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
     const r = await sb.rpc('admin_founder_news_delete', { p_id: t.dataset.fndel }); if (r.error) { toast('Não consegui apagar'); return; } loadFn();
   }, true);
   /* fundadoras = Crias Beta (afiliadas com comissão maior no começo). Ficam separadas das assinantes do Pro. */
-  function isFund(id) { return (st.aff || []).some(a => a.user_id === id && (a.note === 'Cria Beta' || Number(a.rate_first) > Number(a.rate_after))); }
+  function isFund(id) {
+    const u = (st.users || []).find(x => x.user_id === id);
+    return (!!u && /^cria beta/i.test(u.plan_note || '')) || (st.aff || []).some(a => a.user_id === id && (a.note === 'Cria Beta' || Number(a.rate_first) > Number(a.rate_after)));
+  }
   function vCrias() {
     if (st.affMissing) return `<h1>Fundadoras 🍒</h1><div class="fund-miss"><b>Falta um passo</b><p class="sub" style="margin-top:4px">Rode o arquivo <b>supabase/afiliadas.sql</b> no SQL Editor do Supabase e atualize esta página.</p></div>`;
     if (!st.aff) return '<div class="loading">Carregando…</div>';
-    const F = st.aff.filter(a => isFund(a.user_id)).map(a => ({ ...a, u: (st.users || []).find(x => x.user_id === a.user_id) || {} }))
+    const F = (st.users || []).filter(u => isFund(u.user_id)).map(u => { const a = st.aff.find(x => x.user_id === u.user_id); return { user_id: u.user_id, name: u.name || u.email, email: u.email, code: a ? a.code : '', referred: a ? a.referred : 0, pro_active: a ? a.pro_active : 0, to_pay: a ? a.to_pay : 0, pix_key: a ? a.pix_key : '', active: a ? a.active : true, rate_first: a ? a.rate_first : 0, rate_after: a ? a.rate_after : 0, first_months: a ? a.first_months : 0, isAff: !!a, u }; })
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    const semPix = F.filter(a => !a.pix_key).length, ind = F.reduce((s, a) => s + Number(a.referred || 0), 0), pro = F.reduce((s, a) => s + Number(a.pro_active || 0), 0);
+    const semPix = F.filter(a => a.isAff && !a.pix_key).length, ind = F.reduce((s, a) => s + Number(a.referred || 0), 0), pro = F.reduce((s, a) => s + Number(a.pro_active || 0), 0);
     const wa = n => { const d = String(n || '').replace(/\D/g, ''); return d ? 'https://wa.me/' + (d.length <= 11 ? '55' + d : d) : ''; };
     return `<h1>Fundadoras 🍒</h1>
-      <p class="sub">As Crias Beta: Pro grátis, ${F[0] ? `${F[0].rate_first}% de comissão nos primeiros ${F[0].first_months} meses e ${F[0].rate_after}% depois` : 'comissão maior no começo'}. Elas ficam aqui, separadas das assinantes do Pro, e veem o <b>Guia da Fundadora</b> no app. Pra adicionar uma, abra a pessoa em Creators e toque em “Tornar afiliada Cria Beta”.</p>
+      <p class="sub">As Crias Beta, que ganharam o Pro de presente. Ficam aqui, separadas das assinantes do Pro, e veem o <b>Guia da Fundadora</b> no app. Quem entra: quem tem o Pro com a observação começando por “Cria Beta”.</p>
       <div class="kpis" style="margin:14px 0"><div class="kpi"><span>Fundadoras</span><b>${F.length}</b></div><div class="kpi"><span>Indicadas por elas</span><b>${ind}</b></div><div class="kpi"><span>No Pro por elas</span><b>${pro}</b></div><div class="kpi"><span>Sem chave Pix</span><b>${semPix}</b></div></div>
       <section class="card" style="padding:14px 16px;margin-bottom:16px">
         <h2 style="margin:0 0 4px">Mandar novidade pras fundadoras 📣</h2>
@@ -981,9 +984,9 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       ${F.length ? F.map(a => { const u = a.u, w = wa(u.whatsapp); return `<article class="card" style="margin-bottom:10px;padding:14px 16px">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(a.name)}${a.active ? '' : ' <span class="note">(pausada)</span>'}</b>${u.plan === 'pro' ? `<span class="pill pro">Pro${u.plan_until ? ' até ' + dt(u.plan_until) : ''}</span>` : '<span class="pill warn">sem Pro</span>'}</div>
         <p class="sub" style="margin:6px 0">${esc(a.email || '')}${u.instagram ? ' · @' + esc(u.instagram) : ''}${u.last_seen ? ' · usou ' + ago(u.last_seen) : ''}</p>
-        <p class="sub" style="margin:0 0 8px">Código <b>${esc(a.code)}</b> · ${a.referred} indicada${a.referred == 1 ? '' : 's'} · ${a.pro_active} no Pro · a receber ${brl2(a.to_pay)} · ${a.pix_key ? 'Pix ✓' : '<b>sem chave Pix</b>'}</p>
-        <div class="chips">${w ? `<a class="chip" href="${esc(w)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<button class="chip" data-affcopy="https://criahub.app.br/lista?origem=${esc(a.code)}">Link da lista</button><button class="chip" data-affcopy="https://criahub.app.br/?ref=${esc(a.code)}">Link do app</button></div>
-      </article>`; }).join('') : '<p class="sub">Nenhuma fundadora ainda. Abra uma pessoa em Creators e toque em “Tornar afiliada Cria Beta”.</p>'}`;
+        <p class="sub" style="margin:0 0 8px">${a.isAff ? `Afiliada · código <b>${esc(a.code)}</b> · ${a.rate_first !== a.rate_after ? `${a.rate_first}% → ${a.rate_after}%` : `${a.rate_after}%`} · ${a.referred} indicada${a.referred == 1 ? '' : 's'} · ${a.pro_active} no Pro · a receber ${brl2(a.to_pay)} · ${a.pix_key ? 'Pix ✓' : '<b>sem chave Pix</b>'}` : '<b>Ainda não é afiliada</b> · abra em Creators pra criar o link dela'}</p>
+        <div class="chips">${w ? `<a class="chip" href="${esc(w)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${a.isAff ? `<button class="chip" data-affcopy="https://criahub.app.br/lista?origem=${esc(a.code)}">Link da lista</button><button class="chip" data-affcopy="https://criahub.app.br/?ref=${esc(a.code)}">Link do app</button>` : ''}</div>
+      </article>`; }).join('') : '<p class="sub">Nenhuma fundadora ainda. Dê o Pro de presente com a observação começando por “Cria Beta”.</p>'}`;
   }
   document.addEventListener('click', async e => {
     const t = e.target.closest && e.target.closest('[data-affmake],[data-affpaid],[data-afftoggle],[data-affcopy]'); if (!t) return;

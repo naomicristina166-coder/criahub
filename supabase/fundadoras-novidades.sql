@@ -7,12 +7,20 @@
 
 create schema if not exists private;
 
--- quem é fundadora: afiliada ativa Cria Beta (comissão maior no começo)
+-- quem é fundadora: quem ganhou o Pro de presente como Cria Beta (a observação do plano começa com "Cria Beta")
+-- ou afiliada marcada como Cria Beta
 create or replace function private.is_founder(p_user uuid) returns boolean
   language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from public.affiliates a where a.user_id = p_user and a.active
+  select exists (select 1 from public.plans p where p.user_id = p_user and p.note ilike 'Cria Beta%')
+      or exists (select 1 from public.affiliates a where a.user_id = p_user and a.active
                  and (a.note = 'Cria Beta' or a.rate_first > a.rate_after))
 $$;
+
+-- o app pergunta se quem está logada é fundadora (pra mostrar o Guia da Fundadora)
+create or replace function public.am_founder() returns boolean
+  language sql stable security definer set search_path = '' as $$ select private.is_founder(auth.uid()) $$;
+revoke all on function public.am_founder() from public, anon;
+grant execute on function public.am_founder() to authenticated;
 
 create table if not exists public.founder_news (
   id         uuid primary key default gen_random_uuid(),
@@ -45,8 +53,8 @@ begin
   insert into public.founder_news (title, body, go) values (left(trim(p_title), 90), nullif(left(trim(coalesce(p_body, '')), 600), ''), v_go)
     returning id into v_id;
   insert into public.warm_alerts (user_id, send_at, title, body, tag, url)
-    select a.user_id, now(), left('🍒 ' || trim(p_title), 120), left(coalesce(nullif(trim(p_body), ''), 'Toque pra ver a novidade no app ✨'), 240), 'fundadoras', '/#novidade'
-    from public.affiliates a where private.is_founder(a.user_id);
+    select a.id, now(), left('🍒 ' || trim(p_title), 120), left(coalesce(nullif(trim(p_body), ''), 'Toque pra ver a novidade no app ✨'), 240), 'fundadoras', '/#novidade'
+    from auth.users a where private.is_founder(a.id);
   get diagnostics v_n = row_count;
   select count(distinct s.user_id) into v_push from public.push_subs s where private.is_founder(s.user_id);
   return jsonb_build_object('ok', true, 'id', v_id, 'founders', v_n, 'with_push', v_push);
