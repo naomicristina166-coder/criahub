@@ -4321,7 +4321,7 @@ function openSettings() {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><form class="sheet" data-form="settings" role="dialog" aria-modal="true" aria-label="Ajustes">
     <div class="sh"><h2>Ajustes</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     ${S.mode === 'remote' ? `<div class="card section" style="gap:8px"><b>Seu plano</b><span class="sub">${ADMIN ? 'Veja a tela do Pro e os links do Asaas.' : isPro() ? `Você é Pro${PLAN && PLAN.until ? ` até ${String(PLAN.until).slice(0, 10).split('-').reverse().join('/')}` : ''} ✨` : 'Você está no plano Grátis.'}</span><div class="row-btns"><button type="button" class="btn sm ghost" data-pro="">${ADMIN ? 'Abrir tela do Pro' : isPro() ? 'Ver o que tem no Pro' : 'Conhecer o Pro'}</button></div></div>` : ''}
-    ${manOk() ? `<div class="set-row card section" style="gap:8px"><span><b>Manual da Cria 📖</b><small>Tudo sobre o CriaHub, em 8 aulas rápidas</small></span><button type="button" class="btn sm" data-act="manual">Abrir</button></div>` : ''}
+    ${manOk() ? `<div class="set-row card section" style="gap:8px"><span><b>Guia da Fundadora 📖</b><small>Tudo sobre o CriaHub, em 8 aulas rápidas</small></span><button type="button" class="btn sm" data-act="manual">Abrir</button></div>` : ''}
     ${AFF ? `<div class="set-row card section" style="gap:8px"><span><b>Painel de afiliada 💸</b><small>Seu link, suas indicadas e quanto você tem a receber</small></span><button type="button" class="btn sm" data-act="aff">Abrir</button></div>` : ''}
     <details class="set-g"><summary><span class="set-i">👤</span><span><b>Perfil</b><small>Nome, @, WhatsApp e aniversário</small></span></summary><div class="set-b">
     <div class="field"><label for="s_name">Seu nome</label><input type="text" id="s_name" name="name" value="${esc(S.profile.name || '')}" placeholder="Como quer ser chamada"></div>
@@ -6590,7 +6590,7 @@ function affLinks() {
   const c = AFF ? AFF.code : '';
   return { lista: `https://criahub.app.br/lista?origem=${c}`, app: `https://criahub.app.br/?ref=${c}` };
 }
-/* ================= Manual da Cria: mini curso pras afiliadas ================= */
+/* ================= Guia da Fundadora: mini curso pras afiliadas ================= */
 function manRule() {
   const A = AFF;
   if (A && Number(A.rate_first) !== Number(A.rate_after)) return `Você ganha ${A.rate_first}% de cada mensalidade nos primeiros ${A.first_months} meses de cada indicada e, depois, ${A.rate_after}% enquanto ela continuar assinando.`;
@@ -6646,12 +6646,12 @@ function manDoneCount() { const d = manDone(); return MANUAL.filter(m => d.inclu
 function openManual(openId) {
   sheet = { col: 'manual' };
   const done = manDone(), n = manDoneCount(), pct = Math.round(n / MANUAL.length * 100);
-  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet man-sheet" role="dialog" aria-modal="true" aria-label="Manual da Cria">
-    <div class="sh"><h2>Manual da Cria 📖</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
+  $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet man-sheet" role="dialog" aria-modal="true" aria-label="Guia da Fundadora">
+    <div class="sh"><h2>Guia da Fundadora 📖</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <p class="sub" style="margin:0">Tudo o que você precisa saber pra usar, explicar e divulgar o CriaHub.</p>
-    <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${n === MANUAL.length ? 'Manual completo! ✨' : 'Seu progresso'}</span><span class="num">${n} de ${MANUAL.length} aulas</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
+    <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${n === MANUAL.length ? 'Guia completo! ✨' : 'Seu progresso'}</span><span class="num">${n} de ${MANUAL.length} aulas</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
     <div class="man-list">${MANUAL.map((m, i) => { const ok = done.includes(m.id); return `<details class="man-l${ok ? ' ok' : ''}" data-mid="${m.id}"${openId === m.id ? ' open' : ''}><summary><span class="man-n">${ok ? '✓' : i + 1}</span><span><b>${m.ic} ${esc(m.t)}</b><small>${esc(m.d)}</small></span></summary><div class="man-b">${m.b()}
-      <button type="button" class="btn sm${ok ? ' ghost' : ''}" data-mdone="${m.id}">${ok ? 'Lida ✓' : i < MANUAL.length - 1 ? 'Li! Próxima aula ›' : 'Concluir manual ✨'}</button></div></details>`; }).join('')}</div>
+      <button type="button" class="btn sm${ok ? ' ghost' : ''}" data-mdone="${m.id}">${ok ? 'Lida ✓' : i < MANUAL.length - 1 ? 'Li! Próxima aula ›' : 'Concluir o guia ✨'}</button></div></details>`; }).join('')}</div>
   </div></div>`;
 }
 function openAff() {
@@ -6664,7 +6664,7 @@ function openAff() {
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet aff-sheet" role="dialog" aria-modal="true" aria-label="Painel de afiliada">
     <div class="sh"><h2>Seu painel de afiliada 💸</h2><button type="button" class="iconbtn" data-act="close" aria-label="Fechar">${ic('x')}</button></div>
     <div class="aff-tiles">${tile('Indicadas', A.referred, 'criaram conta')}${tile('No Pro', A.pro_active, 'assinando agora')}${tile('Este mês', affBrl(A.month_amount), 'de comissão')}${tile('A receber', affBrl(A.to_pay), 'pago até o dia 10')}</div>
-    ${manOk() ? `<button type="button" class="man-cta" data-act="manual"><span class="man-ic">📖</span><span><b>Manual da Cria</b><small>Tudo o que você precisa saber, em 8 aulas rápidas${manDoneCount() ? ` · ${manDoneCount()} de ${MANUAL.length} lidas` : ''}</small></span><span class="man-go">›</span></button>` : ''}
+    ${manOk() ? `<button type="button" class="man-cta" data-act="manual"><span class="man-ic">📖</span><span><b>Guia da Fundadora</b><small>Tudo o que você precisa saber, em 8 aulas rápidas${manDoneCount() ? ` · ${manDoneCount()} de ${MANUAL.length} lidas` : ''}</small></span><span class="man-go">›</span></button>` : ''}
     <div class="card section" style="gap:8px"><b>Seu link</b>
       <span class="sub">${launched ? 'Mande esse link: quem criar a conta por ele vira sua indicada.' : 'Até o lançamento (17/12), use o link da lista. Quem entrar na lista por ele e assinar depois vira sua indicada.'}</span>
       <div class="aff-link"><code>${esc(launched ? L.app : L.lista)}</code><button type="button" class="btn sm" data-affcopy="${esc(launched ? L.app : L.lista)}">Copiar</button></div>
@@ -6691,7 +6691,7 @@ document.addEventListener('click', async e => {
     await saveProfile({ manualDone: [...d, id] });
     const next = MANUAL[i + 1];
     if (next) { openManual(next.id); const el = document.querySelector(`[data-mid="${next.id}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    else { openManual(); toast('Manual completo! Você é oficialmente uma Cria 🍒✨'); }
+    else { openManual(); toast('Guia completo! Você é oficialmente uma Fundadora 🍒✨'); }
     return;
   }
   if (t.dataset.affcopy) { try { await navigator.clipboard.writeText(t.dataset.affcopy); toast('Link copiado 🍒'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
