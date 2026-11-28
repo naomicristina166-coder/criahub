@@ -20,7 +20,12 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || '/#radar';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) { if ('focus' in c) { c.postMessage({ criahub: 'open', url }); return c.focus(); } }
+    for (const c of list) {
+      if (!('focus' in c)) continue;
+      /* novidade e Guia das fundadoras: recarrega o app já no endereço certo (garante a versão nova) */
+      if (/#(guia|novidade)$/.test(url) && 'navigate' in c) return c.focus().then(w => (w || c).navigate(url)).catch(() => { c.postMessage({ criahub: 'open', url }); return c.focus(); });
+      c.postMessage({ criahub: 'open', url }); return c.focus();
+    }
     return self.clients.openWindow(url);
   }));
 });

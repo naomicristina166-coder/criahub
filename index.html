@@ -24,6 +24,31 @@ window.CRIAHUB_CONFIG = {
   key: 'sb_publishable_a-svz0y1Hv6AaeP3J7om9g_Qot6D66F',
 };
 
+/* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
+   (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
+window.CRIAHUB_BUILD = '2026-11-27-2115';
+(function () {
+  var busy = false;
+  async function check() {
+    if (busy || document.visibilityState !== 'visible') return; busy = true;
+    try {
+      var r = await fetch(location.pathname + '?atualiza=' + Date.now(), { cache: 'reload' });
+      var t = await r.text(), m = t.match(/CRIAHUB_BUILD = '([^']+)'/);
+      if (m && m[1] !== window.CRIAHUB_BUILD) {
+        try { await fetch(location.pathname, { cache: 'reload' }); } catch (_) {}
+        var k = 'criahub:atualizou:' + m[1];
+        if (sessionStorage.getItem(k)) { busy = false; return; }
+        var layer = document.getElementById('layer');
+        if (layer && layer.children.length) { busy = false; return; }  /* tem algo aberto: tenta na próxima vez */
+        sessionStorage.setItem(k, '1'); location.reload(); return;
+      }
+    } catch (_) {}
+    busy = false;
+  }
+  window.addEventListener('load', function () { setTimeout(check, 4000); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(check, 800); });
+})();
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>/* CriaHub — versão própria (criahub.app.br)
