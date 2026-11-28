@@ -26,7 +26,7 @@ window.CRIAHUB_CONFIG = {
 
 /* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
    (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
-window.CRIAHUB_BUILD = '2026-11-27-2115';
+window.CRIAHUB_BUILD = '2026-11-27-2125';
 (function () {
   var busy = false;
   async function check() {
@@ -1467,6 +1467,7 @@ function vHome() {
     <div class="eyebrow">${esc(dateTxt)}</div>
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
+  ${manOk() && manDoneCount() < MANUAL.length ? `<button class="guia-cta" data-act="manual"><span class="gi">📖</span><span><b>Guia da Fundadora</b><small>${manDoneCount() ? `${manDoneCount()} de ${MANUAL.length} aulas lidas · continuar` : 'Novidade pra você: tudo sobre o CriaHub em 8 aulas'}</small></span><span class="go">›</span></button>` : ''}
   ${!isEmpty() ? `${fronts().length > 1 ? frontBar() : ''}${homePanel(upcoming, toReceive, gotMonth)}` : ''}
   ${homeBday()}
   ${homeRetro()}
@@ -5686,6 +5687,9 @@ document.addEventListener('keydown', e => {
 .learn-it:focus-visible{outline:2px solid var(--accent,#420725)}
 .learn-it b{display:block;font-size:15px}.learn-it small{display:block;font-size:12.5px;color:var(--muted)}
 .learn-it svg{width:18px;height:18px;color:var(--muted)}
+.guia-cta{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;margin:4px 0 14px;padding:14px 16px;border-radius:16px;cursor:pointer;background:var(--accent,#420725);color:#fff}
+.guia-cta .gi{font-size:24px}.guia-cta b{display:block;font-size:15px}.guia-cta small{display:block;font-size:12.5px;opacity:.85;margin-top:1px}.guia-cta .go{margin-left:auto;font-size:22px;opacity:.8}
+.guia-cta:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .learn-link{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;margin-top:18px;padding:14px;border:1px dashed var(--line);border-radius:16px;cursor:pointer;color:var(--fg)}
 .learn-link:focus-visible{outline:2px solid var(--accent,#420725)}
 .learn-link svg{width:22px;height:22px;flex:none;color:var(--accent,#420725)}
@@ -6608,6 +6612,7 @@ async function affLoad() {
   if (ref) { try { await sb.rpc('aff_claim', { p_code: ref }); localStorage.removeItem('criahub:ref'); } catch (_) {} }
   try { const { data, error } = await sb.rpc('aff_me'); AFF = error ? null : data; } catch (_) { AFF = null; }
   try { const { data, error } = await sb.rpc('am_founder'); FOUNDER = !error && data === true; } catch (_) { FOUNDER = false; }
+  if (FOUNDER) render();
   AFF_READY = true; if (sheet && sheet.col === 'aff') openAff();
 }
 const affBrl = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');

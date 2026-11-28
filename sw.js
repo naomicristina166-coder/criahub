@@ -19,11 +19,15 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || '/#radar';
+  /* novidade e Guia das fundadoras: abre o app já no endereço certo (carrega a versão nova e cai direto no Guia) */
+  if (/#(guia|novidade)$/.test(url)) {
+    e.waitUntil(self.clients.openWindow(url).catch(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(list => { const c = list.find(x => 'focus' in x); if (c) { c.postMessage({ criahub: 'open', url }); return c.focus(); } })));
+    return;
+  }
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     for (const c of list) {
       if (!('focus' in c)) continue;
-      /* novidade e Guia das fundadoras: recarrega o app já no endereço certo (garante a versão nova) */
-      if (/#(guia|novidade)$/.test(url) && 'navigate' in c) return c.focus().then(w => (w || c).navigate(url)).catch(() => { c.postMessage({ criahub: 'open', url }); return c.focus(); });
       c.postMessage({ criahub: 'open', url }); return c.focus();
     }
     return self.clients.openWindow(url);
