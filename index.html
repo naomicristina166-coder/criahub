@@ -26,7 +26,7 @@ window.CRIAHUB_CONFIG = {
 
 /* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
    (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
-window.CRIAHUB_BUILD = '2026-11-27-2130';
+window.CRIAHUB_BUILD = '2026-11-27-2140';
 (function () {
   var busy = false;
   async function check() {
@@ -6666,15 +6666,45 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
 <p><b>Dá pra cancelar o Pro?</b><br>Sim, quando quiser. Volta pro Grátis e os dados continuam lá.</p>
 <p><b>Preciso ser grande pra usar?</b><br>Não. Ele serve pra quem está começando e pra quem já tem várias marcas.</p>
 <p><b>Serve só pra UGC?</b><br>Não. Serve pra quem faz UGC, cuida de perfis de marca ou cria pro próprio perfil.</p>` },
-  { id: 'juntas', ic: '🤝', t: 'A gente cresce junto', d: 'Recado da fundadora',
-    b: () => `<p>Você não é só afiliada: você é uma <b>Cria</b>. Eu criei o CriaHub pra resolver a minha bagunça, e cada uma de vocês ajuda ele a chegar em mais creators.</p>
-<p>Quero que cada uma conquiste os seus sonhos. Ninguém cresce sozinha: a gente cresce junto, e unidas vamos muito mais longe.</p>
-<p>Precisa de ideia de roteiro, legenda ou tem dúvida sobre o app? Me chama no grupo das Crias. Estou aqui pra ajudar 💜</p>
-<p style="opacity:.7">Naomi, fundadora do CriaHub 🍒</p>` },
+  { id: 'juntas', ic: '🍒', t: 'Recado da fundadora', d: 'Um recado pra você',
+    b: () => `<p>Você não é só afiliada: você é uma <b>Cria</b> 🍒</p>
+<p>Eu criei o CriaHub pra facilitar a nossa rotina de criadora de conteúdo.</p>
+<p style="opacity:.7">Naomi, fundadora do CriaHub</p>` },
 ];
 /* só as fundadoras (Crias Beta) e a admin veem o Guia */
 const GUIA_OPEN = new Date('2026-11-28T08:00:00-03:00'); /* as fundadoras veem a partir de sábado, 28/11, 8h (a admin vê antes) */
 function manOk() { return ADMIN || ((FOUNDER || (!!AFF && Number(AFF.rate_first) > Number(AFF.rate_after))) && new Date() >= GUIA_OPEN); }
+/* ideias pra postar sobre o CriaHub: junta um formato com uma função do app (sem IA, na hora) */
+const MI_F = [
+  { n: 'Rotina', dor: 'esquecer gravação, entrega e reunião', mostra: 'a Rotina com as tarefas do dia e o lembrete chegando no celular' },
+  { n: 'Marcas', dor: 'se perder com várias marcas ao mesmo tempo', mostra: 'a aba Marcas com o ciclo, as entregas e o que falta de cada uma' },
+  { n: 'Agenda', dor: 'perder prazo de entrega', mostra: 'a Agenda com as entregas da semana e as datas que vencem' },
+  { n: 'Finanças', dor: 'não saber quanto vai receber no mês', mostra: 'as Finanças com quanto cada marca paga e o que falta receber' },
+  { n: 'Estúdio', dor: 'ficar sem ideia de conteúdo', mostra: 'o banco de ideias e os roteiros salvos no Estúdio' },
+  { n: 'Gravação em lote', dor: 'gravar todo dia e não ter tempo pra nada', mostra: 'a lista de gravação em lote, com tudo que dá pra gravar de uma vez' },
+  { n: 'Radar Cria', dor: 'perder as novidades e tendências do mundo dos creators', mostra: 'o Radar Cria com as notícias do dia' },
+  { n: 'Calculadora de preço', dor: 'não saber quanto cobrar numa publi', mostra: 'a calculadora de preço montando um valor' },
+];
+const MI_T = [
+  f => ({ fmt: 'Sequência de 4 stories', t: `Minha semana organizada: ${f.n}`, g: `"Meu maior problema era ${f.dor}. Olha como tá agora 👀"`, p: [`Story 1: conta a dor real (${f.dor})`, `Story 2: mostra ${f.mostra}`, 'Story 3: o que mudou na sua semana', 'Story 4: "quer também?" + sticker de link'] }),
+  f => ({ fmt: 'Reels de reação', t: `Reagindo à minha rotina antes do CriaHub`, g: `"POV: você ainda tenta lembrar de tudo de cabeça 😵‍💫"`, p: ['Grava sua reação olhando o caos (prints antigos, bloco de notas, conversas)', `Corta pra tela: ${f.mostra}`, 'Fecha com sua cara de alívio', 'Texto final: "o link tá na bio 🍒"'] }),
+  f => ({ fmt: 'Antes e depois', t: `Antes x depois: ${f.n}`, g: `"Antes: ${f.dor} 😩 Depois: 👇"`, p: ['Tela dividida ou dois takes', 'Antes: anotação perdida, print, bagunça', `Depois: ${f.mostra}`, 'CTA: "comenta CRIA que eu te mando o link"'] }),
+  f => ({ fmt: 'Tutorial de 1 função', t: `Como eu uso ${f.n} no CriaHub`, g: `"A função que me salvou essa semana 🙏"`, p: ['Mostra a tela em 3 passos, sem pressa', `Explica pra que serve: parar de ${f.dor}`, 'Dica sua de como usar no dia a dia', 'CTA: "testa no plano grátis, link na bio"'] }),
+  f => ({ fmt: 'Lista "3 coisas"', t: '3 coisas que eu não esqueço mais', g: `"3 coisas que eu não esqueço desde que organizei minha rotina 👇"`, p: ['1: um prazo de marca', '2: um pagamento pra receber', `3: ${f.mostra}`, 'CTA: "quer organizar também? link na bio"'] }),
+  f => ({ fmt: 'Dia na vida de creator', t: 'Um dia comigo + o app que organiza tudo', g: `"Vem comigo num dia de creator que trabalha e cria conteúdo ☕"`, p: ['Manhã: abre o app e vê o dia', 'Tarde: grava/edita', `No meio: mostra ${f.mostra}`, 'Noite: "tudo certo pra amanhã" + link'] }),
+  f => ({ fmt: 'Story de enquete', t: `Enquete: você também sofre com isso?`, g: `"Quem aqui também sofre com isso: ${f.dor}? 🤔"`, p: ['Story 1: enquete "sim / demais"', 'Story 2: "eu também sofria, até…"', `Story 3: mostra ${f.mostra}`, 'Story 4: sticker de link "quero organizar"'] }),
+  f => ({ fmt: 'POV', t: `POV: você organizou sua rotina de creator`, g: `"POV: é segunda e você já sabe tudo que vai gravar essa semana ✨"`, p: ['Cena calma, café, celular na mão', `Mostra rápido ${f.mostra}`, 'Texto na tela: "nunca mais caos"', 'Legenda com o link'] }),
+];
+var MI_CUR = null;
+function miNew() { const f = MI_F[Math.floor(Math.random() * MI_F.length)], t = MI_T[Math.floor(Math.random() * MI_T.length)]; MI_CUR = { ...t(f), fn: f.n }; return MI_CUR; }
+function miText(x) { return `${x.t}\nFormato: ${x.fmt}\nGancho: ${x.g}\n${x.p.map((p, i) => `${i + 1}. ${p}`).join('\n')}\nNão esquece: #publi ou "link de afiliada" 🍒`; }
+function miHtml() {
+  const x = MI_CUR || miNew();
+  return `<section class="man-ni mi" id="manIdea"><span class="man-nd">💡 Ideia pra postar sobre o CriaHub · ${esc(x.fmt)}</span><b>${esc(x.t)}</b>
+    <p><b>Gancho:</b> ${esc(x.g)}</p><ol class="mi-p">${x.p.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
+    <p style="font-size:12.5px;opacity:.7">Não esquece: #publi ou "link de afiliada" 🍒</p>
+    <div class="mi-b"><button type="button" class="btn sm" data-mi="new">✨ Outra ideia</button><button type="button" class="btn sm ghost" data-mi="copy">Copiar</button><button type="button" class="btn sm ghost" data-mi="save">Salvar nas minhas Ideias</button></div></section>`;
+}
 function manDone() { const d = S.profile && S.profile.manualDone; return Array.isArray(d) ? d : []; }
 function manDoneCount() { const d = manDone(); return MANUAL.filter(m => d.includes(m.id)).length; }
 var MAN_NEWS = null;
@@ -6704,6 +6734,8 @@ function openManual(openId, newsHl) {
     <p class="sub" style="margin:0">Tudo o que você precisa saber pra usar, explicar e divulgar o CriaHub.</p>
     <div class="cycle"><div class="meta"><span style="color:var(--fg);font-weight:700">${n === MANUAL.length ? 'Guia completo! ✨' : 'Seu progresso'}</span><span class="num">${n} de ${MANUAL.length} aulas</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
     ${manNewsHtml(newsHl)}
+    <b class="man-nh" style="margin-top:4px">Ideias pra postar</b>
+    ${miHtml()}
     <b class="man-nh" style="margin-top:4px">As aulas</b>
     <div class="man-list">${MANUAL.map((m, i) => { const ok = done.includes(m.id); return `<details class="man-l${ok ? ' ok' : ''}" data-mid="${m.id}"${openId === m.id ? ' open' : ''}><summary><span class="man-n">${ok ? '✓' : i + 1}</span><span><b>${m.ic} ${esc(m.t)}</b><small>${esc(m.d)}</small></span></summary><div class="man-b">${m.b()}
       <button type="button" class="btn sm${ok ? ' ghost' : ''}" data-mdone="${m.id}">${ok ? 'Lida ✓' : i < MANUAL.length - 1 ? 'Li! Próxima aula ›' : 'Concluir o guia ✨'}</button></div></details>`; }).join('')}</div>
@@ -6737,8 +6769,14 @@ function openAff() {
   </div></div>`;
 }
 document.addEventListener('click', async e => {
-  const t = e.target.closest && e.target.closest('[data-act="aff"],[data-act="affpix"],[data-affcopy],[data-act="manual"],[data-mdone],[data-mgo]'); if (!t) return;
+  const t = e.target.closest && e.target.closest('[data-act="aff"],[data-act="affpix"],[data-affcopy],[data-act="manual"],[data-mdone],[data-mgo],[data-mi]'); if (!t) return;
   e.stopImmediatePropagation(); e.preventDefault();
+  if (t.dataset.mi) {
+    const a = t.dataset.mi;
+    if (a === 'new') { miNew(); const el = document.getElementById('manIdea'); if (el) el.outerHTML = miHtml(); return; }
+    if (a === 'copy') { try { await navigator.clipboard.writeText(miText(MI_CUR || miNew())); toast('Ideia copiada 🍒'); } catch (_) { toast('Não consegui copiar aqui.'); } return; }
+    if (a === 'save') { const x = MI_CUR || miNew(); await put('ideas', { id: newId(), title: x.t, tag: 'Roteiro', status: 'nova', notes: miText(x) }); toast('Salva em Estúdio › Ideias 💡'); return; }
+  }
   if (t.dataset.mgo) {
     const g = t.dataset.mgo; closeForm();
     if (g === 'pro') { if (window.criahubOpenPro) window.criahubOpenPro(); } else if (g === 'aff') openAff();
@@ -6767,6 +6805,8 @@ document.addEventListener('click', async e => {
 .man-cta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--fg);font:inherit;cursor:pointer}
 .man-cta b{display:block;font-size:15px}.man-cta small{display:block;font-size:12.5px;opacity:.7;margin-top:1px}.man-ic{font-size:24px}.man-go{margin-left:auto;font-size:22px;opacity:.5}
 .man-news{display:flex;flex-direction:column;gap:8px}
+.mi .mi-p{margin:0;padding-left:20px;font-size:14px;line-height:1.5;display:flex;flex-direction:column;gap:3px}
+.mi-b{display:flex;gap:8px;flex-wrap:wrap}
 .man-nh{font-size:13px;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
 .man-ni{border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .man-ni.hl{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
