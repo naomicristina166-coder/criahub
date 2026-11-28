@@ -1020,7 +1020,7 @@ textarea.ta{width:100%;min-height:80px;border:1px solid var(--line);border-radiu
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     const semPix = F.filter(a => a.isAff && !a.pix_key).length, ind = F.reduce((s, a) => s + Number(a.referred || 0), 0), pro = F.reduce((s, a) => s + Number(a.pro_active || 0), 0);
     const wa = n => { const d = String(n || '').replace(/\D/g, ''); return d ? 'https://wa.me/' + (d.length <= 11 ? '55' + d : d) : ''; };
-    return `<h1>Fundadoras 🍒</h1>
+    return `<div class="sec-h"><h1>Fundadoras 🍒</h1><a class="btn sm" href="/#guia" target="_top">📖 Abrir o Guia da Fundadora</a></div>
       <p class="sub">As Crias Beta, que ganharam o Pro de presente. Ficam aqui, separadas das assinantes do Pro, e veem o <b>Guia da Fundadora</b> no app. Quem entra: quem tem o Pro com a observação começando por “Cria Beta”.</p>
       <div class="kpis" style="margin:14px 0"><div class="kpi"><span>Fundadoras</span><b>${F.length}</b></div><div class="kpi"><span>Indicadas por elas</span><b>${ind}</b></div><div class="kpi"><span>No Pro por elas</span><b>${pro}</b></div><div class="kpi"><span>Sem chave Pix</span><b>${semPix}</b></div></div>
       <section class="card" style="padding:14px 16px;margin-bottom:16px">
