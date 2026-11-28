@@ -26,7 +26,7 @@ window.CRIAHUB_CONFIG = {
 
 /* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
    (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
-window.CRIAHUB_BUILD = '2026-11-27-2150';
+window.CRIAHUB_BUILD = '2026-11-27-2155';
 (function () {
   var busy = false;
   async function check() {
@@ -6654,7 +6654,7 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
     b: () => `<p>O que mais funciona é <b>contar uma história antes de mostrar o app</b>. A pessoa se conecta com a dor e só depois quer a solução.</p>
 <ol><li><b>Contexto:</b> mostre a sua rotina real ("tenho 4 marcas essa semana e…")</li><li><b>Dor:</b> o que dava errado ("eu vivia perdendo prazo", "não sabia quanto ia receber")</li><li><b>Virada:</b> "aí eu comecei a usar o CriaHub"</li><li><b>Mostra:</b> 1 função por vez, na tela, sem pressa</li><li><b>Chamada:</b> "o link tá na bio" ou "me chama que eu te mando"</li></ol>
 <div class="man-tip">🔗 Se preferir, coloque o seu link direto no story, com o sticker de link.</div>
-<div class="man-tip">✅ Sempre avise que é parceria: use <b>#publi</b> ou "link de afiliada". É regra do CONAR e passa confiança.</div>
+<div class="man-tip">✅ Sempre avise que é parceria: use <b>#publi</b>. É regra do CONAR e passa confiança.</div>
 <p>Ideias de story: sua semana no app · antes e depois da organização · "3 coisas que eu não esqueço mais" · quanto você recebeu no mês (sem valores, se preferir).</p>` },
   { id: 'ganhos', ic: '💸', t: 'Como você ganha', d: 'Comissão e pagamento',
     b: () => `<p>${esc(manRule())}</p>
@@ -6698,12 +6698,12 @@ const MI_T = [
 ];
 var MI_CUR = null;
 function miNew() { const f = MI_F[Math.floor(Math.random() * MI_F.length)], t = MI_T[Math.floor(Math.random() * MI_T.length)]; MI_CUR = { ...t(f), fn: f.n }; return MI_CUR; }
-function miText(x) { return `${x.t}\nFormato: ${x.fmt}\nGancho: ${x.g}\n${x.p.map((p, i) => `${i + 1}. ${p}`).join('\n')}\nNão esquece: #publi ou "link de afiliada" 🍒`; }
+function miText(x) { return `${x.t}\nFormato: ${x.fmt}\nGancho: ${x.g}\n${x.p.map((p, i) => `${i + 1}. ${p}`).join('\n')}\nNão esquece o #publi (regra do CONAR) 🍒`; }
 function miHtml() {
   const x = MI_CUR || miNew();
   return `<section class="man-ni mi" id="manIdea"><span class="man-nd">💡 Ideia pra postar sobre o CriaHub · ${esc(x.fmt)}</span><b>${esc(x.t)}</b>
     <p><b>Gancho:</b> ${esc(x.g)}</p><ol class="mi-p">${x.p.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
-    <p style="font-size:12.5px;opacity:.7">Não esquece: #publi ou "link de afiliada" 🍒</p>
+    <p style="font-size:12.5px;opacity:.7">Não esquece o #publi (regra do CONAR) 🍒</p>
     <div class="mi-b"><button type="button" class="btn sm" data-mi="new">✨ Outra ideia</button><button type="button" class="btn sm ghost" data-mi="copy">Copiar</button><button type="button" class="btn sm ghost" data-mi="save">Salvar nas minhas Ideias</button></div></section>`;
 }
 function manDone() { const d = S.profile && S.profile.manualDone; return Array.isArray(d) ? d : []; }
