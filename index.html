@@ -26,7 +26,7 @@ window.CRIAHUB_CONFIG = {
 
 /* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
    (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
-window.CRIAHUB_BUILD = '2026-11-27-2125';
+window.CRIAHUB_BUILD = '2026-11-27-2130';
 (function () {
   var busy = false;
   async function check() {
@@ -6632,7 +6632,7 @@ const MANUAL = [
   { id: 'o-que-e', ic: '🍒', t: 'O que é o CriaHub', d: 'A ideia por trás do app, em 1 minuto',
     b: () => `<p>O CriaHub é o app que organiza a rotina de creator num lugar só: marcas, entregas, prazos, ideias, roteiros e dinheiro.</p>
 <p>Ele foi feito pra <b>acompanhar a jornada da creator</b>. Quem está começando organiza tudo no Grátis. Quando o trabalho cresce, o Pro cresce junto.</p>
-<p>Funciona no celular (iPhone e Android) e no computador. Não precisa de loja de app: a pessoa abre <b>criahub.app.br</b> e o próprio site ensina a instalar.</p>
+<p>Funciona no celular (iPhone e Android), no iPad e no tablet, e no computador. Não precisa de loja de app: a pessoa abre <b>criahub.app.br</b> e o próprio site ensina a instalar.</p>
 <div class="man-tip">💬 <b>Pra explicar em uma frase:</b> "É o app que organiza a rotina da creator: marcas, prazos, ideias e dinheiro, tudo num lugar só."</div>` },
   { id: 'gratis-pro', ic: '⚖️', t: 'Grátis x Pro', d: 'O que vem em cada plano',
     b: () => `<p><b>🆓 Grátis, pra sempre:</b> pra organizar a rotina.</p>
@@ -6652,6 +6652,7 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
   { id: 'divulgar', ic: '🎬', t: 'Como divulgar', d: 'A narrativa que funciona',
     b: () => `<p>O que mais funciona é <b>contar uma história antes de mostrar o app</b>. A pessoa se conecta com a dor e só depois quer a solução.</p>
 <ol><li><b>Contexto:</b> mostre a sua rotina real ("tenho 4 marcas essa semana e…")</li><li><b>Dor:</b> o que dava errado ("eu vivia perdendo prazo", "não sabia quanto ia receber")</li><li><b>Virada:</b> "aí eu comecei a usar o CriaHub"</li><li><b>Mostra:</b> 1 função por vez, na tela, sem pressa</li><li><b>Chamada:</b> "o link tá na bio" ou "me chama que eu te mando"</li></ol>
+<div class="man-tip">🔗 Se preferir, coloque o seu link direto no story, com o sticker de link.</div>
 <div class="man-tip">✅ Sempre avise que é parceria: use <b>#publi</b> ou "link de afiliada". É regra do CONAR e passa confiança.</div>
 <p>Ideias de story: sua semana no app · antes e depois da organização · "3 coisas que eu não esqueço mais" · quanto você recebeu no mês (sem valores, se preferir).</p>` },
   { id: 'ganhos', ic: '💸', t: 'Como você ganha', d: 'Comissão e pagamento',
@@ -6660,7 +6661,7 @@ ${AFF ? `<div class="aff-link"><code>${esc(on ? L.app : L.lista)}</code><button 
 <div class="man-tip">🎯 <b>Meta:</b> quando você tiver <b>10 indicadas no Pro</b>, sua comissão sobe pra <b>25%</b>.${AFF ? ` Você está com <b>${Number(AFF.pro_active || 0)} de 10</b>${Number(AFF.rate_after) >= 25 ? ' e já está nos 25% 🎉' : ''}.` : ''}</div>
 <div class="man-tip">⚠️ Deixe sua chave Pix salva no painel. Sem ela não tem como receber.</div>` },
   { id: 'duvidas', ic: '❓', t: 'Dúvidas frequentes', d: 'O que mais perguntam',
-    b: () => `<p><b>Precisa baixar na loja?</b><br>Não. Abre criahub.app.br e instala pelo próprio site, no iPhone ou Android.</p>
+    b: () => `<p><b>Precisa baixar na loja?</b><br>Não. Abre criahub.app.br e instala pelo próprio site, no iPhone, Android, iPad ou tablet.</p>
 <p><b>O Grátis acaba?</b><br>Não, é grátis pra sempre.</p>
 <p><b>Dá pra cancelar o Pro?</b><br>Sim, quando quiser. Volta pro Grátis e os dados continuam lá.</p>
 <p><b>Preciso ser grande pra usar?</b><br>Não. Ele serve pra quem está começando e pra quem já tem várias marcas.</p>
