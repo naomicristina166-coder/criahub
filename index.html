@@ -26,7 +26,7 @@ window.CRIAHUB_CONFIG = {
 
 /* atualização automática: quando sai uma versão nova do app, ele recarrega sozinho
    (ao abrir ou voltar pro app, e só se não tiver nenhuma janela aberta por cima). Troque o número a cada versão. */
-window.CRIAHUB_BUILD = '2026-11-27-2140';
+window.CRIAHUB_BUILD = '2026-11-27-2150';
 (function () {
   var busy = false;
   async function check() {
@@ -1467,7 +1467,7 @@ function vHome() {
     <div class="eyebrow">${esc(dateTxt)}</div>
     <h1>${greeting()}${name ? `, <em>${esc(name)}</em>` : ''}.</h1>
   </div>
-  ${manOk() && manDoneCount() < MANUAL.length ? `<button class="guia-cta" data-act="manual"><span class="gi">📖</span><span><b>Guia da Fundadora</b><small>${manDoneCount() ? `${manDoneCount()} de ${MANUAL.length} aulas lidas · continuar` : 'Novidade pra você: tudo sobre o CriaHub em 8 aulas'}</small></span><span class="go">›</span></button>` : ''}
+  ${manOk() && !S.profile.guiaSeen ? `<button class="guia-cta" data-act="manual"><span class="gi">📖</span><span><b>Guia da Fundadora</b><small>${manDoneCount() ? `${manDoneCount()} de ${MANUAL.length} aulas lidas · continuar` : 'Novidade pra você: tudo sobre o CriaHub em 8 aulas'}</small></span><span class="go">›</span></button>` : ''}
   ${!isEmpty() ? `${fronts().length > 1 ? frontBar() : ''}${homePanel(upcoming, toReceive, gotMonth)}` : ''}
   ${homeBday()}
   ${homeRetro()}
@@ -1492,6 +1492,7 @@ function vHome() {
     <div class="card idea-day"><div class="q">${esc(idea.title)}</div>${idea.notes ? `<div class="sub" style="margin-top:6px">${esc(idea.notes)}</div>` : ''}</div></section>` : ''}
   ${homeWhatsNew()}
   <button class="learn-link" data-learn="1">${ic('book')}<span><b>Aprenda o CriaHub</b><small>Ficou com dúvida em alguma aba? Revê os stories aqui.</small></span></button>
+  ${manOk() && S.profile.guiaSeen ? `<button class="learn-link" data-act="manual" style="margin-top:10px">${ic('book')}<span><b>Guia da Fundadora</b><small>${manDoneCount() < MANUAL.length ? `${manDoneCount()} de ${MANUAL.length} aulas lidas · ideias pra postar` : 'Aulas, novidades e ideias pra postar'}</small></span></button>` : ''}
   `}`;
 }
 
@@ -6727,6 +6728,7 @@ window.criahubOpenGuia = (h) => {
 if (location.hash === '#novidade' || location.hash === '#guia') { const h = location.hash.slice(1); try { history.replaceState(null, '', location.pathname); } catch (_) {} setTimeout(() => window.criahubOpenGuia(h), 1200); }
 function openManual(openId, newsHl) {
   sheet = { col: 'manual', open: openId, news: newsHl };
+  if (!S.profile.guiaSeen) setTimeout(() => saveProfile({ guiaSeen: today() }), 0);
   if (MAN_NEWS === null) { MAN_NEWS = []; manNewsLoad(); }
   const done = manDone(), n = manDoneCount(), pct = Math.round(n / MANUAL.length * 100);
   $('#layer').innerHTML = `<div class="scrim" data-scrim><div class="sheet man-sheet" role="dialog" aria-modal="true" aria-label="Guia da Fundadora">
